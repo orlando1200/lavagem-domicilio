@@ -4,10 +4,10 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_scaffold.dart';
 import '../../../../core/widgets/neon_surface.dart';
+import '../../../../core/widgets/loading_skeleton.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/providers/auth_state.dart';
 import '../../../engagement/presentation/providers/engagement_provider.dart';
-import '../../../../core/widgets/loading_skeleton.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -76,6 +76,11 @@ class _HomeTab extends ConsumerWidget {
   }
 }
 
+/// Cabecalho da home com fusao organica entre o "background" visual
+/// (composicao de spots neon, ja que o repo nao possui uma imagem de
+/// fundo dedicada) e a cor base #050811, usando ShaderMask com
+/// RadialGradient + BlendMode.dstOut. Inclui o espaco reservado para o
+/// logo transparente `logo_giucar.png`.
 class _HomeHeader extends StatelessWidget {
   const _HomeHeader({required this.userName});
 
@@ -84,57 +89,159 @@ class _HomeHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 28),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppColors.primaryContainer, AppColors.accentContainer, AppColors.background],
-        ),
-        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(28)),
-        boxShadow: const [
-          BoxShadow(color: AppColors.glow, blurRadius: 30, spreadRadius: -6),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+      decoration: const BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(28)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        children: [
+          // Composicao visual equivalente a uma imagem de fundo: spots de
+          // luz ciano/roxo fundidos organicamente com #050811 via
+          // ShaderMask + RadialGradient + BlendMode.dstOut.
+          Positioned.fill(
+            child: _HeaderNeonFusion(),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Espaco reservado para o logo transparente no topo.
+              Center(
+                child: Image.asset(
+                  'assets/images/logo_giucar.png',
+                  height: 44,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) => const SizedBox(
+                    height: 44,
+                    child: Icon(Icons.bolt_rounded, color: AppColors.primary, size: 32),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  Container(
+                    width: 54,
+                    height: 54,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: const LinearGradient(
+                        colors: AppColors.primaryAccentGradient,
+                      ),
+                      boxShadow: [
+                        BoxShadow(color: AppColors.glow, blurRadius: 18, spreadRadius: 1),
+                      ],
+                    ),
+                    child: const Icon(Icons.bolt_rounded, color: AppColors.textPrimary, size: 28),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          userName.isEmpty ? 'Olá!' : 'Olá, $userName!',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.w900,
+                              ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Pronto para deixar seu veículo brilhando?',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ],
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 54,
-            height: 54,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: const LinearGradient(
-                colors: [AppColors.primary, AppColors.accent],
-              ),
-              boxShadow: const [
-                BoxShadow(color: AppColors.glow, blurRadius: 18, spreadRadius: 1),
+    );
+  }
+}
+
+/// Fusao organica de spots neon (ciano + roxo) sobre o fundo #050811,
+/// usando ShaderMask/RadialGradient/BlendMode.dstOut por spot, o que evita
+/// bordas duras entre a "imagem" e a cor base e funciona bem sob
+/// CanvasKit/WebGL (sem depender de BackdropFilter/blur pesado).
+class _HeaderNeonFusion extends StatelessWidget {
+  const _HeaderNeonFusion();
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        _NeonFusionSpot(
+          alignment: const Alignment(-1.1, -1.2),
+          color: AppColors.primary,
+          size: 260,
+        ),
+        _NeonFusionSpot(
+          alignment: const Alignment(1.2, -0.8),
+          color: AppColors.accent,
+          size: 240,
+        ),
+        _NeonFusionSpot(
+          alignment: const Alignment(0.3, 1.4),
+          color: AppColors.primaryAlt,
+          size: 220,
+        ),
+      ],
+    );
+  }
+}
+
+class _NeonFusionSpot extends StatelessWidget {
+  const _NeonFusionSpot({
+    required this.alignment,
+    required this.color,
+    required this.size,
+  });
+
+  final Alignment alignment;
+  final Color color;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: alignment,
+      child: ShaderMask(
+        blendMode: BlendMode.dstOut,
+        shaderCallback: (rect) {
+          return RadialGradient(
+            center: Alignment.center,
+            radius: 0.5,
+            colors: [
+              AppColors.background.withValues(alpha: 0.0),
+              AppColors.background.withValues(alpha: 1.0),
+            ],
+            stops: const [0.0, 1.0],
+          ).createShader(rect);
+        },
+        child: Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: RadialGradient(
+              colors: [
+                color.withValues(alpha: 0.5),
+                color.withValues(alpha: 0.0),
               ],
-            ),
-            child: const Icon(Icons.bolt_rounded, color: Colors.white, size: 28),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  userName.isEmpty ? 'Olá!' : 'Olá, $userName!',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w900,
-                      ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Pronto para deixar seu veículo brilhando?',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.78),
-                      ),
-                ),
-              ],
+              stops: const [0.0, 1.0],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -162,7 +269,7 @@ class _EngagementHighlightCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
+                      color: AppColors.primaryContainer,
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: const Icon(Icons.workspace_premium_rounded, color: AppColors.primary),
@@ -174,19 +281,22 @@ class _EngagementHighlightCard extends StatelessWidget {
                       children: [
                         Text(
                           'Seu progresso de fidelidade',
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.textPrimary,
+                              ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           '${engagement.loyaltyPoints} pontos · faltam $remaining para o próximo cupom',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                color: AppColors.textSecondary,
                               ),
                         ),
                       ],
                     ),
                   ),
-                  const Icon(Icons.chevron_right_rounded),
+                  const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
                 ],
               ),
               const SizedBox(height: 14),
@@ -195,6 +305,8 @@ class _EngagementHighlightCard extends StatelessWidget {
                 child: LinearProgressIndicator(
                   value: (engagement.loyaltyPoints / engagement.nextRewardAt).clamp(0, 1),
                   minHeight: 10,
+                  backgroundColor: AppColors.border,
+                  valueColor: const AlwaysStoppedAnimation(AppColors.primary),
                 ),
               ),
               const SizedBox(height: 14),
@@ -243,13 +355,16 @@ class _EngagementMiniMetric extends StatelessWidget {
         children: [
           Text(
             value,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                ),
           ),
           const SizedBox(height: 4),
           Text(
             label,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  color: AppColors.textSecondary,
                 ),
           ),
         ],
@@ -268,10 +383,13 @@ class _QuickActionsCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Ações rápidas',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  )),
+          Text(
+            'Ações rápidas',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+          ),
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -317,7 +435,6 @@ class _QuickAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -328,17 +445,19 @@ class _QuickAction extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.12),
+                color: AppColors.primaryContainer,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: AppColors.border),
               ),
-              child: Icon(icon, color: colorScheme.primary),
+              child: Icon(icon, color: AppColors.primary),
             ),
             const SizedBox(height: 6),
             Text(
               label,
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.labelSmall,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
             ),
           ],
         ),
@@ -358,13 +477,17 @@ class _ServicesSection extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Serviços populares',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    )),
+            Text(
+              'Serviços populares',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+            ),
             TextButton(
-                onPressed: () => context.push('/catalog'),
-                child: const Text('Ver todos')),
+              onPressed: () => context.push('/catalog'),
+              child: const Text('Ver todos'),
+            ),
           ],
         ),
         const SizedBox(height: 8),
@@ -398,7 +521,6 @@ class _ServiceChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       width: 132,
       margin: const EdgeInsets.only(right: 12),
@@ -412,18 +534,22 @@ class _ServiceChip extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(icon, color: colorScheme.primary, size: 26),
+                Icon(icon, color: AppColors.primary, size: 26),
                 const Spacer(),
-                Text(title,
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        )),
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                ),
                 const SizedBox(height: 2),
-                Text(price,
-                    style: Theme.of(context)
-                        .textTheme
-                        .labelSmall
-                        ?.copyWith(color: colorScheme.primary)),
+                Text(
+                  price,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: AppColors.primary,
+                      ),
+                ),
               ],
             ),
           ),
@@ -459,17 +585,19 @@ class _MarketplaceBanner extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text('Loja',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleSmall
-                                  ?.copyWith(fontWeight: FontWeight.bold)),
-                          Text('Produtos de limpeza',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(
-                                      color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                          Text(
+                            'Loja',
+                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textPrimary,
+                                ),
+                          ),
+                          Text(
+                            'Produtos de limpeza',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                          ),
                         ],
                       ),
                     ),
@@ -484,7 +612,7 @@ class _MarketplaceBanner extends StatelessWidget {
           child: NeonSurface(
             radius: 14,
             backgroundColor: AppColors.accentContainer,
-            borderColor: AppColors.accent.withValues(alpha: 0.4),
+            borderColor: AppColors.accent,
             child: InkWell(
               onTap: () => context.push('/moto-rental'),
               borderRadius: BorderRadius.circular(14),
@@ -500,17 +628,19 @@ class _MarketplaceBanner extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text('Motos',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleSmall
-                                  ?.copyWith(fontWeight: FontWeight.bold)),
-                          Text('Aluguel parceiros',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(
-                                      color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                          Text(
+                            'Motos',
+                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textPrimary,
+                                ),
+                          ),
+                          Text(
+                            'Aluguel parceiros',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                          ),
                         ],
                       ),
                     ),
@@ -534,10 +664,10 @@ class _PromoSection extends StatelessWidget {
       height: 100,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [AppColors.primary, AppColors.accent],
+          colors: AppColors.primaryAccentGradient,
         ),
         borderRadius: BorderRadius.circular(18),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(color: AppColors.glow, blurRadius: 24, spreadRadius: -4),
         ],
       ),
@@ -549,22 +679,29 @@ class _PromoSection extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('Primeira lavagem',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        )),
-                Text('20% de desconto!',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.white70,
-                        )),
+                Text(
+                  'Primeira lavagem',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                Text(
+                  '20% de desconto!',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                ),
               ],
             ),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Colors.white),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.textPrimary,
+              foregroundColor: AppColors.primaryDark,
+            ),
             onPressed: () => context.push('/quote'),
-            child: const Text('Ver oferta', style: TextStyle(color: AppColors.primaryDark)),
+            child: const Text('Ver oferta'),
           ),
         ],
       ),
@@ -602,8 +739,12 @@ class _ProfileTab extends ConsumerWidget {
       initial: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
       loading: () => const _ProfileLoading(),
       authenticated: (user) => _ProfileView(user: user, ref: ref),
-      unauthenticated: () => const Center(child: Text('Não autenticado')),
-      error: (msg) => Center(child: Text(msg)),
+      unauthenticated: () => const Center(
+        child: Text('Não autenticado', style: TextStyle(color: AppColors.textPrimary)),
+      ),
+      error: (msg) => Center(
+        child: Text(msg, style: const TextStyle(color: AppColors.error)),
+      ),
     );
   }
 }
@@ -635,7 +776,7 @@ class _ProfileLoading extends StatelessWidget {
 class _ProfileView extends StatelessWidget {
   const _ProfileView({required this.user, required this.ref});
 
-  final dynamic user;
+  final AppUser user;
   final WidgetRef ref;
 
   @override
@@ -653,9 +794,9 @@ class _ProfileView extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: const LinearGradient(
-                  colors: [AppColors.primary, AppColors.accent],
+                  colors: AppColors.primaryAccentGradient,
                 ),
-                boxShadow: const [
+                boxShadow: [
                   BoxShadow(color: AppColors.glow, blurRadius: 24, spreadRadius: 1),
                 ],
               ),
@@ -664,7 +805,7 @@ class _ProfileView extends StatelessWidget {
                   user.name.substring(0, 1).toUpperCase(),
                   style: const TextStyle(
                     fontSize: 36,
-                    color: Colors.white,
+                    color: AppColors.textPrimary,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -675,18 +816,17 @@ class _ProfileView extends StatelessWidget {
           Text(
             user.name,
             textAlign: TextAlign.center,
-            style: Theme.of(context)
-                .textTheme
-                .titleLarge
-                ?.copyWith(fontWeight: FontWeight.bold),
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
           ),
           Text(
             user.email,
             textAlign: TextAlign.center,
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
           ),
           const SizedBox(height: 24),
           _ProfileMenuItem(
@@ -755,16 +895,18 @@ class _ProfileMenuItem extends StatelessWidget {
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.1),
+            color: AppColors.primaryContainer,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(icon, color: AppColors.primary),
         ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-        trailing: const Icon(Icons.chevron_right_rounded),
+        title: Text(
+          title,
+          style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+        ),
+        trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
         onTap: onTap,
       ),
     );
   }
 }
-

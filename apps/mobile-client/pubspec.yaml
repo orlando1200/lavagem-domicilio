@@ -1,0 +1,48 @@
+name: giucar_mobile_client
+description: GIUCAR Cyberpunk - App do Cliente (Flutter)
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.6
+
+  # Estado / navegacao
+  flutter_riverpod: ^2.5.1
+  go_router: ^14.2.0
+
+  # UI / tipografia
+  google_fonts: ^6.2.1
+  flutter_svg: ^2.0.10+1
+
+  # Rede
+  dio: ^5.4.3+1
+  web_socket_channel: ^2.4.5
+
+  # Modelos / serializacao
+  freezed_annotation: ^2.4.1
+  json_annotation: ^4.9.0
+
+  # Armazenamento seguro
+  flutter_secure_storage: ^9.2.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^4.0.0
+
+  build_runner: ^2.4.11
+  freezed: ^2.5.7
+  json_serializable: ^6.8.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/

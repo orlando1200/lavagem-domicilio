@@ -1,0 +1,16 @@
+include: package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    prefer_const_constructors: true
+    prefer_const_literals_to_create_immutables: true
+    avoid_print: true
+
+analyzer:
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    # Codigo-fonte corrompido/truncado herdado de uma restauracao anterior
+    # do repositorio; isolado ate ser reconstruido.
+    # Ver docs/FASE9_CORRUPTED_MODULES.md
+    - "_corrupted_quarantine/**"
