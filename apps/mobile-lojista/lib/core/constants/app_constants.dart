@@ -42,9 +42,9 @@ extension StoreTypeLabel on StoreType {
   String get examplesLabel {
     switch (this) {
       case StoreType.lavador:
-        return 'Ex: shampoo automotivo, cera, aspirador profissional, panos de microfibra, equipamentos e repostos para lavagem.';
+        return 'Ex: insumos profissionais (shampoo automotivo, cera), equipamentos, repostos e ferramentas para lavagem.';
       case StoreType.cliente:
-        return 'Ex: aromatizantes, capas de couro, cera carnauba, aspirador portatil, organizadores, lampadas, palhetas.';
+        return 'Ex: aromatizantes, capas de couro, acessorios automotivos, souvenirs e pecas genericas.';
     }
   }
 }
@@ -125,6 +125,17 @@ class StorePlanRules {
     final commission = commissionPercentFor(mode, type);
     return 'R\$ ${fee.toStringAsFixed(0)}/mes + ${commission.toStringAsFixed(0)}%';
   }
+
+  /// Lista das 4 combinacoes possiveis (StoreType x LogisticsMode), na
+  /// ordem: Lavador Integrada, Lavador Propria, Cliente Integrada,
+  /// Cliente Propria. Usada para exibir o comparativo completo das
+  /// tarifas (ex: tela de Plano).
+  static List<({StoreType type, LogisticsMode mode})> get allCombinations => [
+        (type: StoreType.lavador, mode: LogisticsMode.integrada),
+        (type: StoreType.lavador, mode: LogisticsMode.propria),
+        (type: StoreType.cliente, mode: LogisticsMode.integrada),
+        (type: StoreType.cliente, mode: LogisticsMode.propria),
+      ];
 }
 
 /// Destino de catalogo escolhido ao cadastrar um produto.
@@ -162,9 +173,9 @@ extension CatalogTargetLabel on CatalogTarget {
   String get examplesLabel {
     switch (this) {
       case CatalogTarget.lojaLavador:
-        return 'Ex: shampoo automotivo, cera, aspirador profissional, panos de microfibra, equipamentos e repostos.';
+        return 'Ex: insumos profissionais (shampoo automotivo, cera), equipamentos, repostos e ferramentas para lavagem.';
       case CatalogTarget.lojaCliente:
-        return 'Ex: aromatizantes, capas de couro, cera carnauba, aspirador portatil, organizadores, lampadas, palhetas.';
+        return 'Ex: aromatizantes, capas de couro, acessorios automotivos, souvenirs e pecas genericas.';
       case CatalogTarget.ambas:
         return 'Ex: produtos versateis, como aromatizantes premium ou kits de limpeza rapida.';
     }

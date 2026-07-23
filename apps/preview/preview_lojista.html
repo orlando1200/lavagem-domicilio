@@ -101,17 +101,17 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
         <div class="select-card selected">
           <div class="radio"></div>
           <div>
-            <h4>Loja LAVADOR</h4>
+            <h4>Loja do Lavador <span class="badge" style="background:rgba(0,242,194,0.12); color:#00F2C2;">B2B</span></h4>
             <p>Vende produtos profissionais e insumos para lavadores.</p>
-            <p style="margin-top: 6px; font-style: italic; color: #6b7aa0;">Ex: shampoo automotivo, cera, aspirador profissional, panos de microfibra, equipamentos e repostos.</p>
+            <p style="margin-top: 6px; font-style: italic; color: #6b7aa0;">Ex: insumos profissionais (shampoo automotivo, cera), equipamentos, repostos e ferramentas para lavagem.</p>
           </div>
         </div>
         <div class="select-card">
           <div class="radio"></div>
           <div>
-            <h4>Loja CLIENTE</h4>
+            <h4>Loja do Cliente <span class="badge" style="background:rgba(157,78,221,0.14); color:#c77dff;">B2C</span></h4>
             <p>Vende acessórios e produtos para o cliente final.</p>
-            <p style="margin-top: 6px; font-style: italic; color: #6b7aa0;">Ex: aromatizantes, capas de couro, cera carnaúba, aspirador portátil, organizadores, lâmpadas, palhetas.</p>
+            <p style="margin-top: 6px; font-style: italic; color: #6b7aa0;">Ex: aromatizantes, capas de couro, acessórios automotivos, souvenirs e peças genéricas.</p>
           </div>
         </div>
 
@@ -122,8 +122,8 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
           <div>
             <h4>Logística Integrada</h4>
             <p>A plataforma GIUCAR coleta e entrega o produto ao comprador.</p>
-            <span class="price-label">Loja LAVADOR: R$ 150/mês · 23%</span>
-            <span class="price-label" style="margin-top: 2px;">Loja CLIENTE: R$ 59/mês · 18%</span>
+            <span class="price-label">Loja do Lavador: R$ 150/mês + 23%</span>
+            <span class="price-label" style="margin-top: 2px;">Loja do Cliente: R$ 59/mês + 18%</span>
           </div>
         </div>
         <div class="select-card">
@@ -131,8 +131,8 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
           <div>
             <h4>Logística Própria</h4>
             <p>Você (vendedor) entrega diretamente ou organiza a retirada.</p>
-            <span class="price-label">Loja LAVADOR: R$ 110/mês · 15%</span>
-            <span class="price-label" style="margin-top: 2px;">Loja CLIENTE: R$ 29/mês · 12%</span>
+            <span class="price-label">Loja do Lavador: R$ 110/mês + 15%</span>
+            <span class="price-label" style="margin-top: 2px;">Loja do Cliente: R$ 29/mês + 12%</span>
           </div>
         </div>
 
@@ -230,7 +230,12 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
         <p>Seu produto será analisado antes de publicar</p>
       </div>
       <div class="content">
-        <div class="menu-item" style="justify-content: center; border-style: dashed; background: rgba(0,242,194,0.04);">
+        <div class="order-card" style="background: rgba(0,242,194,0.06); border-color: rgba(0,242,194,0.25); display:flex; gap:10px; align-items:flex-start;">
+          <span style="font-size:16px;">💡</span>
+          <span style="font-size:12px; color:#dfe6f5;">Sua loja é <b style="color:#fff;">Loja do Lavador</b>. Ex: insumos profissionais (shampoo automotivo, cera), equipamentos, repostos e ferramentas para lavagem.</span>
+        </div>
+
+        <div class="menu-item" style="justify-content: center; border-style: dashed; background: rgba(0,242,194,0.04); margin-top: 12px;">
           <div class="left" style="flex-direction: column; gap: 8px;">
             <div class="icon" style="width: 56px; height: 56px; font-size: 24px;">📷</div>
             <div class="label" style="color: #00F2C2;">Adicionar foto do produto</div>
@@ -262,12 +267,12 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
         <div class="plan-card selected">
           <h4>Loja do Lavador <span class="badge badge-success">Recomendado</span></h4>
           <p>Produtos profissionais e insumos para lavadores.</p>
-          <p style="margin-top: 6px; font-style: italic; color: #6b7aa0; font-size: 12px;">Ex: shampoo automotivo, cera, aspirador profissional, panos de microfibra, equipamentos e repostos.</p>
+          <p style="margin-top: 6px; font-style: italic; color: #6b7aa0; font-size: 12px;">Ex: insumos profissionais (shampoo automotivo, cera), equipamentos, repostos e ferramentas para lavagem.</p>
         </div>
         <div class="plan-card">
           <h4>Loja do Cliente</h4>
           <p>Acessórios e souvenirs para o cliente final.</p>
-          <p style="margin-top: 6px; font-style: italic; color: #6b7aa0; font-size: 12px;">Ex: aromatizantes, capas de couro, cera carnaúba, aspirador portátil, organizadores, lâmpadas, palhetas.</p>
+          <p style="margin-top: 6px; font-style: italic; color: #6b7aa0; font-size: 12px;">Ex: aromatizantes, capas de couro, acessórios automotivos, souvenirs e peças genéricas.</p>
         </div>
         <div class="plan-card">
           <h4>Ambas as lojas</h4>
@@ -355,7 +360,7 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
         <p>Escolha como quer vender</p>
       </div>
       <div class="content">
-        <div class="subtitle-sm">Sua loja atual: <b style="color:#fff;">Loja LAVADOR</b></div>
+        <div class="subtitle-sm">Sua loja atual: <b style="color:#fff;">Loja do Lavador</b></div>
         <div class="plan-card selected">
           <h4>Logística Integrada <span class="badge badge-success">Atual</span></h4>
           <p>Nós coletamos e entregamos o produto ao comprador.</p>
@@ -369,25 +374,32 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
           <div class="services" style="margin-top: 8px;">Comissão: 15% por venda</div>
         </div>
 
-        <div class="section-title">Se sua loja fosse tipo CLIENTE</div>
-        <div class="plan-card">
-          <h4>Logística Integrada</h4>
-          <p>Nós coletamos e entregamos o produto ao comprador.</p>
-          <div class="price">R$ 59/mês</div>
-          <div class="services" style="margin-top: 8px;">Comissão: 18% por venda</div>
-        </div>
-        <div class="plan-card">
-          <h4>Logística Própria</h4>
-          <p>Você entrega diretamente ou organiza a retirada.</p>
-          <div class="price">R$ 29/mês</div>
-          <div class="services" style="margin-top: 8px;">Comissão: 12% por venda</div>
+        <div class="section-title">Comparativo completo das tarifas</div>
+        <div class="subtitle-sm">Veja como cada combinação de tipo de loja e logística é cobrada.</div>
+        <div class="order-card">
+          <div class="row" style="margin-bottom: 10px;">
+            <span class="customer" style="font-size: 13px;">✅ Loja do Lavador · Integrada</span>
+            <span class="price" style="font-size: 13px;">R$ 150/mês + 23%</span>
+          </div>
+          <div class="row" style="margin-bottom: 10px;">
+            <span class="customer" style="font-size: 13px; font-weight: 600;">⚪ Loja do Lavador · Própria</span>
+            <span class="price" style="font-size: 13px;">R$ 110/mês + 15%</span>
+          </div>
+          <div class="row" style="margin-bottom: 10px;">
+            <span class="customer" style="font-size: 13px; font-weight: 600;">⚪ Loja do Cliente · Integrada</span>
+            <span class="price" style="font-size: 13px;">R$ 59/mês + 18%</span>
+          </div>
+          <div class="row">
+            <span class="customer" style="font-size: 13px; font-weight: 600;">⚪ Loja do Cliente · Própria</span>
+            <span class="price" style="font-size: 13px;">R$ 29/mês + 12%</span>
+          </div>
         </div>
 
         <div class="section-title">Regras de cobrança</div>
         <div class="order-card">
-          <div class="customer" style="font-size: 14px;">Mensalidade só é cobrada se você ultrapassar o piso mínimo de faturamento.</div>
-          <div class="address" style="margin-top: 8px;">Piso atual: R$ 1.800,00/mês</div>
-          <div class="address">Seu faturamento: R$ 2.450,80</div>
+          <div class="customer" style="font-size: 14px;">A mensalidade e a comissão exibidas correspondem ao tipo de loja (Loja do Lavador) e à modalidade de logística escolhida.</div>
+          <div class="address" style="margin-top: 8px;">Plano atual: Logística Integrada</div>
+          <div class="address" style="color:#00F2C2; font-weight:700;">R$ 150/mês + 23%</div>
         </div>
       </div>
       <div class="nav-float">

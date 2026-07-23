@@ -31,6 +31,7 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
   bool _hasPhoto = false;
   bool _submitting = false;
   String? _errorMessage;
+  bool _catalogTargetInitialized = false;
 
   @override
   void dispose() {
@@ -39,6 +40,17 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
     _priceController.dispose();
     _stockController.dispose();
     super.dispose();
+  }
+
+  /// Pre-seleciona o destino do catalogo de acordo com o [StoreType] da
+  /// loja logada (Lavador -> Loja do Lavador, Cliente -> Loja do Cliente),
+  /// para manter a sugestao de produtos coerente com o tipo de loja.
+  void _initCatalogTargetFromStoreType(StoreType storeType) {
+    if (_catalogTargetInitialized) return;
+    _catalogTargetInitialized = true;
+    _catalogTarget = storeType == StoreType.lavador
+        ? CatalogTarget.lojaLavador
+        : CatalogTarget.lojaCliente;
   }
 
   Future<void> _submit() async {
@@ -83,6 +95,15 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authProvider);
+    final storeType = authState.maybeWhen(
+      authenticated: (user) => user.storeType,
+      orElse: () => null,
+    );
+    if (storeType != null) {
+      _initCatalogTargetFromStoreType(storeType);
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('Cadastrar produto')),
@@ -100,6 +121,29 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
                         color: AppColors.textSecondary,
                       ),
                 ),
+                if (storeType != null) ...[
+                  const SizedBox(height: 12),
+                  NeonSurface(
+                    padding: const EdgeInsets.all(14),
+                    backgroundColor: AppColors.primaryContainer,
+                    borderColor: AppColors.primary.withValues(alpha: 0.3),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.lightbulb_outline_rounded, color: AppColors.primary, size: 20),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Sua loja é ${storeType.label}. ${storeType.examplesLabel}',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: AppColors.textPrimary,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 16),
                 _PhotoPicker(
                   hasPhoto: _hasPhoto,
