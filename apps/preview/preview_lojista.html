@@ -70,14 +70,26 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
 .input-field { width: 100%; padding: 14px 16px; border-radius: 14px; border: 1px solid rgba(148,163,255,0.12); background: rgba(13,18,36,0.6); color: #fff; font-size: 14px; margin-bottom: 12px; }
 .input-field::placeholder { color: #4a5578; }
 .subtitle-sm { font-size: 12px; color: #8b9bb4; margin-bottom: 12px; }
+.top-bar { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; max-width: 1600px; margin: 0 auto 20px; width: 100%; }
+.top-bar a { color: #00F2C2; text-decoration: none; font-size: 14px; font-weight: 700; padding: 8px 16px; border: 1px solid rgba(0,242,194,0.3); border-radius: 20px; }
+.top-bar a:hover { background: rgba(0,242,194,0.08); }
+.phone-label { text-align: center; font-size: 13px; font-weight: 700; color: #9d4edd; margin-bottom: 10px; letter-spacing: 0.5px; }
+.phone-wrap { display: flex; flex-direction: column; align-items: center; }
+.nav-float a.nav-item { text-decoration: none; display: flex; flex-direction: column; align-items: center; cursor: pointer; flex: 1; }
 </style>
 </head>
 <body>
+<div class="top-bar">
+  <a href="index.html">‹ Voltar ao portal</a>
+  <a href="index.html">Ver todos os previews</a>
+</div>
 <div class="app-container">
   <!-- Cadastro da Loja (2 modalidades) -->
+  <div class="phone-wrap" id="cadastro-loja">
+    <div class="phone-label">Cadastro da Loja</div>
   <div class="phone">
     <div class="screen">
-      <div class="status"><span class="time">9:41</span><span style="font-size:14px;">‹ Cadastrar minha loja</span></div>
+      <div class="status"><a href="#home" style="color:#c77dff;text-decoration:none;">‹</a><span class="time">9:41</span><span style="font-size:14px;">Cadastrar minha loja</span></div>
       <div class="content">
         <div class="section-title" style="margin-top: 16px;">Dados da loja</div>
         <input class="input-field" type="text" placeholder="Nome da loja" value="AutoLimpeza SP">
@@ -120,12 +132,15 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
           </div>
         </div>
 
-        <button class="btn btn-primary btn-block" style="padding: 16px; margin-top: 8px;">Criar minha loja</button>
+        <button class="btn btn-primary btn-block" style="padding: 16px; margin-top: 8px;" onclick="location.hash='#home'">Criar minha loja</button>
       </div>
     </div>
   </div>
+  </div>
 
   <!-- Home do Lojista -->
+  <div class="phone-wrap" id="home">
+    <div class="phone-label">Home</div>
   <div class="phone">
     <div class="screen">
       <div class="status">
@@ -162,7 +177,7 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
           </div>
         </div>
 
-        <div class="section-title">Pedidos recentes</div>
+        <div class="section-title" id="pedidos">Pedidos recentes</div>
         <div class="order-card">
           <div class="row">
             <span class="customer">Shampoo Automotivo 5L</span>
@@ -185,21 +200,25 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
           <div class="services">Status: Entregue</div>
         </div>
 
-        <button class="btn btn-primary btn-block">+ Cadastrar novo produto</button>
+        <a class="btn btn-primary btn-block" href="#cadastro-produto" style="text-decoration:none; text-align:center; display:block;">+ Cadastrar novo produto</a>
       </div>
       <div class="nav-float">
-        <div class="nav-item active"><div class="nav-icon">🏠</div>Home</div>
-        <div class="nav-item"><div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M19 6h-2c0-2.76-2.24-5-5-5S7 3.24 7 6H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-7-3c1.66 0 3 1.34 3 3H9c0-1.66 1.34-3 3-3zm7 17H5V8h2v2h2V8h8v2h2V8h2v12z"/></svg></div>Produtos</div>
-        <div class="nav-item"><div class="nav-icon">📦</div>Pedidos</div>
-        <div class="nav-item"><div class="nav-icon">👤</div>Perfil</div>
+        <a class="nav-item active" href="#home"><div class="nav-icon">🏠</div>Home</a>
+        <a class="nav-item" href="#meus-produtos"><div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M19 6h-2c0-2.76-2.24-5-5-5S7 3.24 7 6H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-7-3c1.66 0 3 1.34 3 3H9c0-1.66 1.34-3 3-3zm7 17H5V8h2v2h2V8h8v2h2V8h2v12z"/></svg></div>Produtos</a>
+        <a class="nav-item" href="#home"><div class="nav-icon">📦</div>Pedidos</a>
+        <a class="nav-item" href="#plano"><div class="nav-icon">👤</div>Perfil</a>
       </div>
     </div>
   </div>
+  </div>
 
   <!-- Cadastro de Produto -->
+  <div class="phone-wrap" id="cadastro-produto">
+    <div class="phone-label">Cadastro de Produto</div>
   <div class="phone">
     <div class="screen">
       <div class="status">
+        <a href="#home" style="color:#c77dff;text-decoration:none;">‹</a>
         <span class="time">9:41</span>
       </div>
       <div class="header">
@@ -249,12 +268,15 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
           <p>Produto aparece nos dois catálogos.</p>
         </div>
 
-        <button class="btn btn-primary btn-block">Enviar para análise</button>
+        <a class="btn btn-primary btn-block" href="#meus-produtos" style="text-decoration:none; text-align:center; display:block;">Enviar para análise</a>
       </div>
     </div>
   </div>
+  </div>
 
   <!-- Meus Produtos -->
+  <div class="phone-wrap" id="meus-produtos">
+    <div class="phone-label">Meus Produtos</div>
   <div class="phone">
     <div class="screen">
       <div class="status">
@@ -301,18 +323,21 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
           <div class="address">Motivo: Foto fora dos padrões</div>
         </div>
 
-        <button class="btn btn-primary btn-block">+ Novo produto</button>
+        <a class="btn btn-primary btn-block" href="#cadastro-produto" style="text-decoration:none; text-align:center; display:block;">+ Novo produto</a>
       </div>
       <div class="nav-float">
-        <div class="nav-item"><div class="nav-icon">🏠</div>Home</div>
-        <div class="nav-item active"><div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M19 6h-2c0-2.76-2.24-5-5-5S7 3.24 7 6H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-7-3c1.66 0 3 1.34 3 3H9c0-1.66 1.34-3 3-3zm7 17H5V8h2v2h2V8h8v2h2V8h2v12z"/></svg></div>Produtos</div>
-        <div class="nav-item"><div class="nav-icon">📦</div>Pedidos</div>
-        <div class="nav-item"><div class="nav-icon">👤</div>Perfil</div>
+        <a class="nav-item" href="#home"><div class="nav-icon">🏠</div>Home</a>
+        <a class="nav-item active" href="#meus-produtos"><div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M19 6h-2c0-2.76-2.24-5-5-5S7 3.24 7 6H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-7-3c1.66 0 3 1.34 3 3H9c0-1.66 1.34-3 3-3zm7 17H5V8h2v2h2V8h8v2h2V8h2v12z"/></svg></div>Produtos</a>
+        <a class="nav-item" href="#home"><div class="nav-icon">📦</div>Pedidos</a>
+        <a class="nav-item" href="#plano"><div class="nav-icon">👤</div>Perfil</a>
       </div>
     </div>
   </div>
+  </div>
 
   <!-- Escolha de Plano -->
+  <div class="phone-wrap" id="plano">
+    <div class="phone-label">Perfil / Plano</div>
   <div class="phone">
     <div class="screen">
       <div class="status">
@@ -344,12 +369,13 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
         </div>
       </div>
       <div class="nav-float">
-        <div class="nav-item"><div class="nav-icon">🏠</div>Home</div>
-        <div class="nav-item"><div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M19 6h-2c0-2.76-2.24-5-5-5S7 3.24 7 6H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-7-3c1.66 0 3 1.34 3 3H9c0-1.66 1.34-3 3-3zm7 17H5V8h2v2h2V8h8v2h2V8h2v12z"/></svg></div>Produtos</div>
-        <div class="nav-item"><div class="nav-icon">📦</div>Pedidos</div>
-        <div class="nav-item active"><div class="nav-icon">👤</div>Perfil</div>
+        <a class="nav-item" href="#home"><div class="nav-icon">🏠</div>Home</a>
+        <a class="nav-item" href="#meus-produtos"><div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M19 6h-2c0-2.76-2.24-5-5-5S7 3.24 7 6H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-7-3c1.66 0 3 1.34 3 3H9c0-1.66 1.34-3 3-3zm7 17H5V8h2v2h2V8h8v2h2V8h2v12z"/></svg></div>Produtos</a>
+        <a class="nav-item" href="#home"><div class="nav-icon">📦</div>Pedidos</a>
+        <a class="nav-item active" href="#plano"><div class="nav-icon">👤</div>Perfil</a>
       </div>
     </div>
+  </div>
   </div>
 </div>
 </body>

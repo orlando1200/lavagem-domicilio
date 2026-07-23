@@ -42,6 +42,25 @@ td { padding: 14px 12px; border-bottom: 1px solid rgba(148,163,255,0.06); }
 .status-progress { background: rgba(157,78,221,0.12); color: #9D4EDD; }
 .status-cancelled { background: rgba(255,107,107,0.12); color: #ff6b6b; }
 .btn-sm { padding: 8px 14px; border-radius: 8px; border: none; background: linear-gradient(90deg, #00d9ae 0%, #00F2C2 100%); color: #050811; font-size: 12px; font-weight: 800; cursor: pointer; }
+.nav-item { text-decoration: none; }
+.nav-item, .nav-item:visited { color: #8b9bb4; }
+.top-link { color: #00F2C2; text-decoration: none; font-size: 13px; font-weight: 700; padding: 8px 14px; border: 1px solid rgba(0,242,194,0.3); border-radius: 20px; }
+.top-link:hover { background: rgba(0,242,194,0.08); }
+.section-panel { display: none; }
+.section-panel:target { display: block; }
+#dashboard-panel { display: block; }
+#pedidos:target ~ #dashboard-panel,
+#clientes:target ~ #dashboard-panel,
+#lavadores:target ~ #dashboard-panel,
+#marketplace:target ~ #dashboard-panel,
+#servicos:target ~ #dashboard-panel,
+#cupons:target ~ #dashboard-panel,
+#zonas:target ~ #dashboard-panel,
+#financeiro:target ~ #dashboard-panel,
+#fidelidade:target ~ #dashboard-panel,
+#configuracoes:target ~ #dashboard-panel { display: none; }
+.empty-panel { background: linear-gradient(180deg, rgba(13,18,36,0.98) 0%, rgba(10,14,28,0.98) 100%); border: 1px solid rgba(148,163,255,0.12); border-radius: 16px; padding: 40px; text-align: center; color: #8b9bb4; }
+.empty-panel h2 { color: #fff; font-size: 20px; margin-bottom: 10px; }
 @media (max-width: 1200px) {
   .kpis { grid-template-columns: repeat(2, 1fr); }
   .charts { grid-template-columns: 1fr; }
@@ -60,17 +79,17 @@ td { padding: 14px 12px; border-bottom: 1px solid rgba(148,163,255,0.06); }
       <span>GIUCAR</span>
     </div>
     <nav>
-      <div class="nav-item active">📊 Dashboard</div>
-      <div class="nav-item">📋 Pedidos</div>
-      <div class="nav-item">👥 Clientes</div>
-      <div class="nav-item">🧤 Lavadores</div>
-      <div class="nav-item">🏪 Marketplace</div>
-      <div class="nav-item">🧼 Serviços</div>
-      <div class="nav-item">🏷️ Cupons</div>
-      <div class="nav-item">🗺️ Zonas</div>
-      <div class="nav-item">💰 Financeiro</div>
-      <div class="nav-item">🎁 Fidelidade</div>
-      <div class="nav-item">⚙️ Configurações</div>
+      <a class="nav-item active" href="#dashboard-panel">📊 Dashboard</a>
+      <a class="nav-item" href="#pedidos">📋 Pedidos</a>
+      <a class="nav-item" href="#clientes">👥 Clientes</a>
+      <a class="nav-item" href="#lavadores">🧤 Lavadores</a>
+      <a class="nav-item" href="#marketplace">🏪 Marketplace</a>
+      <a class="nav-item" href="#servicos">🧼 Serviços</a>
+      <a class="nav-item" href="#cupons">🏷️ Cupons</a>
+      <a class="nav-item" href="#zonas">🗺️ Zonas</a>
+      <a class="nav-item" href="#financeiro">💰 Financeiro</a>
+      <a class="nav-item" href="#fidelidade">🎁 Fidelidade</a>
+      <a class="nav-item" href="#configuracoes">⚙️ Configurações</a>
     </nav>
   </aside>
 
@@ -78,12 +97,14 @@ td { padding: 14px 12px; border-bottom: 1px solid rgba(148,163,255,0.06); }
     <header class="topbar">
       <h1>Dashboard</h1>
       <div class="user">
+        <a class="top-link" href="index.html">‹ Voltar ao portal</a>
         <span>Admin</span>
         <div class="avatar">A</div>
       </div>
     </header>
 
     <section class="dashboard">
+      <div class="section-panel" id="dashboard-panel">
       <div class="kpis">
         <div class="kpi">
           <div class="label">Pedidos hoje</div>
@@ -172,6 +193,78 @@ td { padding: 14px 12px; border-bottom: 1px solid rgba(148,163,255,0.06); }
           </tbody>
         </table>
       </div>
+      </div>
+
+      <div class="section-panel" id="pedidos">
+        <div class="empty-panel">
+          <h2>📋 Pedidos</h2>
+          <p>Listagem completa de pedidos em desenvolvimento. Consulte "Pedidos recentes" no Dashboard.</p>
+        </div>
+      </div>
+
+      <div class="section-panel" id="clientes">
+        <div class="empty-panel">
+          <h2>👥 Clientes</h2>
+          <p>Gestão de clientes em desenvolvimento.</p>
+        </div>
+      </div>
+
+      <div class="section-panel" id="lavadores">
+        <div class="empty-panel">
+          <h2>🧤 Lavadores</h2>
+          <p>Gestão de lavadores parceiros em desenvolvimento.</p>
+        </div>
+      </div>
+
+      <div class="section-panel" id="marketplace">
+        <div class="empty-panel">
+          <h2>🏪 Marketplace</h2>
+          <p>Gestão de lojas e produtos do marketplace em desenvolvimento.</p>
+        </div>
+      </div>
+
+      <div class="section-panel" id="servicos">
+        <div class="empty-panel">
+          <h2>🧼 Serviços</h2>
+          <p>Catálogo de tipos de lavagem e preços em desenvolvimento.</p>
+        </div>
+      </div>
+
+      <div class="section-panel" id="cupons">
+        <div class="empty-panel">
+          <h2>🏷️ Cupons</h2>
+          <p>Gestão de cupons e promoções em desenvolvimento.</p>
+        </div>
+      </div>
+
+      <div class="section-panel" id="zonas">
+        <div class="empty-panel">
+          <h2>🗺️ Zonas</h2>
+          <p>Configuração de zonas de atendimento em desenvolvimento.</p>
+        </div>
+      </div>
+
+      <div class="section-panel" id="financeiro">
+        <div class="empty-panel">
+          <h2>💰 Financeiro</h2>
+          <p>Relatórios financeiros e repasses em desenvolvimento.</p>
+        </div>
+      </div>
+
+      <div class="section-panel" id="fidelidade">
+        <div class="empty-panel">
+          <h2>🎁 Fidelidade</h2>
+          <p>Programa de fidelidade e recompensas em desenvolvimento.</p>
+        </div>
+      </div>
+
+      <div class="section-panel" id="configuracoes">
+        <div class="empty-panel">
+          <h2>⚙️ Configurações</h2>
+          <p>Configurações gerais da plataforma em desenvolvimento.</p>
+        </div>
+      </div>
+
     </section>
   </main>
 </div>
