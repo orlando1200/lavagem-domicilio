@@ -1,0 +1,68 @@
+# Git
+.git
+.gitignore
+.github
+
+# Node
+node_modules
+**/node_modules
+.pnpm-store
+
+# Build outputs
+dist
+**/dist
+.next
+**/.next
+out
+**/out
+build
+**/build
+
+# Logs
+*.log
+logs
+**/*.log
+
+# Test coverage
+coverage
+**/coverage
+.nyc_output
+
+# Environment files (sensitive)
+.env
+.env.*
+!.env.example
+!.env.docker.example
+
+# IDE / OS
+.idea
+.vscode
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Documentation (not needed for runtime)
+docs
+*.md
+!README.md
+
+# Mobile apps (not built in these images)
+apps/mobile-client
+apps/mobile-driver
+
+# Prisma (keep schema and migrations, ignore generated client if any local copy)
+# Note: generated client is recreated inside the container
+**/prisma/generated
+
+# Misc
+.turbo
+.cache
+tmp
+temp
+

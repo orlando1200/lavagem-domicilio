@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GIUCAR - App Cliente</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at top, #10253d 0%, #071224 45%, #030814 100%); min-height: 100vh; display: flex; justify-content: center; padding: 36px; color: #fff; }
+.app-container { display: flex; gap: 60px; justify-content: center; flex-wrap: wrap; align-items: flex-start; }
+.phone { width: 360px; height: 780px; background: linear-gradient(180deg, #0b0f22 0%, #09061a 100%); border-radius: 50px; padding: 12px; box-shadow: 0 0 0 1px rgba(0,255,255,0.08), 0 30px 80px rgba(0,0,0,0.72), inset 0 0 0 1px rgba(157,78,221,0.12); position: relative; overflow: hidden; }
+.phone::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 132px; height: 28px; background: #09061a; border-radius: 0 0 18px 18px; z-index: 10; }
+.screen { width: 100%; height: 100%; border-radius: 38px; overflow: hidden; position: relative; display: flex; flex-direction: column; background: linear-gradient(180deg, #070b1b 0%, #050816 100%); border: 1px solid rgba(157,78,221,0.18); }
+.status { height: 44px; display: flex; justify-content: space-between; align-items: center; padding: 0 26px; font-size: 14px; font-weight: 600; color: #c77dff; }
+.status .time { color: #c77dff; font-size: 15px; font-weight: 700; }
+.status .battery { display: flex; align-items: center; gap: 5px; }
+.status .battery-bar { width: 22px; height: 11px; border: 1.5px solid #00f5d4; border-radius: 3px; position: relative; }
+.status .battery-bar::after { content: ''; position: absolute; right: -4px; top: 50%; transform: translateY(-50%); width: 2px; height: 5px; background: #00f5d4; border-radius: 0 1px 1px 0; }
+.status .battery-fill { position: absolute; left: 1.5px; top: 1.5px; bottom: 1.5px; width: 65%; background: #00f5d4; border-radius: 1px; }
+.page { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.page-header { padding: 58px 24px 20px; background: linear-gradient(135deg, #1a0b2e 0%, #0d1a30 50%, #050816 100%); }
+.page-header h2 { font-size: 22px; font-weight: 700; color: #fff; }
+.page-header .subtitle { color: #9d4edd; font-size: 14px; margin-top: 4px; font-weight: 500; }
+.content { flex: 1; padding: 20px 16px; overflow-y: auto; }
+.card-neon { background: #0b1020; border: 1px solid #1a2342; border-radius: 20px; padding: 18px; margin-bottom: 16px; }
+.card-neon .card-header { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+.card-neon .icon-box { width: 44px; height: 44px; border-radius: 12px; background: rgba(0,245,212,0.08); border: 1px solid rgba(0,245,212,0.15); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.card-neon h3 { font-size: 14px; font-weight: 700; color: #fff; }
+.card-neon p { color: #9d4edd; font-size: 12px; margin-top: 2px; }
+.progress-bar { height: 8px; background: #121a30; border-radius: 4px; overflow: hidden; margin-top: 10px; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, #00f5d4, #00e5ff); border-radius: 4px; box-shadow: 0 0 8px rgba(0,245,212,0.4); }
+.quick-actions { display: flex; justify-content: space-between; margin: 20px 4px; }
+.quick-action { text-align: center; }
+.qa-icon { width: 58px; height: 58px; border-radius: 16px; background: rgba(157,78,221,0.08); border: 1px solid rgba(157,78,221,0.2); display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 8px; }
+.quick-action span { font-size: 11px; color: #9d4edd; font-weight: 500; }
+.promo { background: linear-gradient(135deg, #00c6ff 0%, #9d4edd 100%); border-radius: 20px; padding: 20px; display: flex; align-items: center; justify-content: space-between; margin: 16px 0; }
+.promo-text h3 { color: #fff; font-size: 16px; font-weight: 800; }
+.promo-text p { color: rgba(255,255,255,0.85); font-size: 13px; margin-top: 4px; }
+.promo-btn { background: #fff; color: #050816; border: none; padding: 10px 20px; border-radius: 20px; font-weight: 800; font-size: 13px; }
+.nav-float { margin: 16px; background: #0b1020; border: 1px solid #1a2342; border-radius: 24px; padding: 10px 16px; display: flex; justify-content: space-around; align-items: center; }
+.nav-item { color: #4a5578; font-size: 11px; text-align: center; font-weight: 500; }
+.nav-item.active { color: #00f5d4; }
+.nav-icon { font-size: 22px; margin-bottom: 2px; }
+
+/* Pedidos */
+.order-card { background: #0b1020; border: 1px solid #1a2342; border-radius: 16px; padding: 16px; margin-bottom: 12px; }
+.order-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.order-code { font-family: monospace; font-size: 12px; color: #00f5d4; }
+.order-status { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 12px; text-transform: uppercase; }
+.status-completed { background: rgba(0,245,212,0.12); color: #00f5d4; }
+.status-in-progress { background: rgba(0,198,255,0.12); color: #00c6ff; }
+.status-pending { background: rgba(255,47,207,0.12); color: #ff2fcf; }
+.order-info { font-size: 13px; color: #9d4edd; margin-bottom: 4px; }
+.order-price { font-size: 16px; font-weight: 800; color: #fff; margin-top: 8px; }
+
+/* Serviços */
+.service-card { display: flex; gap: 14px; background: #0b1020; border: 1px solid #1a2342; border-radius: 18px; padding: 16px; margin-bottom: 12px; }
+.service-icon { width: 56px; height: 56px; border-radius: 14px; background: linear-gradient(135deg, #00c6ff 0%, #9d4edd 100%); display: flex; align-items: center; justify-content: center; font-size: 28px; flex-shrink: 0; }
+.service-content { flex: 1; }
+.service-title { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+.service-desc { font-size: 12px; color: #9d4edd; margin-bottom: 8px; }
+.service-meta { display: flex; justify-content: space-between; align-items: center; }
+.service-price { font-size: 16px; font-weight: 800; color: #00f5d4; }
+.service-duration { font-size: 11px; color: #4a5578; }
+
+/* Veículos */
+.vehicle-card { display: flex; align-items: center; gap: 14px; background: #0b1020; border: 1px solid #1a2342; border-radius: 18px; padding: 16px; margin-bottom: 12px; }
+.vehicle-icon { width: 56px; height: 56px; border-radius: 14px; background: rgba(157,78,221,0.12); border: 1px solid rgba(157,78,221,0.25); display: flex; align-items: center; justify-content: center; font-size: 28px; }
+.vehicle-info { flex: 1; }
+.vehicle-name { font-size: 15px; font-weight: 700; color: #fff; }
+.vehicle-detail { font-size: 12px; color: #9d4edd; margin-top: 2px; }
+.vehicle-badge { font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 10px; background: rgba(0,245,212,0.1); color: #00f5d4; }
+.add-btn { width: 100%; padding: 16px; border-radius: 16px; border: 1px dashed rgba(0,245,212,0.3); background: transparent; color: #00f5d4; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 8px; }
+
+/* Perfil */
+.profile-header { display: flex; flex-direction: column; align-items: center; padding: 30px 20px; background: linear-gradient(135deg, #1a0b2e 0%, #0d1a30 50%, #050816 100%); }
+.profile-avatar { width: 90px; height: 90px; border-radius: 50%; background: linear-gradient(135deg, #00c6ff 0%, #9d4edd 100%); display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 800; color: #fff; margin-bottom: 14px; box-shadow: 0 0 30px rgba(0,198,255,0.2); }
+.profile-name { font-size: 20px; font-weight: 700; color: #fff; }
+.profile-email { font-size: 13px; color: #9d4edd; margin-top: 4px; }
+.profile-stats { display: flex; justify-content: space-around; padding: 20px 0; }
+.profile-stat { text-align: center; }
+.profile-stat-value { font-size: 22px; font-weight: 800; color: #00f5d4; }
+.profile-stat-label { font-size: 11px; color: #4a5578; margin-top: 4px; }
+.menu-item { display: flex; align-items: center; gap: 14px; padding: 16px; background: #0b1020; border: 1px solid #1a2342; border-radius: 14px; margin-bottom: 10px; }
+.menu-item-icon { width: 40px; height: 40px; border-radius: 10px; background: rgba(0,245,212,0.08); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.menu-item-text { flex: 1; }
+.menu-item-title { font-size: 14px; font-weight: 600; color: #fff; }
+.menu-item-subtitle { font-size: 12px; color: #4a5578; margin-top: 2px; }
+.menu-item-arrow { color: #4a5578; font-size: 14px; }
+
+/* Login / Splash */
+.login-screen { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px; text-align: center; background: linear-gradient(180deg, #070b1b 0%, #050816 100%); }
+.login-logo { width: 140px; height: 140px; object-fit: contain; margin-bottom: 24px; filter: drop-shadow(0 0 24px rgba(0,245,212,0.25)); }
+.login-screen h1 { font-size: 32px; font-weight: 900; color: #fff; letter-spacing: 2px; margin-bottom: 6px; }
+.login-screen .tagline { font-size: 14px; color: #9d4edd; margin-bottom: 40px; }
+.login-screen .input { width: 100%; padding: 16px; border-radius: 14px; border: 1px solid rgba(157,78,221,0.25); background: rgba(13,18,36,0.6); color: #fff; font-size: 14px; margin-bottom: 12px; outline: none; }
+.login-screen .input::placeholder { color: #4a5578; }
+.login-screen .input:focus { border-color: #00f5d4; }
+.login-screen .login-btn { width: 100%; padding: 16px; border-radius: 14px; border: none; background: linear-gradient(90deg, #00f5d4 0%, #00c6ff 100%); color: #050816; font-size: 15px; font-weight: 800; margin-top: 8px; cursor: pointer; box-shadow: 0 0 20px rgba(0,245,212,0.2); }
+.login-screen .login-footer { margin-top: 20px; font-size: 12px; color: #4a5578; }
+.login-screen .login-footer a { color: #00f5d4; text-decoration: none; font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="app-container">
+
+  <!-- LOGIN / SPLASH -->
+  <div class="phone">
+    <div class="screen">
+      <div class="status"><span class="time">9:41</span></div>
+      <div class="login-screen">
+        <img src="assets/logo_giucar.png" alt="GIUCAR" class="login-logo">
+        <h1>GIUCAR</h1>
+        <div class="tagline">Lavagem a domicílio</div>
+        <input class="input" type="text" placeholder="E-mail ou CPF" value="orlando.silva@email.com">
+        <input class="input" type="password" placeholder="Senha" value="••••••••">
+        <button class="login-btn">Entrar</button>
+        <div class="login-footer">Ainda não tem conta? <a href="#">Cadastre-se</a></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOME -->
+  <div class="phone">
+    <div class="screen">
+      <div class="status">
+        <span class="time">9:41</span>
+        <div class="battery"><div class="battery-bar"><div class="battery-fill"></div></div></div>
+      </div>
+      <div class="page">
+        <div class="page-header">
+          <h2>Olá, Orlando!</h2>
+          <div class="subtitle">Bem-vindo de volta</div>
+        </div>
+        <div class="content">
+          <div class="card-neon">
+            <div class="card-header">
+              <div class="icon-box">🏆</div>
+              <div>
+                <h3>Seu progresso de fidelidade</h3>
+                <p>245 pontos · faltam 55 para o próximo cupom</p>
+              </div>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width: 82%"></div></div>
+          </div>
+
+          <div class="quick-actions">
+            <div class="quick-action"><div class="qa-icon">🚗</div><span>Lavagem</span></div>
+            <div class="quick-action"><div class="qa-icon">🚙</div><span>Veículos</span></div>
+            <div class="quick-action"><div class="qa-icon">📍</div><span>Endereços</span></div>
+            <div class="quick-action"><div class="qa-icon">🎁</div><span>Rewards</span></div>
+          </div>
+
+          <div class="promo">
+            <div class="promo-text">
+              <h3>Primeira lavagem</h3>
+              <p>20% de desconto!</p>
+            </div>
+            <button class="promo-btn">Ver oferta</button>
+          </div>
+
+          <h3 style="font-size:14px; margin: 20px 4px 12px; color:#fff;">Último pedido</h3>
+          <div class="order-card">
+            <div class="order-card-header">
+              <span class="order-code">#LDO-ABCD123</span>
+              <span class="order-status status-completed">Concluído</span>
+            </div>
+            <div class="order-info">Lavagem Premium · Honda Civic</div>
+            <div class="order-info">Hoje, 14:30 · Rua Augusta, 150</div>
+            <div class="order-price">R$ 89,90</div>
+          </div>
+        </div>
+        <div class="nav-float">
+          <div class="nav-item active"><div class="nav-icon">🏠</div>Home</div>
+          <div class="nav-item"><div class="nav-icon">📋</div>Pedidos</div>
+          <div class="nav-item"><div class="nav-icon">👤</div>Perfil</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PEDIDOS -->
+  <div class="phone">
+    <div class="screen">
+      <div class="status">
+        <span class="time">9:41</span>
+        <div class="battery"><div class="battery-bar"><div class="battery-fill"></div></div></div>
+      </div>
+      <div class="page">
+        <div class="page-header">
+          <h2>Meus Pedidos</h2>
+          <div class="subtitle">Histórico de lavagens</div>
+        </div>
+        <div class="content">
+          <div class="order-card">
+            <div class="order-card-header">
+              <span class="order-code">#LDO-ABCD123</span>
+              <span class="order-status status-in-progress">Em andamento</span>
+            </div>
+            <div class="order-info">Lavagem Premium · Honda Civic</div>
+            <div class="order-info">Hoje, 14:30 · Rua Augusta, 150</div>
+            <div class="order-price">R$ 89,90</div>
+          </div>
+
+          <div class="order-card">
+            <div class="order-card-header">
+              <span class="order-code">#LDO-WXYZ789</span>
+              <span class="order-status status-completed">Concluído</span>
+            </div>
+            <div class="order-info">Lavagem Express · Toyota Corolla</div>
+            <div class="order-info">Ontem, 10:00 · Av. Paulista, 1000</div>
+            <div class="order-price">R$ 59,90</div>
+          </div>
+
+          <div class="order-card">
+            <div class="order-card-header">
+              <span class="order-code">#LDO-QWER456</span>
+              <span class="order-status status-completed">Concluído</span>
+            </div>
+            <div class="order-info">Lavagem Detalhada · Jeep Compass</div>
+            <div class="order-info">15/07, 16:00 · Rua Oscar Freire, 88</div>
+            <div class="order-price">R$ 149,90</div>
+          </div>
+
+          <div class="order-card">
+            <div class="order-card-header">
+              <span class="order-code">#LDO-TYUI321</span>
+              <span class="order-status status-pending">Pendente</span>
+            </div>
+            <div class="order-info">Lavagem Premium · BMW X3</div>
+            <div class="order-info">Amanhã, 09:00 · Alameda Santos, 700</div>
+            <div class="order-price">R$ 129,90</div>
+          </div>
+        </div>
+        <div class="nav-float">
+          <div class="nav-item"><div class="nav-icon">🏠</div>Home</div>
+          <div class="nav-item active"><div class="nav-icon">📋</div>Pedidos</div>
+          <div class="nav-item"><div class="nav-icon">👤</div>Perfil</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TIPOS DE LAVAGEM -->
+  <div class="phone">
+    <div class="screen">
+      <div class="status">
+        <span class="time">9:41</span>
+        <div class="battery"><div class="battery-bar"><div class="battery-fill"></div></div></div>
+      </div>
+      <div class="page">
+        <div class="page-header">
+          <h2>Tipos de Lavagem</h2>
+          <div class="subtitle">Escolha o serviço ideal</div>
+        </div>
+        <div class="content">
+          <div class="service-card">
+            <div class="service-icon">⚡</div>
+            <div class="service-content">
+              <div class="service-title">Lavagem Express</div>
+              <div class="service-desc">Limpeza rápida externa para o dia a dia</div>
+              <div class="service-meta">
+                <span class="service-price">R$ 59,90</span>
+                <span class="service-duration">30 min</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="service-card">
+            <div class="service-icon">✨</div>
+            <div class="service-content">
+              <div class="service-title">Lavagem Premium</div>
+              <div class="service-desc">Externa completa + aspiração e painel</div>
+              <div class="service-meta">
+                <span class="service-price">R$ 89,90</span>
+                <span class="service-duration">60 min</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="service-card">
+            <div class="service-icon">🪣</div>
+            <div class="service-content">
+              <div class="service-title">Lavagem Detalhada</div>
+              <div class="service-desc">Limpeza profunda interna e externa</div>
+              <div class="service-meta">
+                <span class="service-price">R$ 149,90</span>
+                <span class="service-duration">120 min</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="service-card">
+            <div class="service-icon">🛡️</div>
+            <div class="service-content">
+              <div class="service-title">Cristalização de Pintura</div>
+              <div class="service-desc">Proteção e brilho duradouro</div>
+              <div class="service-meta">
+                <span class="service-price">R$ 199,90</span>
+                <span class="service-duration">180 min</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-float">
+          <div class="nav-item"><div class="nav-icon">🏠</div>Home</div>
+          <div class="nav-item"><div class="nav-icon">📋</div>Pedidos</div>
+          <div class="nav-item"><div class="nav-icon">👤</div>Perfil</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AUTOS CADASTRADOS -->
+  <div class="phone">
+    <div class="screen">
+      <div class="status">
+        <span class="time">9:41</span>
+        <div class="battery"><div class="battery-bar"><div class="battery-fill"></div></div></div>
+      </div>
+      <div class="page">
+        <div class="page-header">
+          <h2>Meus Veículos</h2>
+          <div class="subtitle">Autos cadastrados</div>
+        </div>
+        <div class="content">
+          <div class="vehicle-card">
+            <div class="vehicle-icon">🚗</div>
+            <div class="vehicle-info">
+              <div class="vehicle-name">Honda Civic</div>
+              <div class="vehicle-detail">Sedan · Prata · ABC-1234</div>
+            </div>
+            <span class="vehicle-badge">Padrão</span>
+          </div>
+
+          <div class="vehicle-card">
+            <div class="vehicle-icon">🚙</div>
+            <div class="vehicle-info">
+              <div class="vehicle-name">Toyota Corolla</div>
+              <div class="vehicle-detail">Sedan · Preto · XYZ-9876</div>
+            </div>
+          </div>
+
+          <div class="vehicle-card">
+            <div class="vehicle-icon">🚘</div>
+            <div class="vehicle-info">
+              <div class="vehicle-name">Jeep Compass</div>
+              <div class="vehicle-detail">SUV · Branco · QWE-4567</div>
+            </div>
+          </div>
+
+          <button class="add-btn">+ Adicionar novo veículo</button>
+        </div>
+        <div class="nav-float">
+          <div class="nav-item"><div class="nav-icon">🏠</div>Home</div>
+          <div class="nav-item"><div class="nav-icon">📋</div>Pedidos</div>
+          <div class="nav-item"><div class="nav-icon">👤</div>Perfil</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PERFIL -->
+  <div class="phone">
+    <div class="screen">
+      <div class="status">
+        <span class="time">9:41</span>
+        <div class="battery"><div class="battery-bar"><div class="battery-fill"></div></div></div>
+      </div>
+      <div class="page">
+        <div class="profile-header">
+          <div class="profile-avatar">O</div>
+          <div class="profile-name">Orlando Silva</div>
+          <div class="profile-email">orlando@email.com</div>
+        </div>
+        <div class="content">
+          <div class="profile-stats">
+            <div class="profile-stat">
+              <div class="profile-stat-value">12</div>
+              <div class="profile-stat-label">Lavagens</div>
+            </div>
+            <div class="profile-stat">
+              <div class="profile-stat-value">245</div>
+              <div class="profile-stat-label">Pontos</div>
+            </div>
+            <div class="profile-stat">
+              <div class="profile-stat-value">3</div>
+              <div class="profile-stat-label">Veículos</div>
+            </div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-icon">👤</div>
+            <div class="menu-item-text">
+              <div class="menu-item-title">Dados pessoais</div>
+              <div class="menu-item-subtitle">Nome, email, telefone</div>
+            </div>
+            <span class="menu-item-arrow">›</span>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-icon">📍</div>
+            <div class="menu-item-text">
+              <div class="menu-item-title">Endereços</div>
+              <div class="menu-item-subtitle">2 endereços salvos</div>
+            </div>
+            <span class="menu-item-arrow">›</span>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-icon">🚗</div>
+            <div class="menu-item-text">
+              <div class="menu-item-title">Meus veículos</div>
+              <div class="menu-item-subtitle">3 veículos cadastrados</div>
+            </div>
+            <span class="menu-item-arrow">›</span>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-icon">💳</div>
+            <div class="menu-item-text">
+              <div class="menu-item-title">Pagamentos</div>
+              <div class="menu-item-subtitle">Cartões e histórico</div>
+            </div>
+            <span class="menu-item-arrow">›</span>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-icon">🏆</div>
+            <div class="menu-item-text">
+              <div class="menu-item-title">Programa de fidelidade</div>
+              <div class="menu-item-subtitle">245 pontos · nível Prata</div>
+            </div>
+            <span class="menu-item-arrow">›</span>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-icon">⚙️</div>
+            <div class="menu-item-text">
+              <div class="menu-item-title">Configurações</div>
+              <div class="menu-item-subtitle">Notificações, idioma, segurança</div>
+            </div>
+            <span class="menu-item-arrow">›</span>
+          </div>
+
+          <button class="add-btn" style="color:#ff5b8a; border-color:rgba(255,91,138,0.3);">Sair da conta</button>
+        </div>
+        <div class="nav-float">
+          <div class="nav-item"><div class="nav-icon">🏠</div>Home</div>
+          <div class="nav-item"><div class="nav-icon">📋</div>Pedidos</div>
+          <div class="nav-item active"><div class="nav-icon">👤</div>Perfil</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
+

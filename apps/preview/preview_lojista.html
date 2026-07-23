@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GIUCAR - Portal do Lojista</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at top, #0d142b 0%, #070b18 45%, #03060f 100%); min-height: 100vh; display: flex; justify-content: center; padding: 36px; color: #fff; }
+.app-container { display: flex; gap: 60px; justify-content: center; flex-wrap: wrap; align-items: flex-start; }
+.phone { width: 360px; height: 780px; background: linear-gradient(180deg, #0c1020 0%, #080a16 100%); border-radius: 48px; padding: 12px; box-shadow: 0 0 0 1px rgba(0,245,212,0.08), 0 24px 70px rgba(0,0,0,0.78), inset 0 0 0 1px rgba(157,78,221,0.08); position: relative; overflow: hidden; }
+.phone::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 140px; height: 30px; background: #080a16; border-radius: 0 0 18px 18px; z-index: 10; }
+.screen { width: 100%; height: 100%; background: linear-gradient(180deg, #070914 0%, #050816 100%); border-radius: 36px; overflow: hidden; position: relative; display: flex; flex-direction: column; }
+.status { height: 44px; display: flex; justify-content: space-between; align-items: center; padding: 0 26px; font-size: 14px; font-weight: 600; color: #c77dff; }
+.status .time { color: #c77dff; font-size: 15px; font-weight: 700; }
+.header { padding: 12px 24px 20px; }
+.header h2 { font-size: 22px; font-weight: 700; color: #fff; }
+.header p { color: #9d4edd; font-size: 14px; margin-top: 4px; }
+.content { flex: 1; padding: 0 16px 16px; overflow-y: auto; }
+.section-title { font-size: 13px; font-weight: 700; color: #c77dff; text-transform: uppercase; letter-spacing: 1px; margin: 20px 0 12px; }
+.balance-card { background: linear-gradient(135deg, #22d3ee 0%, #8b5cf6 55%, #f472b6 100%); border-radius: 20px; padding: 20px; box-shadow: 0 10px 30px rgba(157,78,221,0.16); }
+.balance-card h3 { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.9); }
+.balance-card .amount { font-size: 34px; font-weight: 900; color: #fff; margin-top: 6px; }
+.balance-card .footer { font-size: 12px; color: rgba(255,255,255,0.85); margin-top: 8px; }
+.kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.kpi-mini { background: rgba(13,18,36,0.98); border: 1px solid rgba(148,163,255,0.12); border-radius: 16px; padding: 16px; text-align: center; }
+.kpi-mini .value { font-size: 22px; font-weight: 800; color: #4fe7cf; }
+.kpi-mini .label { font-size: 11px; color: #8b9bb4; margin-top: 4px; }
+.order-card { background: rgba(13,18,36,0.98); border: 1px solid rgba(148,163,255,0.12); border-radius: 18px; padding: 16px; margin-bottom: 12px; box-shadow: 0 10px 26px rgba(0,0,0,0.2); }
+.order-card .row { display: flex; justify-content: space-between; align-items: center; }
+.order-card .customer { font-size: 15px; font-weight: 700; color: #fff; }
+.order-card .price { font-size: 16px; font-weight: 800; color: #4fe7cf; }
+.order-card .address { font-size: 12px; color: #8b9bb4; margin-top: 6px; }
+.order-card .services { font-size: 12px; color: #c77dff; margin-top: 4px; }
+.order-card .actions { display: flex; gap: 10px; margin-top: 14px; }
+.btn { flex: 1; padding: 12px; border-radius: 12px; border: none; font-size: 13px; font-weight: 800; cursor: pointer; }
+.btn-primary { background: linear-gradient(90deg, #28e9d2 0%, #12f2c5 100%); color: #09101a; box-shadow: 0 0 18px rgba(18,242,197,0.18); }
+.btn-secondary { background: rgba(255,255,255,0.06); color: #fff; border: 1px solid rgba(255,255,255,0.1); }
+.btn-block { width: 100%; margin-top: 12px; }
+.nav-float { margin: 16px; background: rgba(11,16,32,0.92); border: 1px solid rgba(148,163,255,0.12); border-radius: 24px; padding: 10px 10px; display: flex; justify-content: space-around; align-items: center; backdrop-filter: blur(10px); }
+.nav-item { color: #4a5578; font-size: 10px; text-align: center; font-weight: 500; flex: 1; }
+.nav-item.active { color: #4fe7cf; }
+.nav-icon { font-size: 20px; margin-bottom: 2px; }
+.nav-icon svg { width: 22px; height: 22px; display: block; margin: 0 auto 2px; fill: currentColor; }
+.menu-item { display: flex; align-items: center; justify-content: space-between; padding: 16px; background: rgba(13,18,36,0.98); border: 1px solid rgba(148,163,255,0.12); border-radius: 14px; margin-bottom: 10px; cursor: pointer; }
+.menu-item .left { display: flex; align-items: center; gap: 12px; }
+.menu-item .icon { width: 38px; height: 38px; border-radius: 12px; background: rgba(0,245,212,0.08); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.menu-item .label { font-size: 14px; font-weight: 600; color: #fff; }
+.menu-item .arrow { color: #4a5578; font-size: 14px; }
+.badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 10px; background: rgba(255,193,7,0.12); color: #ffc107; margin-left: 8px; }
+.badge-success { background: rgba(79,231,207,0.12); color: #4fe7cf; }
+.status-badge { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.status-pending { background: rgba(255,193,7,0.12); color: #ffc107; }
+.status-approved { background: rgba(79,231,207,0.12); color: #4fe7cf; }
+.status-rejected { background: rgba(255,107,107,0.12); color: #ff6b6b; }
+.plan-card { background: rgba(13,18,36,0.98); border: 1px solid rgba(148,163,255,0.12); border-radius: 18px; padding: 16px; margin-bottom: 12px; }
+.plan-card.selected { border-color: #4fe7cf; box-shadow: 0 0 18px rgba(79,231,207,0.12); }
+.plan-card h4 { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+.plan-card p { font-size: 12px; color: #8b9bb4; margin-bottom: 10px; }
+.plan-card .price { font-size: 18px; font-weight: 800; color: #4fe7cf; }
+</style>
+</head>
+<body>
+<div class="app-container">
+  <!-- Home do Lojista -->
+  <div class="phone">
+    <div class="screen">
+      <div class="status">
+        <span class="time">9:41</span>
+      </div>
+      <div class="header">
+        <h2>Olá, AutoLimpeza SP!</h2>
+        <p>Resumo da sua loja</p>
+      </div>
+      <div class="content">
+        <div class="balance-card">
+          <h3>Saldo a receber</h3>
+          <div class="amount">R$ 2.450,80</div>
+          <div class="footer">Próximo repasse: 25/07</div>
+        </div>
+
+        <div class="section-title">Métricas</div>
+        <div class="kpi-grid">
+          <div class="kpi-mini">
+            <div class="value">28</div>
+            <div class="label">Vendas</div>
+          </div>
+          <div class="kpi-mini">
+            <div class="value">12</div>
+            <div class="label">Produtos ativos</div>
+          </div>
+          <div class="kpi-mini">
+            <div class="value">4.8</div>
+            <div class="label">Avaliação</div>
+          </div>
+          <div class="kpi-mini">
+            <div class="value">23%</div>
+            <div class="label">Comissão</div>
+          </div>
+        </div>
+
+        <div class="section-title">Pedidos recentes</div>
+        <div class="order-card">
+          <div class="row">
+            <span class="customer">Shampoo Automotivo 5L</span>
+            <span class="price">R$ 89,90</span>
+          </div>
+          <div class="address">Carlos Silva · Lavador</div>
+          <div class="services">Status: Aguardando envio</div>
+          <div class="actions">
+            <button class="btn btn-secondary">Detalhes</button>
+            <button class="btn btn-primary">Preparar</button>
+          </div>
+        </div>
+
+        <div class="order-card">
+          <div class="row">
+            <span class="customer">Cera Líquida Premium 1L</span>
+            <span class="price">R$ 129,90</span>
+          </div>
+          <div class="address">João Souza · Lavador</div>
+          <div class="services">Status: Entregue</div>
+        </div>
+
+        <button class="btn btn-primary btn-block">+ Cadastrar novo produto</button>
+      </div>
+      <div class="nav-float">
+        <div class="nav-item active"><div class="nav-icon">🏠</div>Home</div>
+        <div class="nav-item"><div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M19 6h-2c0-2.76-2.24-5-5-5S7 3.24 7 6H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-7-3c1.66 0 3 1.34 3 3H9c0-1.66 1.34-3 3-3zm7 17H5V8h2v2h2V8h8v2h2V8h2v12z"/></svg></div>Produtos</div>
+        <div class="nav-item"><div class="nav-icon">📦</div>Pedidos</div>
+        <div class="nav-item"><div class="nav-icon">👤</div>Perfil</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cadastro de Produto -->
+  <div class="phone">
+    <div class="screen">
+      <div class="status">
+        <span class="time">9:41</span>
+      </div>
+      <div class="header">
+        <h2>Cadastrar produto</h2>
+        <p>Seu produto será analisado antes de publicar</p>
+      </div>
+      <div class="content">
+        <div class="menu-item" style="justify-content: center; border-style: dashed; background: rgba(0,245,212,0.04);">
+          <div class="left" style="flex-direction: column; gap: 8px;">
+            <div class="icon" style="width: 56px; height: 56px; font-size: 24px;">📷</div>
+            <div class="label" style="color: #4fe7cf;">Adicionar foto do produto</div>
+          </div>
+        </div>
+
+        <div class="section-title">Informações</div>
+        <div class="order-card" style="padding: 14px 16px; margin-bottom: 10px;">
+          <div class="address" style="color: #8b9bb4; font-size: 11px;">Título do produto</div>
+          <div class="customer" style="font-size: 14px;">Aspirador GT 3000 12V</div>
+        </div>
+        <div class="order-card" style="padding: 14px 16px; margin-bottom: 10px;">
+          <div class="address" style="color: #8b9bb4; font-size: 11px;">Descrição</div>
+          <div class="customer" style="font-size: 14px;">Aspirador portátil 1200W para lavagens externas</div>
+        </div>
+
+        <div class="kpi-grid" style="margin-top: 4px;">
+          <div class="order-card" style="padding: 14px 16px;">
+            <div class="address" style="color: #8b9bb4; font-size: 11px;">Preço</div>
+            <div class="customer" style="font-size: 14px;">R$ 349,90</div>
+          </div>
+          <div class="order-card" style="padding: 14px 16px;">
+            <div class="address" style="color: #8b9bb4; font-size: 11px;">Estoque</div>
+            <div class="customer" style="font-size: 14px;">15 un</div>
+          </div>
+        </div>
+
+        <div class="section-title" style="margin-top: 16px;">Destino do catálogo</div>
+        <div class="plan-card selected">
+          <h4>Loja do Lavador <span class="badge badge-success">Recomendado</span></h4>
+          <p>Produtos profissionais e insumos para lavadores.</p>
+        </div>
+        <div class="plan-card">
+          <h4>Loja do Cliente</h4>
+          <p>Acessórios e souvenirs para o cliente final.</p>
+        </div>
+        <div class="plan-card">
+          <h4>Ambas as lojas</h4>
+          <p>Produto aparece nos dois catálogos.</p>
+        </div>
+
+        <button class="btn btn-primary btn-block">Enviar para análise</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Meus Produtos -->
+  <div class="phone">
+    <div class="screen">
+      <div class="status">
+        <span class="time">9:41</span>
+      </div>
+      <div class="header">
+        <h2>Meus produtos</h2>
+        <p>Gerencie seus anúncios</p>
+      </div>
+      <div class="content">
+        <div class="section-title">Pendentes de aprovação</div>
+        <div class="order-card">
+          <div class="row">
+            <span class="customer">Aspirador GT 3000 12V</span>
+            <span class="status-badge status-pending">Pendente</span>
+          </div>
+          <div class="address">R$ 349,90 · Loja do Lavador · 15 un</div>
+        </div>
+
+        <div class="section-title">Ativos</div>
+        <div class="order-card">
+          <div class="row">
+            <span class="customer">Shampoo Automotivo 5L</span>
+            <span class="status-badge status-approved">Ativo</span>
+          </div>
+          <div class="address">R$ 89,90 · Loja do Lavador · 42 un</div>
+          <div class="services">Vendas: 18 · Avaliação: 4.9</div>
+        </div>
+        <div class="order-card">
+          <div class="row">
+            <span class="customer">Cera Líquida Premium 1L</span>
+            <span class="status-badge status-approved">Ativo</span>
+          </div>
+          <div class="address">R$ 129,90 · Loja do Lavador · 20 un</div>
+          <div class="services">Vendas: 10 · Avaliação: 4.7</div>
+        </div>
+
+        <div class="section-title">Rejeitados</div>
+        <div class="order-card">
+          <div class="row">
+            <span class="customer">Limpador genérico 500ml</span>
+            <span class="status-badge status-rejected">Rejeitado</span>
+          </div>
+          <div class="address">Motivo: Foto fora dos padrões</div>
+        </div>
+
+        <button class="btn btn-primary btn-block">+ Novo produto</button>
+      </div>
+      <div class="nav-float">
+        <div class="nav-item"><div class="nav-icon">🏠</div>Home</div>
+        <div class="nav-item active"><div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M19 6h-2c0-2.76-2.24-5-5-5S7 3.24 7 6H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-7-3c1.66 0 3 1.34 3 3H9c0-1.66 1.34-3 3-3zm7 17H5V8h2v2h2V8h8v2h2V8h2v12z"/></svg></div>Produtos</div>
+        <div class="nav-item"><div class="nav-icon">📦</div>Pedidos</div>
+        <div class="nav-item"><div class="nav-icon">👤</div>Perfil</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Escolha de Plano -->
+  <div class="phone">
+    <div class="screen">
+      <div class="status">
+        <span class="time">9:41</span>
+      </div>
+      <div class="header">
+        <h2>Plano da loja</h2>
+        <p>Escolha como quer vender</p>
+      </div>
+      <div class="content">
+        <div class="plan-card selected">
+          <h4>Logística Integrada <span class="badge badge-success">Atual</span></h4>
+          <p>Nós coletamos e entregamos o produto ao comprador.</p>
+          <div class="price">R$ 150/mês</div>
+          <div class="services" style="margin-top: 8px;">Comissão: 23% por venda</div>
+        </div>
+        <div class="plan-card">
+          <h4>Logística Própria</h4>
+          <p>Você entrega diretamente ou organiza a retirada.</p>
+          <div class="price">R$ 110/mês</div>
+          <div class="services" style="margin-top: 8px;">Comissão: 10% por venda</div>
+        </div>
+
+        <div class="section-title">Regras de cobrança</div>
+        <div class="order-card">
+          <div class="customer" style="font-size: 14px;">Mensalidade só é cobrada se você ultrapassar o piso mínimo de faturamento.</div>
+          <div class="address" style="margin-top: 8px;">Piso atual: R$ 1.800,00/mês</div>
+          <div class="address">Seu faturamento: R$ 2.450,80</div>
+        </div>
+      </div>
+      <div class="nav-float">
+        <div class="nav-item"><div class="nav-icon">🏠</div>Home</div>
+        <div class="nav-item"><div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M19 6h-2c0-2.76-2.24-5-5-5S7 3.24 7 6H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-7-3c1.66 0 3 1.34 3 3H9c0-1.66 1.34-3 3-3zm7 17H5V8h2v2h2V8h8v2h2V8h2v12z"/></svg></div>Produtos</div>
+        <div class="nav-item"><div class="nav-icon">📦</div>Pedidos</div>
+        <div class="nav-item active"><div class="nav-icon">👤</div>Perfil</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
+
