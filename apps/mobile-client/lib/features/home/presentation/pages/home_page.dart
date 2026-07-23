@@ -396,7 +396,7 @@ class _QuickActionsCard extends StatelessWidget {
             children: [
               _QuickAction(
                 icon: Icons.shopping_bag_outlined,
-                label: 'Loja\nProdutos',
+                label: 'Loja\nAcessórios',
                 onTap: () => context.push('/marketplace'),
               ),
               _QuickAction(
@@ -586,14 +586,14 @@ class _MarketplaceBanner extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            'Loja',
+                            'Loja de Acessórios',
                             style: Theme.of(context).textTheme.titleSmall?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: AppColors.textPrimary,
                                 ),
                           ),
                           Text(
-                            'Produtos de limpeza',
+                            'Acessórios e souvenirs pro seu carro',
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                   color: AppColors.textSecondary,
                                 ),
