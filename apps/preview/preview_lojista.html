@@ -7,11 +7,11 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap');
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at top, #0d142b 0%, #070b18 45%, #03060f 100%); min-height: 100vh; display: flex; justify-content: center; padding: 36px; color: #fff; }
+body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at top, #10182f 0%, #070b18 45%, #050811 100%); min-height: 100vh; display: flex; justify-content: center; padding: 36px; color: #fff; }
 .app-container { display: flex; gap: 60px; justify-content: center; flex-wrap: wrap; align-items: flex-start; }
-.phone { width: 360px; height: 780px; background: linear-gradient(180deg, #0c1020 0%, #080a16 100%); border-radius: 48px; padding: 12px; box-shadow: 0 0 0 1px rgba(0,245,212,0.08), 0 24px 70px rgba(0,0,0,0.78), inset 0 0 0 1px rgba(157,78,221,0.08); position: relative; overflow: hidden; }
+.phone { width: 360px; height: 780px; background: linear-gradient(180deg, #0c1020 0%, #080a16 100%); border-radius: 48px; padding: 12px; box-shadow: 0 0 0 1px rgba(0,242,194,0.08), 0 24px 70px rgba(0,0,0,0.78), inset 0 0 0 1px rgba(157,78,221,0.08); position: relative; overflow: hidden; }
 .phone::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 140px; height: 30px; background: #080a16; border-radius: 0 0 18px 18px; z-index: 10; }
-.screen { width: 100%; height: 100%; background: linear-gradient(180deg, #070914 0%, #050816 100%); border-radius: 36px; overflow: hidden; position: relative; display: flex; flex-direction: column; }
+.screen { width: 100%; height: 100%; background: linear-gradient(180deg, #070914 0%, #050811 100%); border-radius: 36px; overflow: hidden; position: relative; display: flex; flex-direction: column; }
 .status { height: 44px; display: flex; justify-content: space-between; align-items: center; padding: 0 26px; font-size: 14px; font-weight: 600; color: #c77dff; }
 .status .time { color: #c77dff; font-size: 15px; font-weight: 700; }
 .header { padding: 12px 24px 20px; }
@@ -19,50 +19,112 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
 .header p { color: #9d4edd; font-size: 14px; margin-top: 4px; }
 .content { flex: 1; padding: 0 16px 16px; overflow-y: auto; }
 .section-title { font-size: 13px; font-weight: 700; color: #c77dff; text-transform: uppercase; letter-spacing: 1px; margin: 20px 0 12px; }
-.balance-card { background: linear-gradient(135deg, #22d3ee 0%, #8b5cf6 55%, #f472b6 100%); border-radius: 20px; padding: 20px; box-shadow: 0 10px 30px rgba(157,78,221,0.16); }
+.balance-card { background: linear-gradient(135deg, #00c6ff 0%, #9D4EDD 55%, #f472b6 100%); border-radius: 20px; padding: 20px; box-shadow: 0 10px 30px rgba(157,78,221,0.16); }
 .balance-card h3 { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.9); }
 .balance-card .amount { font-size: 34px; font-weight: 900; color: #fff; margin-top: 6px; }
 .balance-card .footer { font-size: 12px; color: rgba(255,255,255,0.85); margin-top: 8px; }
 .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .kpi-mini { background: rgba(13,18,36,0.98); border: 1px solid rgba(148,163,255,0.12); border-radius: 16px; padding: 16px; text-align: center; }
-.kpi-mini .value { font-size: 22px; font-weight: 800; color: #4fe7cf; }
+.kpi-mini .value { font-size: 22px; font-weight: 800; color: #00F2C2; }
 .kpi-mini .label { font-size: 11px; color: #8b9bb4; margin-top: 4px; }
 .order-card { background: rgba(13,18,36,0.98); border: 1px solid rgba(148,163,255,0.12); border-radius: 18px; padding: 16px; margin-bottom: 12px; box-shadow: 0 10px 26px rgba(0,0,0,0.2); }
 .order-card .row { display: flex; justify-content: space-between; align-items: center; }
 .order-card .customer { font-size: 15px; font-weight: 700; color: #fff; }
-.order-card .price { font-size: 16px; font-weight: 800; color: #4fe7cf; }
+.order-card .price { font-size: 16px; font-weight: 800; color: #00F2C2; }
 .order-card .address { font-size: 12px; color: #8b9bb4; margin-top: 6px; }
 .order-card .services { font-size: 12px; color: #c77dff; margin-top: 4px; }
 .order-card .actions { display: flex; gap: 10px; margin-top: 14px; }
 .btn { flex: 1; padding: 12px; border-radius: 12px; border: none; font-size: 13px; font-weight: 800; cursor: pointer; }
-.btn-primary { background: linear-gradient(90deg, #28e9d2 0%, #12f2c5 100%); color: #09101a; box-shadow: 0 0 18px rgba(18,242,197,0.18); }
+.btn-primary { background: linear-gradient(90deg, #00d9ae 0%, #00F2C2 100%); color: #050811; box-shadow: 0 0 18px rgba(0,242,194,0.25); }
 .btn-secondary { background: rgba(255,255,255,0.06); color: #fff; border: 1px solid rgba(255,255,255,0.1); }
 .btn-block { width: 100%; margin-top: 12px; }
 .nav-float { margin: 16px; background: rgba(11,16,32,0.92); border: 1px solid rgba(148,163,255,0.12); border-radius: 24px; padding: 10px 10px; display: flex; justify-content: space-around; align-items: center; backdrop-filter: blur(10px); }
 .nav-item { color: #4a5578; font-size: 10px; text-align: center; font-weight: 500; flex: 1; }
-.nav-item.active { color: #4fe7cf; }
+.nav-item.active { color: #00F2C2; }
 .nav-icon { font-size: 20px; margin-bottom: 2px; }
 .nav-icon svg { width: 22px; height: 22px; display: block; margin: 0 auto 2px; fill: currentColor; }
 .menu-item { display: flex; align-items: center; justify-content: space-between; padding: 16px; background: rgba(13,18,36,0.98); border: 1px solid rgba(148,163,255,0.12); border-radius: 14px; margin-bottom: 10px; cursor: pointer; }
 .menu-item .left { display: flex; align-items: center; gap: 12px; }
-.menu-item .icon { width: 38px; height: 38px; border-radius: 12px; background: rgba(0,245,212,0.08); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.menu-item .icon { width: 38px; height: 38px; border-radius: 12px; background: rgba(0,242,194,0.08); display: flex; align-items: center; justify-content: center; font-size: 18px; }
 .menu-item .label { font-size: 14px; font-weight: 600; color: #fff; }
 .menu-item .arrow { color: #4a5578; font-size: 14px; }
 .badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 10px; background: rgba(255,193,7,0.12); color: #ffc107; margin-left: 8px; }
-.badge-success { background: rgba(79,231,207,0.12); color: #4fe7cf; }
+.badge-success { background: rgba(0,242,194,0.12); color: #00F2C2; }
 .status-badge { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
 .status-pending { background: rgba(255,193,7,0.12); color: #ffc107; }
-.status-approved { background: rgba(79,231,207,0.12); color: #4fe7cf; }
+.status-approved { background: rgba(0,242,194,0.12); color: #00F2C2; }
 .status-rejected { background: rgba(255,107,107,0.12); color: #ff6b6b; }
 .plan-card { background: rgba(13,18,36,0.98); border: 1px solid rgba(148,163,255,0.12); border-radius: 18px; padding: 16px; margin-bottom: 12px; }
-.plan-card.selected { border-color: #4fe7cf; box-shadow: 0 0 18px rgba(79,231,207,0.12); }
+.plan-card.selected { border-color: #00F2C2; box-shadow: 0 0 18px rgba(0,242,194,0.12); }
 .plan-card h4 { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 6px; }
 .plan-card p { font-size: 12px; color: #8b9bb4; margin-bottom: 10px; }
-.plan-card .price { font-size: 18px; font-weight: 800; color: #4fe7cf; }
+.plan-card .price { font-size: 18px; font-weight: 800; color: #00F2C2; }
+.select-card { display: flex; align-items: flex-start; gap: 12px; background: rgba(13,18,36,0.98); border: 1px solid rgba(148,163,255,0.12); border-radius: 20px; padding: 16px; margin-bottom: 12px; cursor: pointer; }
+.select-card.selected { border-color: #00F2C2; box-shadow: 0 0 18px rgba(0,242,194,0.12); }
+.select-card .radio { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #4a5578; flex-shrink: 0; margin-top: 2px; position: relative; }
+.select-card.selected .radio { border-color: #00F2C2; }
+.select-card.selected .radio::after { content: ''; position: absolute; inset: 3px; border-radius: 50%; background: #00F2C2; }
+.select-card h4 { font-size: 14px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+.select-card p { font-size: 12px; color: #8b9bb4; }
+.select-card .price-label { font-size: 14px; font-weight: 800; color: #00F2C2; margin-top: 8px; display: block; }
+.input-field { width: 100%; padding: 14px 16px; border-radius: 14px; border: 1px solid rgba(148,163,255,0.12); background: rgba(13,18,36,0.6); color: #fff; font-size: 14px; margin-bottom: 12px; }
+.input-field::placeholder { color: #4a5578; }
+.subtitle-sm { font-size: 12px; color: #8b9bb4; margin-bottom: 12px; }
 </style>
 </head>
 <body>
 <div class="app-container">
+  <!-- Cadastro da Loja (2 modalidades) -->
+  <div class="phone">
+    <div class="screen">
+      <div class="status"><span class="time">9:41</span><span style="font-size:14px;">‹ Cadastrar minha loja</span></div>
+      <div class="content">
+        <div class="section-title" style="margin-top: 16px;">Dados da loja</div>
+        <input class="input-field" type="text" placeholder="Nome da loja" value="AutoLimpeza SP">
+        <input class="input-field" type="email" placeholder="E-mail" value="contato@autolimpezasp.com.br">
+        <input class="input-field" type="password" placeholder="Senha" value="••••••••">
+
+        <div class="section-title">Tipo de loja</div>
+        <div class="subtitle-sm">Para quem sua loja vai vender.</div>
+        <div class="select-card selected">
+          <div class="radio"></div>
+          <div>
+            <h4>Loja LAVADOR</h4>
+            <p>Vende produtos profissionais e insumos para lavadores.</p>
+          </div>
+        </div>
+        <div class="select-card">
+          <div class="radio"></div>
+          <div>
+            <h4>Loja CLIENTE</h4>
+            <p>Vende acessórios e produtos para o cliente final.</p>
+          </div>
+        </div>
+
+        <div class="section-title">Modalidade de logística</div>
+        <div class="subtitle-sm">Como os produtos chegam até o comprador.</div>
+        <div class="select-card selected">
+          <div class="radio"></div>
+          <div>
+            <h4>Logística Integrada</h4>
+            <p>A plataforma GIUCAR coleta e entrega o produto ao comprador.</p>
+            <span class="price-label">R$ 150/mês · Comissão 23%</span>
+          </div>
+        </div>
+        <div class="select-card">
+          <div class="radio"></div>
+          <div>
+            <h4>Logística Própria</h4>
+            <p>Você (vendedor) entrega diretamente ou organiza a retirada.</p>
+            <span class="price-label">R$ 110/mês · Comissão 15%</span>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-block" style="padding: 16px; margin-top: 8px;">Criar minha loja</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Home do Lojista -->
   <div class="phone">
     <div class="screen">
@@ -145,10 +207,10 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
         <p>Seu produto será analisado antes de publicar</p>
       </div>
       <div class="content">
-        <div class="menu-item" style="justify-content: center; border-style: dashed; background: rgba(0,245,212,0.04);">
+        <div class="menu-item" style="justify-content: center; border-style: dashed; background: rgba(0,242,194,0.04);">
           <div class="left" style="flex-direction: column; gap: 8px;">
             <div class="icon" style="width: 56px; height: 56px; font-size: 24px;">📷</div>
-            <div class="label" style="color: #4fe7cf;">Adicionar foto do produto</div>
+            <div class="label" style="color: #00F2C2;">Adicionar foto do produto</div>
           </div>
         </div>
 
@@ -271,7 +333,7 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
           <h4>Logística Própria</h4>
           <p>Você entrega diretamente ou organiza a retirada.</p>
           <div class="price">R$ 110/mês</div>
-          <div class="services" style="margin-top: 8px;">Comissão: 10% por venda</div>
+          <div class="services" style="margin-top: 8px;">Comissão: 15% por venda</div>
         </div>
 
         <div class="section-title">Regras de cobrança</div>
