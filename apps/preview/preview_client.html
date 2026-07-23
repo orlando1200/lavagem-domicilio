@@ -73,6 +73,48 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
 .vehicle-badge { font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 10px; background: rgba(0,242,194,0.1); color: #00F2C2; }
 .add-btn { width: 100%; padding: 16px; border-radius: 16px; border: 1px dashed rgba(0,242,194,0.3); background: transparent; color: #00F2C2; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 8px; }
 
+/* Loja - categorias e busca */
+.shop-search { width: 100%; padding: 12px 14px; border-radius: 14px; border: 1px solid #1a2342; background: #0b1020; color: #fff; font-size: 13px; margin-bottom: 14px; outline: none; }
+.shop-search::placeholder { color: #4a5578; }
+.shop-categories { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 14px; }
+.shop-chip { flex-shrink: 0; padding: 8px 14px; border-radius: 20px; border: 1px solid #1a2342; background: #0b1020; color: rgba(255,255,255,0.72); font-size: 11px; font-weight: 700; white-space: nowrap; text-decoration: none; }
+.shop-chip.active { background: rgba(0,242,194,0.16); border-color: #00F2C2; color: #00F2C2; }
+.product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.product-card { background: #0b1020; border: 1px solid #1a2342; border-radius: 18px; padding: 12px; text-decoration: none; color: inherit; display: flex; flex-direction: column; }
+.product-thumb { width: 100%; aspect-ratio: 1; border-radius: 14px; background: rgba(0,242,194,0.1); border: 1px solid #1a2342; display: flex; align-items: center; justify-content: center; font-size: 30px; margin-bottom: 10px; }
+.product-name { font-size: 12px; font-weight: 700; color: #fff; margin-bottom: 6px; min-height: 30px; }
+.product-old-price { font-size: 10px; color: #4a5578; text-decoration: line-through; }
+.product-price { font-size: 15px; font-weight: 800; color: #00F2C2; margin-bottom: 8px; }
+.product-add-btn { width: 100%; padding: 8px; border-radius: 10px; border: none; background: linear-gradient(90deg, #00F2C2 0%, #00c6ff 100%); color: #050811; font-size: 11px; font-weight: 800; text-align: center; }
+.cart-badge { position: absolute; top: -4px; right: -6px; background: #9d4edd; color: #fff; font-size: 9px; font-weight: 800; padding: 1px 5px; border-radius: 8px; }
+.cart-icon-wrap { position: relative; display: inline-flex; }
+
+/* Detalhe do produto */
+.product-hero { width: 100%; aspect-ratio: 1.3; border-radius: 20px; background: rgba(0,242,194,0.1); border: 1px solid #1a2342; display: flex; align-items: center; justify-content: center; font-size: 72px; margin-bottom: 16px; }
+.product-detail-category { display: inline-block; padding: 5px 12px; border-radius: 999px; background: rgba(157,78,221,0.16); border: 1px solid #9d4edd; color: #c77dff; font-size: 11px; font-weight: 700; margin-bottom: 10px; }
+.product-detail-name { font-size: 20px; font-weight: 900; color: #fff; margin-bottom: 6px; }
+.product-detail-price { font-size: 24px; font-weight: 900; color: #00F2C2; margin: 10px 0; }
+.qty-row { display: flex; align-items: center; justify-content: space-between; background: #0b1020; border: 1px solid #1a2342; border-radius: 16px; padding: 12px 16px; margin: 14px 0; }
+.qty-controls { display: flex; align-items: center; gap: 14px; }
+.qty-btn { width: 28px; height: 28px; border-radius: 50%; border: 1px solid #00F2C2; background: transparent; color: #00F2C2; font-size: 16px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.detail-cta { position: absolute; bottom: 0; left: 0; right: 0; padding: 16px; background: linear-gradient(0deg, #050811 60%, transparent); }
+.detail-cta .login-btn { display: block; text-align: center; text-decoration: none; }
+
+/* Carrinho */
+.cart-item { display: flex; gap: 12px; background: #0b1020; border: 1px solid #1a2342; border-radius: 16px; padding: 14px; margin-bottom: 12px; }
+.cart-item-thumb { width: 52px; height: 52px; border-radius: 12px; background: rgba(0,242,194,0.1); border: 1px solid #1a2342; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+.cart-item-info { flex: 1; }
+.cart-item-name { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+.cart-item-price { font-size: 13px; font-weight: 700; color: #00F2C2; margin-bottom: 8px; }
+.summary-row { display: flex; justify-content: space-between; font-size: 13px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+.summary-row.total { font-size: 17px; font-weight: 800; color: #fff; padding-top: 10px; border-top: 1px solid #1a2342; margin-top: 4px; }
+.summary-row .free-shipping { color: #00F2C2; font-weight: 700; }
+.checkout-sheet { background: #0b1020; border-radius: 20px 20px 0 0; border: 1px solid #1a2342; padding: 16px; }
+.payment-option { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; border: 1px solid #1a2342; background: #0d1428; margin-bottom: 10px; }
+.payment-option.selected { border-color: #00F2C2; }
+.payment-option .radio { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #4a5578; margin-left: auto; }
+.payment-option.selected .radio { border-color: #00F2C2; background: radial-gradient(circle, #00F2C2 40%, transparent 44%); }
+
 /* Perfil */
 .profile-header { display: flex; flex-direction: column; align-items: center; padding: 30px 20px; background: linear-gradient(135deg, #1a0b2e 0%, #0d1a30 50%, #050811 100%); }
 .profile-avatar { width: 90px; height: 90px; border-radius: 50%; background: linear-gradient(135deg, #00c6ff 0%, #9d4edd 100%); display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 800; color: #fff; margin-bottom: 14px; box-shadow: 0 0 30px rgba(0,198,255,0.2); }
@@ -352,86 +394,130 @@ a.order-card, a.promo-btn { color: inherit; }
         <div class="battery"><div class="battery-bar"><div class="battery-fill"></div></div></div>
       </div>
       <div class="page">
-        <div class="page-header">
-          <h2>Loja de Acessórios</h2>
-          <div class="subtitle">Acessórios e souvenirs pro seu carro</div>
+        <div class="page-header" style="display:flex; align-items:flex-start; justify-content:space-between;">
+          <div>
+            <h2>Loja de Acessórios</h2>
+            <div class="subtitle">Tudo para o seu carro</div>
+          </div>
+          <a href="#carrinho" class="cart-icon-wrap" style="margin-top:4px; text-decoration:none;">
+            <span style="font-size:22px;">🛒</span>
+            <span class="cart-badge">3</span>
+          </a>
         </div>
         <div class="content">
-          <div class="service-card">
-            <div class="service-icon">🌸</div>
-            <div class="service-content">
-              <div class="service-title">Aromatizante Premium</div>
-              <div class="service-desc">Fragrância duradoura para o interior do carro</div>
-              <div class="service-meta">
-                <span class="service-price">R$ 24,90</span>
-              </div>
-            </div>
+          <input class="shop-search" type="text" placeholder="Buscar produtos...">
+          <div class="shop-categories">
+            <a class="shop-chip active" href="#loja">Todos</a>
+            <a class="shop-chip" href="#loja">Aromatizantes</a>
+            <a class="shop-chip" href="#loja">Capas &amp; Bancos</a>
+            <a class="shop-chip" href="#loja">Acessórios</a>
+            <a class="shop-chip" href="#loja">Peças</a>
+            <a class="shop-chip" href="#loja">Óleos &amp; Fluidos</a>
+            <a class="shop-chip" href="#loja">Limpeza</a>
+            <a class="shop-chip" href="#loja">Organizadores</a>
           </div>
 
-          <div class="service-card">
-            <div class="service-icon">🛋️</div>
-            <div class="service-content">
-              <div class="service-title">Capa de Couro para Bancos</div>
-              <div class="service-desc">Proteção e conforto premium</div>
-              <div class="service-meta">
-                <span class="service-price">R$ 189,90</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="service-card">
-            <div class="service-icon">✨</div>
-            <div class="service-content">
-              <div class="service-title">Cera Carnaúba</div>
-              <div class="service-desc">Brilho e proteção para a pintura</div>
-              <div class="service-meta">
-                <span class="service-price">R$ 39,90</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="service-card">
-            <div class="service-icon">🔋</div>
-            <div class="service-content">
-              <div class="service-title">Aspirador Portátil</div>
-              <div class="service-desc">Praticidade para limpeza rápida</div>
-              <div class="service-meta">
-                <span class="service-price">R$ 79,90</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="service-card">
-            <div class="service-icon">🗂️</div>
-            <div class="service-content">
-              <div class="service-title">Organizador de Porta-malas</div>
-              <div class="service-desc">Praticidade e organização</div>
-              <div class="service-meta">
-                <span class="service-price">R$ 59,90</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="service-card">
-            <div class="service-icon">💡</div>
-            <div class="service-content">
-              <div class="service-title">Kit Lâmpadas LED</div>
-              <div class="service-desc">Mais visibilidade e estilo</div>
-              <div class="service-meta">
-                <span class="service-price">R$ 99,90</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="service-card">
-            <div class="service-icon">🌧️</div>
-            <div class="service-content">
-              <div class="service-title">Palhetas Limpador de Para-brisa</div>
-              <div class="service-desc">Par de palhetas premium</div>
-              <div class="service-meta">
-                <span class="service-price">R$ 49,90</span>
-              </div>
-            </div>
+          <div class="product-grid">
+            <a class="product-card" href="#produto">
+              <div class="product-thumb">🌸</div>
+              <div class="product-name">Aromatizante Premium</div>
+              <div class="product-old-price">R$ 32,90</div>
+              <div class="product-price">R$ 24,90</div>
+              <div class="product-add-btn">Adicionar</div>
+            </a>
+            <a class="product-card" href="#produto">
+              <div class="product-thumb">🧴</div>
+              <div class="product-name">Aromatizante Gel Automotivo</div>
+              <div class="product-price">R$ 18,90</div>
+              <div class="product-add-btn">Adicionar</div>
+            </a>
+            <a class="product-card" href="#produto">
+              <div class="product-thumb">🛋️</div>
+              <div class="product-name">Capa de Couro para Bancos</div>
+              <div class="product-old-price">R$ 229,90</div>
+              <div class="product-price">R$ 189,90</div>
+              <div class="product-add-btn">Adicionar</div>
+            </a>
+            <a class="product-card" href="#produto">
+              <div class="product-thumb">🎯</div>
+              <div class="product-name">Capa de Volante em Couro</div>
+              <div class="product-price">R$ 49,90</div>
+              <div class="product-add-btn">Adicionar</div>
+            </a>
+            <a class="product-card" href="#produto">
+              <div class="product-thumb">📱</div>
+              <div class="product-name">Suporte de Celular Veicular</div>
+              <div class="product-price">R$ 34,90</div>
+              <div class="product-add-btn">Adicionar</div>
+            </a>
+            <a class="product-card" href="#produto">
+              <div class="product-thumb">🔌</div>
+              <div class="product-name">Carregador Veicular USB-C</div>
+              <div class="product-price">R$ 39,90</div>
+              <div class="product-add-btn">Adicionar</div>
+            </a>
+            <a class="product-card" href="#produto">
+              <div class="product-thumb">💡</div>
+              <div class="product-name">Kit Lâmpadas LED</div>
+              <div class="product-price">R$ 99,90</div>
+              <div class="product-add-btn">Adicionar</div>
+            </a>
+            <a class="product-card" href="#produto">
+              <div class="product-thumb">🌧️</div>
+              <div class="product-name">Palhetas Limpador de Para-brisa</div>
+              <div class="product-price">R$ 49,90</div>
+              <div class="product-add-btn">Adicionar</div>
+            </a>
+            <a class="product-card" href="#produto">
+              <div class="product-thumb">🌬️</div>
+              <div class="product-name">Filtro de Ar Automotivo</div>
+              <div class="product-price">R$ 59,90</div>
+              <div class="product-add-btn">Adicionar</div>
+            </a>
+            <a class="product-card" href="#produto">
+              <div class="product-thumb">🛑</div>
+              <div class="product-name">Pastilhas de Freio (jogo)</div>
+              <div class="product-old-price">R$ 179,90</div>
+              <div class="product-price">R$ 149,90</div>
+              <div class="product-add-btn">Adicionar</div>
+            </a>
+            <a class="product-card" href="#produto">
+              <div class="product-thumb">🛢️</div>
+              <div class="product-name">Óleo de Motor Sintético 5W30</div>
+              <div class="product-price">R$ 44,90</div>
+              <div class="product-add-btn">Adicionar</div>
+            </a>
+            <a class="product-card" href="#produto">
+              <div class="product-thumb">❄️</div>
+              <div class="product-name">Aditivo / Refrigerante de Radiador</div>
+              <div class="product-price">R$ 29,90</div>
+              <div class="product-add-btn">Adicionar</div>
+            </a>
+            <a class="product-card" href="#produto">
+              <div class="product-thumb">✨</div>
+              <div class="product-name">Cera Carnaúba</div>
+              <div class="product-price">R$ 39,90</div>
+              <div class="product-add-btn">Adicionar</div>
+            </a>
+            <a class="product-card" href="#produto">
+              <div class="product-thumb">🔋</div>
+              <div class="product-name">Aspirador Portátil Automotivo</div>
+              <div class="product-old-price">R$ 99,90</div>
+              <div class="product-price">R$ 79,90</div>
+              <div class="product-add-btn">Adicionar</div>
+            </a>
+            <a class="product-card" href="#produto">
+              <div class="product-thumb">🗂️</div>
+              <div class="product-name">Organizador de Porta-malas</div>
+              <div class="product-price">R$ 59,90</div>
+              <div class="product-add-btn">Adicionar</div>
+            </a>
+            <a class="product-card" href="#produto">
+              <div class="product-thumb">🎒</div>
+              <div class="product-name">Organizador de Banco Traseiro</div>
+              <div class="product-price">R$ 44,90</div>
+              <div class="product-add-btn">Adicionar</div>
+            </a>
           </div>
         </div>
         <div class="nav-float">
@@ -439,6 +525,120 @@ a.order-card, a.promo-btn { color: inherit; }
           <a class="nav-item active" href="#loja"><div class="nav-icon">🛍️</div>Loja</a>
           <a class="nav-item" href="#pedidos"><div class="nav-icon">📋</div>Pedidos</a>
           <a class="nav-item" href="#perfil"><div class="nav-icon">👤</div>Perfil</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <!-- DETALHE DO PRODUTO -->
+  <div class="phone-wrap" id="produto">
+    <div class="phone-label">Detalhe do Produto</div>
+  <div class="phone">
+    <div class="screen">
+      <div class="status">
+        <span class="time">9:41</span>
+        <div class="battery"><div class="battery-bar"><div class="battery-fill"></div></div></div>
+      </div>
+      <div class="page" style="position:relative;">
+        <div class="page-header" style="display:flex; align-items:center; gap:12px; padding-top:52px;">
+          <a href="#loja" style="color:#00F2C2; text-decoration:none; font-size:20px;">‹</a>
+          <h2 style="font-size:16px;">Capa de Couro para Bancos</h2>
+        </div>
+        <div class="content" style="padding-bottom:100px;">
+          <div class="product-hero">🛋️</div>
+          <div class="product-detail-category">Capas &amp; Bancos</div>
+          <div class="product-detail-name">Capa de Couro para Bancos</div>
+          <div style="color:#ffb800; font-size:13px; font-weight:700;">★ 4.8</div>
+          <div class="product-detail-price">R$ 189,90 <span style="font-size:14px; color:#4a5578; font-weight:500; text-decoration:line-through;">R$ 229,90</span></div>
+          <div class="card-neon">
+            <h3 style="margin-bottom:8px;">Descrição</h3>
+            <p style="color:rgba(255,255,255,0.72); line-height:1.5;">Proteção e conforto premium, jogo completo para bancos dianteiros e traseiros, acabamento em couro sintético de alta durabilidade.</p>
+          </div>
+          <div class="qty-row">
+            <span style="font-weight:700; color:#fff;">Quantidade</span>
+            <div class="qty-controls">
+              <div class="qty-btn">−</div>
+              <span style="color:#fff; font-weight:800;">1</span>
+              <div class="qty-btn">+</div>
+            </div>
+          </div>
+        </div>
+        <div class="detail-cta">
+          <a href="#carrinho" class="login-btn">Adicionar ao carrinho · R$ 189,90</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <!-- CARRINHO / CHECKOUT -->
+  <div class="phone-wrap" id="carrinho">
+    <div class="phone-label">Carrinho</div>
+  <div class="phone">
+    <div class="screen">
+      <div class="status">
+        <span class="time">9:41</span>
+        <div class="battery"><div class="battery-bar"><div class="battery-fill"></div></div></div>
+      </div>
+      <div class="page">
+        <div class="page-header" style="display:flex; align-items:center; gap:12px;">
+          <a href="#loja" style="color:#00F2C2; text-decoration:none; font-size:20px;">‹</a>
+          <h2 style="font-size:18px;">Carrinho</h2>
+        </div>
+        <div class="content">
+          <div class="cart-item">
+            <div class="cart-item-thumb">🌸</div>
+            <div class="cart-item-info">
+              <div class="cart-item-name">Aromatizante Premium</div>
+              <div class="cart-item-price">R$ 24,90</div>
+              <div class="qty-controls">
+                <div class="qty-btn" style="width:22px; height:22px; font-size:13px;">−</div>
+                <span style="color:#fff; font-weight:800; font-size:12px;">2</span>
+                <div class="qty-btn" style="width:22px; height:22px; font-size:13px;">+</div>
+              </div>
+            </div>
+          </div>
+          <div class="cart-item">
+            <div class="cart-item-thumb">🛋️</div>
+            <div class="cart-item-info">
+              <div class="cart-item-name">Capa de Couro para Bancos</div>
+              <div class="cart-item-price">R$ 189,90</div>
+              <div class="qty-controls">
+                <div class="qty-btn" style="width:22px; height:22px; font-size:13px;">−</div>
+                <span style="color:#fff; font-weight:800; font-size:12px;">1</span>
+                <div class="qty-btn" style="width:22px; height:22px; font-size:13px;">+</div>
+              </div>
+            </div>
+          </div>
+          <div class="cart-item">
+            <div class="cart-item-thumb">🔋</div>
+            <div class="cart-item-info">
+              <div class="cart-item-name">Aspirador Portátil Automotivo</div>
+              <div class="cart-item-price">R$ 79,90</div>
+              <div class="qty-controls">
+                <div class="qty-btn" style="width:22px; height:22px; font-size:13px;">−</div>
+                <span style="color:#fff; font-weight:800; font-size:12px;">1</span>
+                <div class="qty-btn" style="width:22px; height:22px; font-size:13px;">+</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="checkout-sheet">
+          <div class="summary-row"><span>Subtotal</span><span>R$ 319,60</span></div>
+          <div class="summary-row"><span>Frete</span><span class="free-shipping">Grátis</span></div>
+          <div class="summary-row total"><span>Total</span><span>R$ 319,60</span></div>
+          <div style="margin-top:14px; margin-bottom:6px; font-size:12px; color:#9d4edd; font-weight:700;">Forma de pagamento</div>
+          <div class="payment-option selected">
+            <span>💳</span><span style="color:#fff; font-size:13px; font-weight:600;">Cartão de Crédito</span><div class="radio"></div>
+          </div>
+          <div class="payment-option">
+            <span>🔳</span><span style="color:#fff; font-size:13px; font-weight:600;">Pix</span><div class="radio"></div>
+          </div>
+          <div class="payment-option">
+            <span>👛</span><span style="color:#fff; font-size:13px; font-weight:600;">Carteira GIUCAR</span><div class="radio"></div>
+          </div>
+          <a href="#home" class="login-btn" style="display:block; text-align:center; text-decoration:none; margin-top:6px;">Confirmar Pagamento (mock)</a>
         </div>
       </div>
     </div>

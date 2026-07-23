@@ -6,8 +6,8 @@ import '../theme/app_colors.dart';
 /// Fornece:
 /// - fundo #050811 com spots radiais neon (ciano + roxo) fundidos via
 ///   [ShaderMask] + [BlendMode.dstOut], evitando cortes bruscos entre luzes;
-/// - navegacao inferior flutuante (Home / Pedidos / Perfil) sobreposta ao
-///   conteudo, com efeito "glass" neon.
+/// - navegacao inferior flutuante (Home / Loja / Pedidos / Perfil) sobreposta
+///   ao conteudo, com efeito "glass" neon.
 class AppScaffold extends StatelessWidget {
   const AppScaffold({
     super.key,
@@ -147,6 +147,7 @@ class _FloatingNavBar extends StatelessWidget {
 
   static const _items = [
     (icon: Icons.home_rounded, label: 'Home'),
+    (icon: Icons.storefront_rounded, label: 'Loja'),
     (icon: Icons.receipt_long_rounded, label: 'Pedidos'),
     (icon: Icons.person_rounded, label: 'Perfil'),
   ];
@@ -168,15 +169,16 @@ class _FloatingNavBar extends StatelessWidget {
         ],
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: List.generate(_items.length, (i) {
           final selected = i == currentIndex;
           final item = _items[i];
-          return _NavItem(
-            icon: item.icon,
-            label: item.label,
-            selected: selected,
-            onTap: () => onDestinationSelected?.call(i),
+          return Expanded(
+            child: _NavItem(
+              icon: item.icon,
+              label: item.label,
+              selected: selected,
+              onTap: () => onDestinationSelected?.call(i),
+            ),
           );
         }),
       ),
@@ -204,7 +206,7 @@ class _NavItem extends StatelessWidget {
       borderRadius: BorderRadius.circular(20),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
         decoration: BoxDecoration(
           color: selected ? AppColors.primaryContainer : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
@@ -220,8 +222,10 @@ class _NavItem extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 10,
                 fontWeight: FontWeight.w700,
                 color: selected ? AppColors.primary : AppColors.textMuted,
               ),

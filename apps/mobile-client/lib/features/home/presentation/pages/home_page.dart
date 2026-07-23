@@ -8,6 +8,7 @@ import '../../../../core/widgets/loading_skeleton.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/providers/auth_state.dart';
 import '../../../engagement/presentation/providers/engagement_provider.dart';
+import '../../../shop/presentation/pages/shop_page.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -21,6 +22,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   final _pages = const [
     _HomeTab(),
+    ShopPage(),
     _HistoryTab(),
     _ProfileTab(),
   ];
@@ -397,7 +399,7 @@ class _QuickActionsCard extends StatelessWidget {
               _QuickAction(
                 icon: Icons.shopping_bag_outlined,
                 label: 'Loja\nAcessórios',
-                onTap: () => context.push('/marketplace'),
+                onTap: () => context.push('/shop'),
               ),
               _QuickAction(
                 icon: Icons.two_wheeler,
@@ -571,7 +573,7 @@ class _MarketplaceBanner extends StatelessWidget {
             radius: 14,
             backgroundColor: AppColors.surfaceAlt,
             child: InkWell(
-              onTap: () => context.push('/marketplace'),
+              onTap: () => context.push('/shop'),
               borderRadius: BorderRadius.circular(14),
               child: Container(
                 height: 88,
