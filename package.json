@@ -1,0 +1,15 @@
+{
+  "name": "lavagem-domicilio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Monorepo Lavagem a Domicilio (API NestJS + Admin Web Next.js + Apps Flutter)",
+  "packageManager": "pnpm@8.15.0",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "build": "pnpm --filter api build && pnpm --filter admin-web build",
+    "lint": "pnpm --filter api lint && pnpm --filter admin-web lint",
+    "test": "pnpm --filter api test"
+  }
+}
