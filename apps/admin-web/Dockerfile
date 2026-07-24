@@ -12,6 +12,7 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml turbo.json* ./
 COPY apps/admin-web/package.json ./apps/admin-web/
 COPY services/api/package.json ./services/api/
+RUN mkdir -p packages
 COPY packages ./packages
 
 RUN pnpm install --frozen-lockfile=false --filter admin-web
@@ -30,6 +31,7 @@ COPY --from=deps /app/apps/admin-web/node_modules ./apps/admin-web/node_modules
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml turbo.json* ./
 COPY apps/admin-web ./apps/admin-web
 COPY services/api/package.json ./services/api/
+RUN mkdir -p packages
 COPY packages ./packages
 
 WORKDIR /app/apps/admin-web

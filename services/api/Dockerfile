@@ -13,6 +13,7 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml turbo.json* ./
 COPY services/api/package.json ./services/api/
 COPY apps/admin-web/package.json ./apps/admin-web/
+RUN mkdir -p packages
 COPY packages ./packages
 
 # Instala apenas as dependências da API
@@ -32,6 +33,7 @@ COPY --from=deps /app/services/api/node_modules ./services/api/node_modules
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml turbo.json* ./
 COPY services/api ./services/api
 COPY apps/admin-web/package.json ./apps/admin-web/
+RUN mkdir -p packages
 COPY packages ./packages
 
 WORKDIR /app/services/api

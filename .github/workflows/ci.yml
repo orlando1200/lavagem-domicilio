@@ -13,55 +13,49 @@ concurrency:
 env:
   NODE_VERSION: '20'
   PNPM_VERSION: '8.15.0'
+  FLUTTER_VERSION: '3.22.0'
 
 jobs:
-  # ---------------------------------------------------------------------
-  # Instalação e lint/typecheck compartilhados (rápido)
   # -------------------------------------------------------------------
-  changes:
-    name: Detect changed packages
+  # Validacao geral de sintaxe (YAML dos workflows + arquivos de config)
+  # -------------------------------------------------------------------
+  syntax:
+    name: Syntax validation
     runs-on: ubuntu-latest
-    outputs:
-      api: ${{ steps.filter.outputs.api }}
-      admin-web: ${{ steps.filter.outputs.admin-web }}
-      mobile: ${{ steps.filter.outputs.mobile }}
-      docker: ${{ steps.filter.outputs.docker }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Paths filter
-        uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            api:
-              - 'services/api/**'
-              - 'packages/**'
-              - 'pnpm-workspace.yaml'
-              - 'package.json'
-            admin-web:
-              - 'apps/admin-web/**'
-              - 'packages/**'
-              - 'pnpm-workspace.yaml'
-              - 'package.json'
-            mobile:
-              - 'apps/mobile-client/**'
-              - 'apps/mobile-driver/**'
-            docker:
-              - 'services/api/Dockerfile'
-              - 'apps/admin-web/Dockerfile'
-              - 'docker-compose.yml'
-              - '.github/workflows/**'
+      - name: Validate workflow YAML files
+        run: |
+          python3 -c "
+          import sys, yaml, glob
+          files = glob.glob('.github/workflows/*.yml') + glob.glob('.github/workflows/*.yaml')
+          ok = True
+          for f in files:
+              try:
+                  with open(f, 'r', encoding='utf-8') as fh:
+                      yaml.safe_load(fh)
+                  print(f'OK: {f}')
+              except Exception as e:
+                  print(f'INVALID: {f} -> {e}')
+                  ok = False
+          sys.exit(0 if ok else 1)
+          "
+
+      - name: Validate docker-compose.yml
+        uses: docker/setup-buildx-action@v3
+
+      - name: Docker Compose config check
+        run: docker compose -f docker-compose.yml config > /dev/null
 
   # -------------------------------------------------------------------
-  # Backend API
+  # Backend API (NestJS)
   # -------------------------------------------------------------------
   api:
     name: API (lint, typecheck, test, build)
     runs-on: ubuntu-latest
-    needs: changes
-    if: ${{ needs.changes.outputs.api == 'true' || github.ref_name == 'main' }}
+    needs: syntax
     defaults:
       run:
         working-directory: services/api
@@ -79,36 +73,48 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
+          cache-dependency-path: |
+            package.json
+            pnpm-workspace.yaml
+            services/api/package.json
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            services/api/node_modules
+            ~/.local/share/pnpm/store
+          key: ${{ runner.os }}-pnpm-api-${{ hashFiles('services/api/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-api-
 
       - name: Install dependencies
         working-directory: .
-        run: pnpm install --frozen-lockfile=false
+        run: pnpm install --no-frozen-lockfile
 
       - name: Generate Prisma Client
-        run: pnpm db:generate
+        run: pnpm run db:generate
 
       - name: Lint
-        run: pnpm lint
-        continue-on-error: true
+        run: pnpm run lint
 
       - name: Type check
-        run: npx tsc --noEmit -p tsconfig.json
+        run: pnpm run type-check
 
       - name: Unit tests
-        run: pnpm test -- --ci --coverage
-        continue-on-error: true
+        run: pnpm run test -- --ci --coverage
 
       - name: Build
-        run: pnpm build
+        run: pnpm run build
 
   # -------------------------------------------------------------------
-  # Admin Web
+  # Admin Web (Next.js)
   # -------------------------------------------------------------------
   admin-web:
     name: Admin Web (lint, typecheck, build)
     runs-on: ubuntu-latest
-    needs: changes
-    if: ${{ needs.changes.outputs.admin-web == 'true' || github.ref_name == 'main' }}
+    needs: syntax
     defaults:
       run:
         working-directory: apps/admin-web
@@ -126,31 +132,45 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
+          cache-dependency-path: |
+            package.json
+            pnpm-workspace.yaml
+            apps/admin-web/package.json
+
+      - name: Cache node_modules and .next/cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            apps/admin-web/node_modules
+            apps/admin-web/.next/cache
+            ~/.local/share/pnpm/store
+          key: ${{ runner.os }}-pnpm-admin-web-${{ hashFiles('apps/admin-web/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-admin-web-
 
       - name: Install dependencies
         working-directory: .
-        run: pnpm install --frozen-lockfile=false
+        run: pnpm install --no-frozen-lockfile
 
       - name: Lint
-        run: pnpm lint
-        continue-on-error: true
+        run: pnpm run lint
 
       - name: Type check
-        run: pnpm type-check
+        run: pnpm run type-check
 
       - name: Build
-        run: pnpm build
+        run: pnpm run build
         env:
           API_URL: http://localhost:3000/api/v1
 
   # -------------------------------------------------------------------
-  # Mobile apps (Flutter)
+  # Mobile apps (Flutter) - matrix mobile-client / mobile-driver
   # -------------------------------------------------------------------
   mobile:
-    name: Mobile (analyze)
+    name: Mobile (${{ matrix.app }})
     runs-on: ubuntu-latest
-    needs: changes
-    if: ${{ needs.changes.outputs.mobile == 'true' || github.ref_name == 'main' }}
+    needs: syntax
     strategy:
       fail-fast: false
       matrix:
@@ -162,8 +182,20 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.22.0'
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: 'stable'
+          cache: true
+          cache-key: flutter-${{ env.FLUTTER_VERSION }}-${{ matrix.app }}
+
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.PUB_CACHE }}
+            apps/${{ matrix.app }}/.dart_tool
+          key: ${{ runner.os }}-pub-${{ matrix.app }}-${{ hashFiles(format('apps/{0}/pubspec.lock', matrix.app)) }}
+          restore-keys: |
+            ${{ runner.os }}-pub-${{ matrix.app }}-
 
       - name: Install dependencies
         working-directory: apps/${{ matrix.app }}
@@ -171,17 +203,15 @@ jobs:
 
       - name: Analyze
         working-directory: apps/${{ matrix.app }}
-        run: flutter analyze
-        continue-on-error: true
+        run: flutter analyze --no-fatal-infos
 
   # -------------------------------------------------------------------
-  # Validação dos Dockerfiles
+  # Validacao dos Dockerfiles (build de teste, sem push)
   # -------------------------------------------------------------------
   docker:
     name: Validate Dockerfiles
     runs-on: ubuntu-latest
-    needs: changes
-    if: ${{ needs.changes.outputs.docker == 'true' || github.ref_name == 'main' }}
+    needs: [api, admin-web]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -189,25 +219,102 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Validate API Dockerfile
+      - name: Validate API Dockerfile (build stage)
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./services/api/Dockerfile
           push: false
           target: builder
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,mode=max,scope=api
 
-      - name: Validate Admin Web Dockerfile
+      - name: Validate Admin Web Dockerfile (build stage)
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./apps/admin-web/Dockerfile
           push: false
           target: builder
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=admin-web
+          cache-to: type=gha,mode=max,scope=admin-web
           build-args: |
             API_URL=http://localhost:3000/api/v1
 
+  # -------------------------------------------------------------------
+  # CD (opcional): build e push das imagens para Amazon ECR em push p/ main
+  # Nao faz deploy em ECS; apenas publica as imagens no registry.
+  # Requer os secrets: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION,
+  # ECR_REPOSITORY_API, ECR_REPOSITORY_ADMIN_WEB.
+  # -------------------------------------------------------------------
+  push-to-ecr:
+    name: Build and push images to Amazon ECR
+    runs-on: ubuntu-latest
+    needs: docker
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Extract metadata for API image
+        id: meta-api
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.ecr-login.outputs.registry }}/${{ secrets.ECR_REPOSITORY_API }}
+          tags: |
+            type=sha,prefix=
+            type=ref,event=branch
+            latest
+
+      - name: Build and push API image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./services/api/Dockerfile
+          push: true
+          tags: ${{ steps.meta-api.outputs.tags }}
+          labels: ${{ steps.meta-api.outputs.labels }}
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,mode=max,scope=api
+
+      - name: Extract metadata for Admin Web image
+        id: meta-admin
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.ecr-login.outputs.registry }}/${{ secrets.ECR_REPOSITORY_ADMIN_WEB }}
+          tags: |
+            type=sha,prefix=
+            type=ref,event=branch
+            latest
+
+      - name: Build and push Admin Web image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./apps/admin-web/Dockerfile
+          push: true
+          tags: ${{ steps.meta-admin.outputs.tags }}
+          labels: ${{ steps.meta-admin.outputs.labels }}
+          cache-from: type=gha,scope=admin-web
+          cache-to: type=gha,mode=max,scope=admin-web
+          build-args: |
+            API_URL=http://localhost:3000/api/v1
+
+      - name: Output image tags
+        run: |
+          echo "API image: ${{ steps.ecr-login.outputs.registry }}/${{ secrets.ECR_REPOSITORY_API }}:${{ github.sha }}"
+          echo "Admin Web image: ${{ steps.ecr-login.outputs.registry }}/${{ secrets.ECR_REPOSITORY_ADMIN_WEB }}:${{ github.sha }}"
