@@ -7,14 +7,14 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap');
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at top, #0d142b 0%, #070b18 45%, #03060f 100%); min-height: 100vh; display: flex; justify-content: center; padding: 36px; color: #fff; }
+body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at top, #10182f 0%, #070b18 45%, #050811 100%); min-height: 100vh; display: flex; justify-content: center; padding: 36px; color: #fff; }
 .app-container { display: flex; gap: 60px; justify-content: center; flex-wrap: wrap; align-items: flex-start; max-width: 2200px; }
-.phone { width: 360px; height: 780px; background: linear-gradient(180deg, #0c1020 0%, #080a16 100%); border-radius: 48px; padding: 12px; box-shadow: 0 0 0 1px rgba(0,245,212,0.08), 0 24px 70px rgba(0,0,0,0.78), inset 0 0 0 1px rgba(157,78,221,0.08); position: relative; overflow: hidden; }
+.phone { width: 360px; height: 780px; background: linear-gradient(180deg, #0c1020 0%, #080a16 100%); border-radius: 48px; padding: 12px; box-shadow: 0 0 0 1px rgba(0,242,194,0.08), 0 24px 70px rgba(0,0,0,0.78), inset 0 0 0 1px rgba(157,78,221,0.08); position: relative; overflow: hidden; }
 .phone::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 140px; height: 30px; background: #080a16; border-radius: 0 0 18px 18px; z-index: 10; }
-.screen { width: 100%; height: 100%; background: linear-gradient(180deg, #070914 0%, #050816 100%); border-radius: 36px; overflow: hidden; position: relative; display: flex; flex-direction: column; }
+.screen { width: 100%; height: 100%; background: linear-gradient(180deg, #070914 0%, #050811 100%); border-radius: 36px; overflow: hidden; position: relative; display: flex; flex-direction: column; }
 .status { height: 44px; display: flex; justify-content: space-between; align-items: center; padding: 0 26px; font-size: 14px; font-weight: 600; color: #c77dff; }
-.online-toggle { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #4fe7cf; background: rgba(0,245,212,0.08); padding: 4px 10px; border-radius: 12px; }
-.online-dot { width: 8px; height: 8px; background: #4fe7cf; border-radius: 50%; box-shadow: 0 0 8px #4fe7cf; }
+.online-toggle { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #00F2C2; background: rgba(0,242,194,0.08); padding: 4px 10px; border-radius: 12px; }
+.online-dot { width: 8px; height: 8px; background: #00F2C2; border-radius: 50%; box-shadow: 0 0 8px #00F2C2; }
 .header { padding: 12px 24px 20px; }
 .header h2 { font-size: 22px; font-weight: 700; color: #fff; }
 .header p { color: #9d4edd; font-size: 14px; margin-top: 4px; }
@@ -22,33 +22,33 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
 .section-title { font-size: 14px; font-weight: 700; color: #fff; margin: 20px 4px 12px; }
 .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .stat-card { background: linear-gradient(180deg, rgba(13,18,36,0.98) 0%, rgba(10,14,28,0.98) 100%); border: 1px solid rgba(148,163,255,0.12); border-radius: 18px; padding: 18px; text-align: center; }
-.stat-card .value { font-size: 28px; font-weight: 800; color: #4fe7cf; }
+.stat-card .value { font-size: 28px; font-weight: 800; color: #00F2C2; }
 .stat-card .label { font-size: 12px; color: #8b9bb4; margin-top: 4px; }
 .order-card { background: linear-gradient(180deg, rgba(13,18,36,0.98) 0%, rgba(10,14,28,0.98) 100%); border: 1px solid rgba(148,163,255,0.12); border-radius: 18px; padding: 16px; margin-bottom: 12px; }
 .order-card .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 .order-card .customer { font-size: 15px; font-weight: 700; color: #fff; }
-.order-card .price { font-size: 18px; font-weight: 800; color: #4fe7cf; }
+.order-card .price { font-size: 18px; font-weight: 800; color: #00F2C2; }
 .order-card .detail { font-size: 12px; color: #8b9bb4; margin-bottom: 4px; }
 .order-card .actions { display: flex; gap: 10px; margin-top: 12px; }
 .btn { flex: 1; padding: 12px; border-radius: 12px; border: none; font-size: 13px; font-weight: 800; cursor: pointer; }
-.btn-primary { background: linear-gradient(90deg, #28e9d2 0%, #12f2c5 100%); color: #09101a; box-shadow: 0 0 18px rgba(18,242,197,0.18); }
+.btn-primary { background: linear-gradient(90deg, #00d9ae 0%, #00F2C2 100%); color: #050811; box-shadow: 0 0 18px rgba(0,242,194,0.25); }
 .btn-secondary { background: rgba(255,255,255,0.06); color: #fff; border: 1px solid rgba(255,255,255,0.1); }
 .nav-float { margin: 16px; background: rgba(11,16,32,0.92); border: 1px solid rgba(148,163,255,0.12); border-radius: 24px; padding: 10px 10px; display: flex; justify-content: space-around; align-items: center; }
 .nav-item { color: #4a5578; font-size: 11px; text-align: center; font-weight: 500; }
-.nav-item.active { color: #4fe7cf; }
+.nav-item.active { color: #00F2C2; }
 .nav-icon { font-size: 22px; margin-bottom: 2px; }
 .empty-state { text-align: center; padding: 40px 20px; color: #4a5578; font-size: 13px; }
-.profile-avatar { width: 90px; height: 90px; border-radius: 28px; background: linear-gradient(135deg, #22d3ee 0%, #8b5cf6 55%, #f472b6 100%); display: flex; align-items: center; justify-content: center; font-size: 38px; font-weight: 900; margin: 0 auto 16px; box-shadow: 0 0 28px rgba(34,211,238,0.18); }
+.profile-avatar { width: 90px; height: 90px; border-radius: 28px; background: linear-gradient(135deg, #00F2C2 0%, #9D4EDD 100%); display: flex; align-items: center; justify-content: center; font-size: 38px; font-weight: 900; margin: 0 auto 16px; box-shadow: 0 0 28px rgba(0,242,194,0.2); }
 .profile-name { text-align: center; font-size: 20px; font-weight: 800; color: #fff; }
 .profile-rating { text-align: center; font-size: 14px; color: #ffc107; margin-top: 4px; }
-.profile-status { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; font-size: 13px; color: #4fe7cf; }
+.profile-status { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; font-size: 13px; color: #00F2C2; }
 .menu-item { display: flex; align-items: center; justify-content: space-between; padding: 16px; background: linear-gradient(180deg, rgba(13,18,36,0.98) 0%, rgba(10,14,28,0.98) 100%); border: 1px solid rgba(148,163,255,0.12); border-radius: 14px; margin-bottom: 10px; cursor: pointer; }
 .menu-item .left { display: flex; align-items: center; gap: 12px; }
-.menu-item .icon { width: 38px; height: 38px; border-radius: 12px; background: rgba(0,245,212,0.08); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.menu-item .icon { width: 38px; height: 38px; border-radius: 12px; background: rgba(0,242,194,0.08); display: flex; align-items: center; justify-content: center; font-size: 18px; }
 .menu-item .label { font-size: 14px; font-weight: 600; color: #fff; }
 .menu-item .arrow { color: #4a5578; font-size: 14px; }
 .verification-item { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: rgba(13,18,36,0.6); border: 1px solid rgba(148,163,255,0.08); border-radius: 12px; margin-bottom: 8px; }
-.verification-item .status { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #4fe7cf; }
+.verification-item .status { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #00F2C2; }
 .verification-item .status.pending { color: #ffc107; }
 .tools-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
 .tool-card { background: linear-gradient(180deg, rgba(13,18,36,0.98) 0%, rgba(10,14,28,0.98) 100%); border: 1px solid rgba(148,163,255,0.12); border-radius: 18px; padding: 16px; text-align: center; cursor: pointer; }
@@ -56,22 +56,45 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
 .tool-card .label { font-size: 13px; font-weight: 700; color: #fff; }
 .tool-card .sub { font-size: 11px; color: #8b9bb4; margin-top: 2px; }
 .logout-btn { width: 100%; padding: 16px; border-radius: 14px; border: 1px solid rgba(255,107,107,0.3); background: rgba(255,107,107,0.08); color: #ff6b6b; font-size: 14px; font-weight: 800; margin-top: 20px; cursor: pointer; }
-.login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 32px 24px; text-align: center; background: radial-gradient(circle at 50% 0%, rgba(0,245,212,0.08), transparent 50%); }
-.logo-icon { width: 110px; height: 110px; border-radius: 32px; background: linear-gradient(135deg, #22d3ee 0%, #8b5cf6 55%, #f472b6 100%); display: flex; align-items: center; justify-content: center; font-size: 56px; margin-bottom: 20px; box-shadow: 0 0 40px rgba(34,211,238,0.2); }
+.login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 32px 24px; text-align: center; background: radial-gradient(circle at 50% 0%, rgba(0,242,194,0.08), transparent 50%); }
+.logo-icon { width: 110px; height: 110px; border-radius: 32px; background: linear-gradient(135deg, #00F2C2 0%, #9D4EDD 100%); display: flex; align-items: center; justify-content: center; font-size: 56px; margin-bottom: 20px; box-shadow: 0 0 40px rgba(0,242,194,0.2); }
 .login-screen h1 { font-size: 26px; font-weight: 900; color: #fff; margin-bottom: 6px; }
 .login-screen .tagline { font-size: 14px; color: #8b9bb4; margin-bottom: 36px; }
 .login-screen .input { width: 100%; padding: 16px; border-radius: 14px; border: 1px solid rgba(148,163,255,0.12); background: rgba(13,18,36,0.6); color: #fff; font-size: 14px; margin-bottom: 12px; outline: none; }
 .login-screen .input::placeholder { color: #4a5578; }
-.login-screen .input:focus { border-color: #4fe7cf; }
-.login-screen .login-btn { width: 100%; padding: 16px; border-radius: 14px; border: none; background: linear-gradient(90deg, #28e9d2 0%, #12f2c5 100%); color: #09101a; font-size: 15px; font-weight: 800; margin-top: 8px; cursor: pointer; }
+.login-screen .input:focus { border-color: #00F2C2; }
+.login-screen .login-btn { width: 100%; padding: 16px; border-radius: 14px; border: none; background: linear-gradient(90deg, #00d9ae 0%, #00F2C2 100%); color: #050811; font-size: 15px; font-weight: 800; margin-top: 8px; cursor: pointer; }
 .login-screen .login-footer { margin-top: 20px; font-size: 12px; color: #4a5578; }
-.login-screen .login-footer a { color: #4fe7cf; text-decoration: none; font-weight: 700; }
+.login-screen .login-footer a { color: #00F2C2; text-decoration: none; font-weight: 700; }
+.timeline { padding: 4px 0; }
+.timeline-step { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.timeline-dot { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; flex-shrink: 0; border: 1px solid rgba(148,163,255,0.25); background: rgba(255,255,255,0.04); color: #4a5578; }
+.timeline-step.done .timeline-dot { background: #00F2C2; border-color: #00F2C2; color: #050811; box-shadow: 0 0 10px rgba(0,242,194,0.4); }
+.timeline-step .timeline-label { font-size: 14px; color: #4a5578; font-weight: 500; }
+.timeline-step.done .timeline-label { color: #fff; font-weight: 700; }
+.detail-row { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #8b9bb4; margin-bottom: 8px; }
+.detail-row b { color: #fff; font-weight: 600; }
+.status-pill { display: inline-flex; align-items: center; padding: 5px 14px; border-radius: 999px; background: rgba(0,242,194,0.1); border: 1px solid #00F2C2; color: #00F2C2; font-size: 12px; font-weight: 700; margin: 12px 0; }
+.top-bar { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; max-width: 1600px; margin: 0 auto 20px; width: 100%; }
+.top-bar a { color: #00F2C2; text-decoration: none; font-size: 14px; font-weight: 700; padding: 8px 16px; border: 1px solid rgba(0,242,194,0.3); border-radius: 20px; }
+.top-bar a:hover { background: rgba(0,242,194,0.08); }
+.phone-label { text-align: center; font-size: 13px; font-weight: 700; color: #9d4edd; margin-bottom: 10px; letter-spacing: 0.5px; }
+.phone-wrap { display: flex; flex-direction: column; align-items: center; }
+.nav-float a.nav-item { text-decoration: none; display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+.tool-card, .menu-item { cursor: pointer; }
+a.tool-card, a.menu-item { text-decoration: none; display: block; color: inherit; }
 </style>
 </head>
 <body>
+<div class="top-bar">
+  <a href="index.html">‹ Voltar ao portal</a>
+  <a href="index.html">Ver todos os previews</a>
+</div>
 <div class="app-container">
 
   <!-- Login do Lavador -->
+  <div class="phone-wrap" id="login">
+    <div class="phone-label">Login</div>
   <div class="phone">
     <div class="screen">
       <div class="status"><span class="time">9:41</span></div>
@@ -81,13 +104,16 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
         <div class="tagline">Área do lavador parceiro</div>
         <input class="input" type="text" placeholder="E-mail ou CPF" value="carlos.lavador@email.com">
         <input class="input" type="password" placeholder="Senha" value="••••••••">
-        <button class="login-btn">Entrar como lavador</button>
-        <div class="login-footer">Ainda não é parceiro? <a href="#">Cadastre-se</a></div>
+        <a href="#home" class="login-btn" style="display:block; text-align:center; text-decoration:none;">Entrar como lavador</a>
+        <div class="login-footer">Ainda não é parceiro? <a href="#login">Cadastre-se</a></div>
       </div>
     </div>
   </div>
+  </div>
 
   <!-- Home do Lavador -->
+  <div class="phone-wrap" id="home">
+    <div class="phone-label">Home</div>
   <div class="phone">
     <div class="screen">
       <div class="status">
@@ -115,36 +141,101 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
           <div class="detail">🚗 Lavagem Premium · Honda Civic</div>
           <div class="detail">📍 Rua Augusta, 150 · 2,3 km</div>
           <div class="actions">
-            <button class="btn btn-primary">Iniciar lavagem</button>
-            <button class="btn btn-secondary">Ver detalhes</button>
+            <a class="btn btn-primary" style="text-decoration:none;text-align:center;display:block;" href="#pedido-ativo">Iniciar lavagem</a>
+            <a class="btn btn-secondary" style="text-decoration:none;text-align:center;display:block;" href="#pedido-ativo">Ver detalhes</a>
           </div>
         </div>
 
         <div class="section-title">Ferramentas do lavador</div>
         <div class="tools-grid">
-          <div class="tool-card">
+          <a class="tool-card" href="#loja">
             <div class="icon">🛒</div>
             <div class="label">Loja de produtos</div>
             <div class="sub">Repõe seu kit</div>
-          </div>
-          <div class="tool-card">
+          </a>
+          <a class="tool-card" href="#motos">
             <div class="icon">🏍️</div>
             <div class="label">Aluguel de moto</div>
             <div class="sub">Mobilidade pro dia</div>
-          </div>
+          </a>
+          <a class="tool-card" href="#entregas" style="grid-column: 1 / -1;">
+            <div class="icon">📦</div>
+            <div class="label">Entregas Loja do Lavador</div>
+            <div class="sub">Aceite e entregue produtos comprados por outros lavadores</div>
+          </a>
         </div>
       </div>
       <div class="nav-float">
-        <div class="nav-item active"><div class="nav-icon">🏠</div>Home</div>
-        <div class="nav-item"><div class="nav-icon">🛒</div>Loja</div>
-        <div class="nav-item"><div class="nav-icon">🏍️</div>Motos</div>
-        <div class="nav-item"><div class="nav-icon">📋</div>Pedidos</div>
-        <div class="nav-item"><div class="nav-icon">👤</div>Perfil</div>
+        <a class="nav-item active" href="#home"><div class="nav-icon">🏠</div>Home</a>
+        <a class="nav-item" href="#loja"><div class="nav-icon">🛒</div>Loja</a>
+        <a class="nav-item" href="#entregas"><div class="nav-icon">📦</div>Entregas</a>
+        <a class="nav-item" href="#pedidos-disponiveis"><div class="nav-icon">📋</div>Pedidos</a>
+        <a class="nav-item" href="#perfil"><div class="nav-icon">👤</div>Perfil</a>
       </div>
     </div>
   </div>
+  </div>
+
+  <!-- Pedido Ativo (detalhe + andamento) -->
+  <div class="phone-wrap" id="pedido-ativo">
+    <div class="phone-label">Pedido Ativo</div>
+  <div class="phone">
+    <div class="screen">
+      <div class="status"><a href="#home" style="color:#c77dff;text-decoration:none;">‹</a><span class="time">9:41</span><span style="font-size:14px;">Pedido ativo</span></div>
+      <div class="content">
+        <div class="order-card">
+          <div class="row">
+            <span class="customer">Orlando Silva</span>
+            <span class="price">R$ 89,90</span>
+          </div>
+          <span class="status-pill">Em andamento</span>
+          <div class="detail-row">🚗 <span><b>Lavagem Premium</b> · Honda Civic</span></div>
+          <div class="detail-row">📍 <span>Rua Augusta, 150 · <b>2,3 km</b></span></div>
+        </div>
+
+        <div class="section-title">Andamento</div>
+        <div class="order-card">
+          <div class="timeline">
+            <div class="timeline-step done">
+              <div class="timeline-dot">✓</div>
+              <div class="timeline-label">Atribuído</div>
+            </div>
+            <div class="timeline-step done">
+              <div class="timeline-dot">✓</div>
+              <div class="timeline-label">A caminho</div>
+            </div>
+            <div class="timeline-step done">
+              <div class="timeline-dot">✓</div>
+              <div class="timeline-label">Chegou ao local</div>
+            </div>
+            <div class="timeline-step done">
+              <div class="timeline-dot">✓</div>
+              <div class="timeline-label">Em andamento</div>
+            </div>
+            <div class="timeline-step">
+              <div class="timeline-dot">5</div>
+              <div class="timeline-label">Concluído</div>
+            </div>
+          </div>
+        </div>
+
+        <a class="btn btn-primary" href="#home" style="width:100%; margin-top: 16px; padding: 16px; text-decoration:none; text-align:center; display:block; box-sizing:border-box;">Concluir lavagem</a>
+        <a class="btn" href="#pedidos-disponiveis" style="width:100%; margin-top: 10px; padding: 14px; background: rgba(255,107,107,0.08); border: 1px solid rgba(255,107,107,0.3); color: #ff6b6b; text-decoration:none; text-align:center; display:block; box-sizing:border-box;">Cancelar pedido</a>
+      </div>
+      <div class="nav-float">
+        <a class="nav-item" href="#home"><div class="nav-icon">🏠</div>Home</a>
+        <a class="nav-item" href="#loja"><div class="nav-icon">🛒</div>Loja</a>
+        <a class="nav-item" href="#entregas"><div class="nav-icon">📦</div>Entregas</a>
+        <a class="nav-item active" href="#pedidos-disponiveis"><div class="nav-icon">📋</div>Pedidos</a>
+        <a class="nav-item" href="#perfil"><div class="nav-icon">👤</div>Perfil</a>
+      </div>
+    </div>
+  </div>
+  </div>
 
   <!-- Loja do Lavador (B2B) -->
+  <div class="phone-wrap" id="loja">
+    <div class="phone-label">Loja do Lavador</div>
   <div class="phone">
     <div class="screen">
       <div class="status">
@@ -180,16 +271,129 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
         </div>
       </div>
       <div class="nav-float">
-        <div class="nav-item"><div class="nav-icon">🏠</div>Home</div>
-        <div class="nav-item active"><div class="nav-icon">🛒</div>Loja</div>
-        <div class="nav-item"><div class="nav-icon">🏍️</div>Motos</div>
-        <div class="nav-item"><div class="nav-icon">📋</div>Pedidos</div>
-        <div class="nav-item"><div class="nav-icon">👤</div>Perfil</div>
+        <a class="nav-item" href="#home"><div class="nav-icon">🏠</div>Home</a>
+        <a class="nav-item active" href="#loja"><div class="nav-icon">🛒</div>Loja</a>
+        <a class="nav-item" href="#entregas"><div class="nav-icon">📦</div>Entregas</a>
+        <a class="nav-item" href="#pedidos-disponiveis"><div class="nav-icon">📋</div>Pedidos</a>
+        <a class="nav-item" href="#perfil"><div class="nav-icon">👤</div>Perfil</a>
       </div>
     </div>
   </div>
+  </div>
+
+  <!-- Entregas Loja do Lavador -->
+  <div class="phone-wrap" id="entregas">
+    <div class="phone-label">Entregas</div>
+  <div class="phone">
+    <div class="screen">
+      <div class="status">
+        <span class="time">9:41</span>
+        <div class="online-toggle"><div class="online-dot"></div>Online</div>
+      </div>
+      <div class="header">
+        <h2>Entregas Loja do Lavador</h2>
+        <p>Entregue produtos comprados por outros lavadores</p>
+      </div>
+      <div class="content">
+        <div class="section-title">Entrega em andamento</div>
+        <div class="order-card">
+          <div class="row">
+            <span class="customer">Kit Shampoo + Cera</span>
+            <span class="price">R$ 12,00</span>
+          </div>
+          <span class="status-pill">A caminho</span>
+          <div class="detail-row">🏪 <span>Loja AutoBrilho · <b>André Souza</b></span></div>
+          <div class="detail-row">📦 <span>Coleta: Rua Vergueiro, 500</span></div>
+          <div class="detail-row">📍 <span>Entrega: Rua Domingos de Morais, 900 · <b>3,1 km</b></span></div>
+          <div class="actions">
+            <a class="btn btn-primary" href="#entregas" style="text-decoration:none;text-align:center;display:block;">Confirmar entrega</a>
+            <a class="btn btn-secondary" href="#entregas" style="text-decoration:none;text-align:center;display:block;">Cancelar</a>
+          </div>
+        </div>
+
+        <div class="section-title">Entregas pendentes</div>
+        <div class="order-card">
+          <div class="row">
+            <span class="customer">Aspirador 12V</span>
+            <span class="price">R$ 15,00</span>
+          </div>
+          <div class="detail">🏪 Loja Turbo Clean · Fernanda Alves</div>
+          <div class="detail">📦 Coleta: Av. Ibirapuera, 200</div>
+          <div class="detail">📍 Entrega: Rua Bela Cintra, 45 · 4,6 km</div>
+          <div class="actions">
+            <a class="btn btn-primary" href="#entregas" style="text-decoration:none;text-align:center;display:block;">Aceitar</a>
+            <a class="btn btn-secondary" href="#entregas" style="text-decoration:none;text-align:center;display:block;">Recusar</a>
+          </div>
+        </div>
+
+        <div class="order-card">
+          <div class="row">
+            <span class="customer">Microfibras (kit 10un)</span>
+            <span class="price">R$ 8,00</span>
+          </div>
+          <div class="detail">🏪 Loja AutoBrilho · Ricardo Nunes</div>
+          <div class="detail">📦 Coleta: Rua Vergueiro, 500</div>
+          <div class="detail">📍 Entrega: Av. Faria Lima, 1200 · 6,2 km</div>
+          <div class="actions">
+            <a class="btn btn-primary" href="#entregas" style="text-decoration:none;text-align:center;display:block;">Aceitar</a>
+            <a class="btn btn-secondary" href="#entregas" style="text-decoration:none;text-align:center;display:block;">Recusar</a>
+          </div>
+        </div>
+      </div>
+      <div class="nav-float">
+        <a class="nav-item" href="#home"><div class="nav-icon">🏠</div>Home</a>
+        <a class="nav-item" href="#loja"><div class="nav-icon">🛒</div>Loja</a>
+        <a class="nav-item active" href="#entregas"><div class="nav-icon">📦</div>Entregas</a>
+        <a class="nav-item" href="#pedidos-disponiveis"><div class="nav-icon">📋</div>Pedidos</a>
+        <a class="nav-item" href="#perfil"><div class="nav-icon">👤</div>Perfil</a>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <!-- Aluguel de Moto (B2B) -->
+  <div class="phone-wrap" id="motos">
+    <div class="phone-label">Aluguel de Moto</div>
+  <div class="phone">
+    <div class="screen">
+      <div class="status">
+        <span class="time">9:41</span>
+        <div class="online-toggle"><div class="online-dot"></div>Online</div>
+      </div>
+      <div class="header">
+        <h2>Aluguel de moto</h2>
+        <p>Mobilidade para o seu dia de trabalho</p>
+      </div>
+      <div class="content">
+        <div class="tools-grid">
+          <div class="tool-card">
+            <div class="icon">🏍️</div>
+            <div class="label">Honda CG 160</div>
+            <div class="sub">R$ 39,90/dia</div>
+          </div>
+          <div class="tool-card">
+            <div class="icon">🛵</div>
+            <div class="label">Yamaha Fazer</div>
+            <div class="sub">R$ 49,90/dia</div>
+          </div>
+        </div>
+        <div class="empty-state">Mais opções em breve nesta região.</div>
+      </div>
+      <div class="nav-float">
+        <a class="nav-item" href="#home"><div class="nav-icon">🏠</div>Home</a>
+        <a class="nav-item" href="#loja"><div class="nav-icon">🛒</div>Loja</a>
+        <a class="nav-item" href="#entregas"><div class="nav-icon">📦</div>Entregas</a>
+        <a class="nav-item active" href="#motos"><div class="nav-icon">🏍️</div>Motos</a>
+        <a class="nav-item" href="#pedidos-disponiveis"><div class="nav-icon">📋</div>Pedidos</a>
+        <a class="nav-item" href="#perfil"><div class="nav-icon">👤</div>Perfil</a>
+      </div>
+    </div>
+  </div>
+  </div>
 
   <!-- Pedidos Disponíveis -->
+  <div class="phone-wrap" id="pedidos-disponiveis">
+    <div class="phone-label">Pedidos Disponíveis</div>
   <div class="phone">
     <div class="screen">
       <div class="status">
@@ -209,8 +413,8 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
           <div class="detail">🚗 Lavagem Premium · Honda Civic</div>
           <div class="detail">📍 Rua Augusta, 150 · 2,3 km · 8 min</div>
           <div class="actions">
-            <button class="btn btn-primary">Aceitar</button>
-            <button class="btn btn-secondary">Recusar</button>
+            <a class="btn btn-primary" href="#pedido-ativo" style="text-decoration:none;text-align:center;display:block;">Aceitar</a>
+            <a class="btn btn-secondary" href="#pedidos-disponiveis" style="text-decoration:none;text-align:center;display:block;">Recusar</a>
           </div>
         </div>
 
@@ -222,8 +426,8 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
           <div class="detail">🚙 Lavagem Express · Toyota Corolla</div>
           <div class="detail">📍 Av. Paulista, 1000 · 4,1 km · 15 min</div>
           <div class="actions">
-            <button class="btn btn-primary">Aceitar</button>
-            <button class="btn btn-secondary">Recusar</button>
+            <a class="btn btn-primary" href="#pedido-ativo" style="text-decoration:none;text-align:center;display:block;">Aceitar</a>
+            <a class="btn btn-secondary" href="#pedidos-disponiveis" style="text-decoration:none;text-align:center;display:block;">Recusar</a>
           </div>
         </div>
 
@@ -235,22 +439,25 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
           <div class="detail">🚘 Lavagem Detalhada · BMW X3</div>
           <div class="detail">📍 Alameda Santos, 700 · 1,8 km · 6 min</div>
           <div class="actions">
-            <button class="btn btn-primary">Aceitar</button>
-            <button class="btn btn-secondary">Recusar</button>
+            <a class="btn btn-primary" href="#pedido-ativo" style="text-decoration:none;text-align:center;display:block;">Aceitar</a>
+            <a class="btn btn-secondary" href="#pedidos-disponiveis" style="text-decoration:none;text-align:center;display:block;">Recusar</a>
           </div>
         </div>
       </div>
       <div class="nav-float">
-        <div class="nav-item"><div class="nav-icon">🏠</div>Home</div>
-        <div class="nav-item"><div class="nav-icon">🛒</div>Loja</div>
-        <div class="nav-item"><div class="nav-icon">🏍️</div>Motos</div>
-        <div class="nav-item active"><div class="nav-icon">📋</div>Pedidos</div>
-        <div class="nav-item"><div class="nav-icon">👤</div>Perfil</div>
+        <a class="nav-item" href="#home"><div class="nav-icon">🏠</div>Home</a>
+        <a class="nav-item" href="#loja"><div class="nav-icon">🛒</div>Loja</a>
+        <a class="nav-item" href="#entregas"><div class="nav-icon">📦</div>Entregas</a>
+        <a class="nav-item active" href="#pedidos-disponiveis"><div class="nav-icon">📋</div>Pedidos</a>
+        <a class="nav-item" href="#perfil"><div class="nav-icon">👤</div>Perfil</a>
       </div>
     </div>
   </div>
+  </div>
 
   <!-- Perfil do Lavador -->
+  <div class="phone-wrap" id="perfil">
+    <div class="phone-label">Perfil</div>
   <div class="phone">
     <div class="screen">
       <div class="status">
@@ -302,16 +509,17 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
           <span class="arrow">›</span>
         </div>
 
-        <button class="logout-btn">Sair da conta</button>
+        <a class="logout-btn" href="#login" style="display:block; text-align:center; text-decoration:none;">Sair da conta</a>
       </div>
       <div class="nav-float">
-        <div class="nav-item"><div class="nav-icon">🏠</div>Home</div>
-        <div class="nav-item"><div class="nav-icon">🛒</div>Loja</div>
-        <div class="nav-item"><div class="nav-icon">🏍️</div>Motos</div>
-        <div class="nav-item"><div class="nav-icon">📋</div>Pedidos</div>
-        <div class="nav-item active"><div class="nav-icon">👤</div>Perfil</div>
+        <a class="nav-item" href="#home"><div class="nav-icon">🏠</div>Home</a>
+        <a class="nav-item" href="#loja"><div class="nav-icon">🛒</div>Loja</a>
+        <a class="nav-item" href="#entregas"><div class="nav-icon">📦</div>Entregas</a>
+        <a class="nav-item" href="#pedidos-disponiveis"><div class="nav-icon">📋</div>Pedidos</a>
+        <a class="nav-item active" href="#perfil"><div class="nav-icon">👤</div>Perfil</a>
       </div>
     </div>
+  </div>
   </div>
 
 </div>

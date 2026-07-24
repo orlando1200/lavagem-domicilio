@@ -11,15 +11,15 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
 .app-container { display: flex; gap: 60px; justify-content: center; flex-wrap: wrap; align-items: flex-start; }
 .phone { width: 360px; height: 780px; background: linear-gradient(180deg, #0b0f22 0%, #09061a 100%); border-radius: 50px; padding: 12px; box-shadow: 0 0 0 1px rgba(0,255,255,0.08), 0 30px 80px rgba(0,0,0,0.72), inset 0 0 0 1px rgba(157,78,221,0.12); position: relative; overflow: hidden; }
 .phone::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 132px; height: 28px; background: #09061a; border-radius: 0 0 18px 18px; z-index: 10; }
-.screen { width: 100%; height: 100%; border-radius: 38px; overflow: hidden; position: relative; display: flex; flex-direction: column; background: linear-gradient(180deg, #070b1b 0%, #050816 100%); border: 1px solid rgba(157,78,221,0.18); }
+.screen { width: 100%; height: 100%; border-radius: 38px; overflow: hidden; position: relative; display: flex; flex-direction: column; background: linear-gradient(180deg, #070b1b 0%, #050811 100%); border: 1px solid rgba(157,78,221,0.18); }
 .status { height: 44px; display: flex; justify-content: space-between; align-items: center; padding: 0 26px; font-size: 14px; font-weight: 600; color: #c77dff; }
 .status .time { color: #c77dff; font-size: 15px; font-weight: 700; }
 .status .battery { display: flex; align-items: center; gap: 5px; }
-.status .battery-bar { width: 22px; height: 11px; border: 1.5px solid #00f5d4; border-radius: 3px; position: relative; }
-.status .battery-bar::after { content: ''; position: absolute; right: -4px; top: 50%; transform: translateY(-50%); width: 2px; height: 5px; background: #00f5d4; border-radius: 0 1px 1px 0; }
-.status .battery-fill { position: absolute; left: 1.5px; top: 1.5px; bottom: 1.5px; width: 65%; background: #00f5d4; border-radius: 1px; }
+.status .battery-bar { width: 22px; height: 11px; border: 1.5px solid #00F2C2; border-radius: 3px; position: relative; }
+.status .battery-bar::after { content: ''; position: absolute; right: -4px; top: 50%; transform: translateY(-50%); width: 2px; height: 5px; background: #00F2C2; border-radius: 0 1px 1px 0; }
+.status .battery-fill { position: absolute; left: 1.5px; top: 1.5px; bottom: 1.5px; width: 65%; background: #00F2C2; border-radius: 1px; }
 .page { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-.page-header { padding: 58px 24px 20px; background: linear-gradient(135deg, #1a0b2e 0%, #0d1a30 50%, #050816 100%); }
+.page-header { padding: 58px 24px 20px; background: linear-gradient(135deg, #1a0b2e 0%, #0d1a30 50%, #050811 100%); }
 .page-header h2 { font-size: 22px; font-weight: 700; color: #fff; }
 .page-header .subtitle { color: #9d4edd; font-size: 14px; margin-top: 4px; font-weight: 500; }
 .content { flex: 1; padding: 20px 16px; overflow-y: auto; }
@@ -29,7 +29,7 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
 .card-neon h3 { font-size: 14px; font-weight: 700; color: #fff; }
 .card-neon p { color: #9d4edd; font-size: 12px; margin-top: 2px; }
 .progress-bar { height: 8px; background: #121a30; border-radius: 4px; overflow: hidden; margin-top: 10px; }
-.progress-fill { height: 100%; background: linear-gradient(90deg, #00f5d4, #00e5ff); border-radius: 4px; box-shadow: 0 0 8px rgba(0,245,212,0.4); }
+.progress-fill { height: 100%; background: linear-gradient(90deg, #00F2C2, #00e5ff); border-radius: 4px; box-shadow: 0 0 8px rgba(0,242,194,0.4); }
 .quick-actions { display: flex; justify-content: space-between; margin: 20px 4px; }
 .quick-action { text-align: center; }
 .qa-icon { width: 58px; height: 58px; border-radius: 16px; background: rgba(157,78,221,0.08); border: 1px solid rgba(157,78,221,0.2); display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 8px; }
@@ -37,18 +37,18 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
 .promo { background: linear-gradient(135deg, #00c6ff 0%, #9d4edd 100%); border-radius: 20px; padding: 20px; display: flex; align-items: center; justify-content: space-between; margin: 16px 0; }
 .promo-text h3 { color: #fff; font-size: 16px; font-weight: 800; }
 .promo-text p { color: rgba(255,255,255,0.85); font-size: 13px; margin-top: 4px; }
-.promo-btn { background: #fff; color: #050816; border: none; padding: 10px 20px; border-radius: 20px; font-weight: 800; font-size: 13px; }
+.promo-btn { background: #fff; color: #050811; border: none; padding: 10px 20px; border-radius: 20px; font-weight: 800; font-size: 13px; }
 .nav-float { margin: 16px; background: #0b1020; border: 1px solid #1a2342; border-radius: 24px; padding: 10px 16px; display: flex; justify-content: space-around; align-items: center; }
 .nav-item { color: #4a5578; font-size: 11px; text-align: center; font-weight: 500; }
-.nav-item.active { color: #00f5d4; }
+.nav-item.active { color: #00F2C2; }
 .nav-icon { font-size: 22px; margin-bottom: 2px; }
 
 /* Pedidos */
 .order-card { background: #0b1020; border: 1px solid #1a2342; border-radius: 16px; padding: 16px; margin-bottom: 12px; }
 .order-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-.order-code { font-family: monospace; font-size: 12px; color: #00f5d4; }
+.order-code { font-family: monospace; font-size: 12px; color: #00F2C2; }
 .order-status { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 12px; text-transform: uppercase; }
-.status-completed { background: rgba(0,245,212,0.12); color: #00f5d4; }
+.status-completed { background: rgba(0,242,194,0.12); color: #00F2C2; }
 .status-in-progress { background: rgba(0,198,255,0.12); color: #00c6ff; }
 .status-pending { background: rgba(255,47,207,0.12); color: #ff2fcf; }
 .order-info { font-size: 13px; color: #9d4edd; margin-bottom: 4px; }
@@ -61,7 +61,7 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
 .service-title { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 4px; }
 .service-desc { font-size: 12px; color: #9d4edd; margin-bottom: 8px; }
 .service-meta { display: flex; justify-content: space-between; align-items: center; }
-.service-price { font-size: 16px; font-weight: 800; color: #00f5d4; }
+.service-price { font-size: 16px; font-weight: 800; color: #00F2C2; }
 .service-duration { font-size: 11px; color: #4a5578; }
 
 /* Veículos */
@@ -70,17 +70,59 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
 .vehicle-info { flex: 1; }
 .vehicle-name { font-size: 15px; font-weight: 700; color: #fff; }
 .vehicle-detail { font-size: 12px; color: #9d4edd; margin-top: 2px; }
-.vehicle-badge { font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 10px; background: rgba(0,245,212,0.1); color: #00f5d4; }
-.add-btn { width: 100%; padding: 16px; border-radius: 16px; border: 1px dashed rgba(0,245,212,0.3); background: transparent; color: #00f5d4; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 8px; }
+.vehicle-badge { font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 10px; background: rgba(0,242,194,0.1); color: #00F2C2; }
+.add-btn { width: 100%; padding: 16px; border-radius: 16px; border: 1px dashed rgba(0,242,194,0.3); background: transparent; color: #00F2C2; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 8px; }
+
+/* Loja - categorias e busca */
+.shop-search { width: 100%; padding: 12px 14px; border-radius: 14px; border: 1px solid #1a2342; background: #0b1020; color: #fff; font-size: 13px; margin-bottom: 14px; outline: none; }
+.shop-search::placeholder { color: #4a5578; }
+.shop-categories { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 14px; }
+.shop-chip { flex-shrink: 0; padding: 8px 14px; border-radius: 20px; border: 1px solid #1a2342; background: #0b1020; color: rgba(255,255,255,0.72); font-size: 11px; font-weight: 700; white-space: nowrap; text-decoration: none; }
+.shop-chip.active { background: rgba(0,242,194,0.16); border-color: #00F2C2; color: #00F2C2; }
+.product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.product-card { background: #0b1020; border: 1px solid #1a2342; border-radius: 18px; padding: 12px; text-decoration: none; color: inherit; display: flex; flex-direction: column; }
+.product-thumb { width: 100%; aspect-ratio: 1; border-radius: 14px; background: rgba(0,242,194,0.1); border: 1px solid #1a2342; display: flex; align-items: center; justify-content: center; font-size: 30px; margin-bottom: 10px; }
+.product-name { font-size: 12px; font-weight: 700; color: #fff; margin-bottom: 6px; min-height: 30px; }
+.product-old-price { font-size: 10px; color: #4a5578; text-decoration: line-through; }
+.product-price { font-size: 15px; font-weight: 800; color: #00F2C2; margin-bottom: 8px; }
+.product-add-btn { width: 100%; padding: 8px; border-radius: 10px; border: none; background: linear-gradient(90deg, #00F2C2 0%, #00c6ff 100%); color: #050811; font-size: 11px; font-weight: 800; text-align: center; }
+.cart-badge { position: absolute; top: -4px; right: -6px; background: #9d4edd; color: #fff; font-size: 9px; font-weight: 800; padding: 1px 5px; border-radius: 8px; }
+.cart-icon-wrap { position: relative; display: inline-flex; }
+
+/* Detalhe do produto */
+.product-hero { width: 100%; aspect-ratio: 1.3; border-radius: 20px; background: rgba(0,242,194,0.1); border: 1px solid #1a2342; display: flex; align-items: center; justify-content: center; font-size: 72px; margin-bottom: 16px; }
+.product-detail-category { display: inline-block; padding: 5px 12px; border-radius: 999px; background: rgba(157,78,221,0.16); border: 1px solid #9d4edd; color: #c77dff; font-size: 11px; font-weight: 700; margin-bottom: 10px; }
+.product-detail-name { font-size: 20px; font-weight: 900; color: #fff; margin-bottom: 6px; }
+.product-detail-price { font-size: 24px; font-weight: 900; color: #00F2C2; margin: 10px 0; }
+.qty-row { display: flex; align-items: center; justify-content: space-between; background: #0b1020; border: 1px solid #1a2342; border-radius: 16px; padding: 12px 16px; margin: 14px 0; }
+.qty-controls { display: flex; align-items: center; gap: 14px; }
+.qty-btn { width: 28px; height: 28px; border-radius: 50%; border: 1px solid #00F2C2; background: transparent; color: #00F2C2; font-size: 16px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.detail-cta { position: absolute; bottom: 0; left: 0; right: 0; padding: 16px; background: linear-gradient(0deg, #050811 60%, transparent); }
+.detail-cta .login-btn { display: block; text-align: center; text-decoration: none; }
+
+/* Carrinho */
+.cart-item { display: flex; gap: 12px; background: #0b1020; border: 1px solid #1a2342; border-radius: 16px; padding: 14px; margin-bottom: 12px; }
+.cart-item-thumb { width: 52px; height: 52px; border-radius: 12px; background: rgba(0,242,194,0.1); border: 1px solid #1a2342; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+.cart-item-info { flex: 1; }
+.cart-item-name { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+.cart-item-price { font-size: 13px; font-weight: 700; color: #00F2C2; margin-bottom: 8px; }
+.summary-row { display: flex; justify-content: space-between; font-size: 13px; color: rgba(255,255,255,0.72); margin-bottom: 8px; }
+.summary-row.total { font-size: 17px; font-weight: 800; color: #fff; padding-top: 10px; border-top: 1px solid #1a2342; margin-top: 4px; }
+.summary-row .free-shipping { color: #00F2C2; font-weight: 700; }
+.checkout-sheet { background: #0b1020; border-radius: 20px 20px 0 0; border: 1px solid #1a2342; padding: 16px; }
+.payment-option { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; border: 1px solid #1a2342; background: #0d1428; margin-bottom: 10px; }
+.payment-option.selected { border-color: #00F2C2; }
+.payment-option .radio { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #4a5578; margin-left: auto; }
+.payment-option.selected .radio { border-color: #00F2C2; background: radial-gradient(circle, #00F2C2 40%, transparent 44%); }
 
 /* Perfil */
-.profile-header { display: flex; flex-direction: column; align-items: center; padding: 30px 20px; background: linear-gradient(135deg, #1a0b2e 0%, #0d1a30 50%, #050816 100%); }
+.profile-header { display: flex; flex-direction: column; align-items: center; padding: 30px 20px; background: linear-gradient(135deg, #1a0b2e 0%, #0d1a30 50%, #050811 100%); }
 .profile-avatar { width: 90px; height: 90px; border-radius: 50%; background: linear-gradient(135deg, #00c6ff 0%, #9d4edd 100%); display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 800; color: #fff; margin-bottom: 14px; box-shadow: 0 0 30px rgba(0,198,255,0.2); }
 .profile-name { font-size: 20px; font-weight: 700; color: #fff; }
 .profile-email { font-size: 13px; color: #9d4edd; margin-top: 4px; }
 .profile-stats { display: flex; justify-content: space-around; padding: 20px 0; }
 .profile-stat { text-align: center; }
-.profile-stat-value { font-size: 22px; font-weight: 800; color: #00f5d4; }
+.profile-stat-value { font-size: 22px; font-weight: 800; color: #00F2C2; }
 .profile-stat-label { font-size: 11px; color: #4a5578; margin-top: 4px; }
 .menu-item { display: flex; align-items: center; gap: 14px; padding: 16px; background: #0b1020; border: 1px solid #1a2342; border-radius: 14px; margin-bottom: 10px; }
 .menu-item-icon { width: 40px; height: 40px; border-radius: 10px; background: rgba(0,245,212,0.08); display: flex; align-items: center; justify-content: center; font-size: 18px; }
@@ -90,22 +132,39 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
 .menu-item-arrow { color: #4a5578; font-size: 14px; }
 
 /* Login / Splash */
-.login-screen { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px; text-align: center; background: linear-gradient(180deg, #070b1b 0%, #050816 100%); }
-.login-logo { width: 140px; height: 140px; object-fit: contain; margin-bottom: 24px; filter: drop-shadow(0 0 24px rgba(0,245,212,0.25)); }
+.login-screen { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px; text-align: center; background: linear-gradient(180deg, #070b1b 0%, #050811 100%); }
+.login-logo { width: 140px; height: 140px; object-fit: contain; margin-bottom: 24px; filter: drop-shadow(0 0 24px rgba(0,242,194,0.25)); }
 .login-screen h1 { font-size: 32px; font-weight: 900; color: #fff; letter-spacing: 2px; margin-bottom: 6px; }
 .login-screen .tagline { font-size: 14px; color: #9d4edd; margin-bottom: 40px; }
 .login-screen .input { width: 100%; padding: 16px; border-radius: 14px; border: 1px solid rgba(157,78,221,0.25); background: rgba(13,18,36,0.6); color: #fff; font-size: 14px; margin-bottom: 12px; outline: none; }
 .login-screen .input::placeholder { color: #4a5578; }
-.login-screen .input:focus { border-color: #00f5d4; }
-.login-screen .login-btn { width: 100%; padding: 16px; border-radius: 14px; border: none; background: linear-gradient(90deg, #00f5d4 0%, #00c6ff 100%); color: #050816; font-size: 15px; font-weight: 800; margin-top: 8px; cursor: pointer; box-shadow: 0 0 20px rgba(0,245,212,0.2); }
+.login-screen .input:focus { border-color: #00F2C2; }
+.login-screen .login-btn { width: 100%; padding: 16px; border-radius: 14px; border: none; background: linear-gradient(90deg, #00F2C2 0%, #00c6ff 100%); color: #050811; font-size: 15px; font-weight: 800; margin-top: 8px; cursor: pointer; box-shadow: 0 0 20px rgba(0,242,194,0.2); }
 .login-screen .login-footer { margin-top: 20px; font-size: 12px; color: #4a5578; }
-.login-screen .login-footer a { color: #00f5d4; text-decoration: none; font-weight: 700; }
+.login-screen .login-footer a { color: #00F2C2; text-decoration: none; font-weight: 700; }
+
+/* Navegação entre telas */
+.top-bar { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; max-width: 1600px; margin: 0 auto 20px; width: 100%; }
+.top-bar a { color: #00F2C2; text-decoration: none; font-size: 14px; font-weight: 700; padding: 8px 16px; border: 1px solid rgba(0,242,194,0.3); border-radius: 20px; }
+.top-bar a:hover { background: rgba(0,242,194,0.08); }
+.phone-label { text-align: center; font-size: 13px; font-weight: 700; color: #9d4edd; margin-bottom: 10px; letter-spacing: 0.5px; }
+.phone-wrap { display: flex; flex-direction: column; align-items: center; }
+.nav-float a.nav-item, a.quick-action, a.menu-item, a.card-neon { text-decoration: none; cursor: pointer; color: inherit; }
+.nav-float a.nav-item { display: flex; flex-direction: column; align-items: center; }
+a.quick-action { display: block; }
+a.order-card, a.promo-btn { color: inherit; }
 </style>
 </head>
 <body>
+<div class="top-bar">
+  <a href="index.html">‹ Voltar ao portal</a>
+  <a href="index.html">Ver todos os previews</a>
+</div>
 <div class="app-container">
 
   <!-- LOGIN / SPLASH -->
+  <div class="phone-wrap" id="splash">
+    <div class="phone-label">Splash / Login</div>
   <div class="phone">
     <div class="screen">
       <div class="status"><span class="time">9:41</span></div>
@@ -115,13 +174,16 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
         <div class="tagline">Lavagem a domicílio</div>
         <input class="input" type="text" placeholder="E-mail ou CPF" value="orlando.silva@email.com">
         <input class="input" type="password" placeholder="Senha" value="••••••••">
-        <button class="login-btn">Entrar</button>
-        <div class="login-footer">Ainda não tem conta? <a href="#">Cadastre-se</a></div>
+        <a href="#home" class="login-btn" style="display:block; text-align:center; text-decoration:none;">Entrar</a>
+        <div class="login-footer">Ainda não tem conta? <a href="#splash">Cadastre-se</a></div>
       </div>
     </div>
   </div>
+  </div>
 
   <!-- HOME -->
+  <div class="phone-wrap" id="home">
+    <div class="phone-label">Home</div>
   <div class="phone">
     <div class="screen">
       <div class="status">
@@ -146,22 +208,22 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
           </div>
 
           <div class="quick-actions">
-            <div class="quick-action"><div class="qa-icon">🚗</div><span>Lavagem</span></div>
-            <div class="quick-action"><div class="qa-icon">🚙</div><span>Veículos</span></div>
-            <div class="quick-action"><div class="qa-icon">📍</div><span>Endereços</span></div>
-            <div class="quick-action"><div class="qa-icon">🎁</div><span>Rewards</span></div>
+            <a class="quick-action" href="#tipos-lavagem"><div class="qa-icon">🚗</div><span>Lavagem</span></a>
+            <a class="quick-action" href="#veiculos"><div class="qa-icon">🚙</div><span>Veículos</span></a>
+            <a class="quick-action" href="#loja"><div class="qa-icon">🛍️</div><span>Loja<br>Acessórios</span></a>
+            <a class="quick-action" href="#perfil"><div class="qa-icon">🎁</div><span>Rewards</span></a>
           </div>
 
           <div class="promo">
             <div class="promo-text">
-              <h3>Primeira lavagem</h3>
-              <p>20% de desconto!</p>
+              <h3>Loja de Acessórios</h3>
+              <p>Aromatizantes, capas e mais pro seu carro</p>
             </div>
-            <button class="promo-btn">Ver oferta</button>
+            <a href="#loja" class="promo-btn" style="text-decoration:none; display:inline-block;">Ver loja</a>
           </div>
 
           <h3 style="font-size:14px; margin: 20px 4px 12px; color:#fff;">Último pedido</h3>
-          <div class="order-card">
+          <a class="order-card" href="#pedidos" style="display:block;">
             <div class="order-card-header">
               <span class="order-code">#LDO-ABCD123</span>
               <span class="order-status status-completed">Concluído</span>
@@ -169,18 +231,22 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
             <div class="order-info">Lavagem Premium · Honda Civic</div>
             <div class="order-info">Hoje, 14:30 · Rua Augusta, 150</div>
             <div class="order-price">R$ 89,90</div>
-          </div>
+          </a>
         </div>
         <div class="nav-float">
-          <div class="nav-item active"><div class="nav-icon">🏠</div>Home</div>
-          <div class="nav-item"><div class="nav-icon">📋</div>Pedidos</div>
-          <div class="nav-item"><div class="nav-icon">👤</div>Perfil</div>
+          <a class="nav-item active" href="#home"><div class="nav-icon">🏠</div>Home</a>
+          <a class="nav-item" href="#loja"><div class="nav-icon">🛍️</div>Loja</a>
+          <a class="nav-item" href="#pedidos"><div class="nav-icon">📋</div>Pedidos</a>
+          <a class="nav-item" href="#perfil"><div class="nav-icon">👤</div>Perfil</a>
         </div>
       </div>
     </div>
   </div>
+  </div>
 
   <!-- PEDIDOS -->
+  <div class="phone-wrap" id="pedidos">
+    <div class="phone-label">Pedidos</div>
   <div class="phone">
     <div class="screen">
       <div class="status">
@@ -234,15 +300,19 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
           </div>
         </div>
         <div class="nav-float">
-          <div class="nav-item"><div class="nav-icon">🏠</div>Home</div>
-          <div class="nav-item active"><div class="nav-icon">📋</div>Pedidos</div>
-          <div class="nav-item"><div class="nav-icon">👤</div>Perfil</div>
+          <a class="nav-item" href="#home"><div class="nav-icon">🏠</div>Home</a>
+          <a class="nav-item" href="#loja"><div class="nav-icon">🛍️</div>Loja</a>
+          <a class="nav-item active" href="#pedidos"><div class="nav-icon">📋</div>Pedidos</a>
+          <a class="nav-item" href="#perfil"><div class="nav-icon">👤</div>Perfil</a>
         </div>
       </div>
     </div>
   </div>
+  </div>
 
   <!-- TIPOS DE LAVAGEM -->
+  <div class="phone-wrap" id="tipos-lavagem">
+    <div class="phone-label">Tipos de Lavagem</div>
   <div class="phone">
     <div class="screen">
       <div class="status">
@@ -304,15 +374,280 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
           </div>
         </div>
         <div class="nav-float">
-          <div class="nav-item"><div class="nav-icon">🏠</div>Home</div>
-          <div class="nav-item"><div class="nav-icon">📋</div>Pedidos</div>
-          <div class="nav-item"><div class="nav-icon">👤</div>Perfil</div>
+          <a class="nav-item" href="#home"><div class="nav-icon">🏠</div>Home</a>
+          <a class="nav-item" href="#loja"><div class="nav-icon">🛍️</div>Loja</a>
+          <a class="nav-item" href="#pedidos"><div class="nav-icon">📋</div>Pedidos</a>
+          <a class="nav-item" href="#perfil"><div class="nav-icon">👤</div>Perfil</a>
         </div>
       </div>
     </div>
   </div>
+  </div>
+
+  <!-- LOJA DE ACESSÓRIOS -->
+  <div class="phone-wrap" id="loja">
+    <div class="phone-label">Loja de Acessórios</div>
+  <div class="phone">
+    <div class="screen">
+      <div class="status">
+        <span class="time">9:41</span>
+        <div class="battery"><div class="battery-bar"><div class="battery-fill"></div></div></div>
+      </div>
+      <div class="page">
+        <div class="page-header" style="display:flex; align-items:flex-start; justify-content:space-between;">
+          <div>
+            <h2>Loja de Acessórios</h2>
+            <div class="subtitle">Tudo para o seu carro</div>
+          </div>
+          <a href="#carrinho" class="cart-icon-wrap" style="margin-top:4px; text-decoration:none;">
+            <span style="font-size:22px;">🛒</span>
+            <span class="cart-badge">3</span>
+          </a>
+        </div>
+        <div class="content">
+          <input class="shop-search" type="text" placeholder="Buscar produtos...">
+          <div class="shop-categories">
+            <a class="shop-chip active" href="#loja">Todos</a>
+            <a class="shop-chip" href="#loja">Aromatizantes</a>
+            <a class="shop-chip" href="#loja">Capas &amp; Bancos</a>
+            <a class="shop-chip" href="#loja">Acessórios</a>
+            <a class="shop-chip" href="#loja">Peças</a>
+            <a class="shop-chip" href="#loja">Óleos &amp; Fluidos</a>
+            <a class="shop-chip" href="#loja">Limpeza</a>
+            <a class="shop-chip" href="#loja">Organizadores</a>
+          </div>
+
+          <div class="product-grid">
+            <a class="product-card" href="#produto">
+              <div class="product-thumb">🌸</div>
+              <div class="product-name">Aromatizante Premium</div>
+              <div class="product-old-price">R$ 32,90</div>
+              <div class="product-price">R$ 24,90</div>
+              <div class="product-add-btn">Adicionar</div>
+            </a>
+            <a class="product-card" href="#produto">
+              <div class="product-thumb">🧴</div>
+              <div class="product-name">Aromatizante Gel Automotivo</div>
+              <div class="product-price">R$ 18,90</div>
+              <div class="product-add-btn">Adicionar</div>
+            </a>
+            <a class="product-card" href="#produto">
+              <div class="product-thumb">🛋️</div>
+              <div class="product-name">Capa de Couro para Bancos</div>
+              <div class="product-old-price">R$ 229,90</div>
+              <div class="product-price">R$ 189,90</div>
+              <div class="product-add-btn">Adicionar</div>
+            </a>
+            <a class="product-card" href="#produto">
+              <div class="product-thumb">🎯</div>
+              <div class="product-name">Capa de Volante em Couro</div>
+              <div class="product-price">R$ 49,90</div>
+              <div class="product-add-btn">Adicionar</div>
+            </a>
+            <a class="product-card" href="#produto">
+              <div class="product-thumb">📱</div>
+              <div class="product-name">Suporte de Celular Veicular</div>
+              <div class="product-price">R$ 34,90</div>
+              <div class="product-add-btn">Adicionar</div>
+            </a>
+            <a class="product-card" href="#produto">
+              <div class="product-thumb">🔌</div>
+              <div class="product-name">Carregador Veicular USB-C</div>
+              <div class="product-price">R$ 39,90</div>
+              <div class="product-add-btn">Adicionar</div>
+            </a>
+            <a class="product-card" href="#produto">
+              <div class="product-thumb">💡</div>
+              <div class="product-name">Kit Lâmpadas LED</div>
+              <div class="product-price">R$ 99,90</div>
+              <div class="product-add-btn">Adicionar</div>
+            </a>
+            <a class="product-card" href="#produto">
+              <div class="product-thumb">🌧️</div>
+              <div class="product-name">Palhetas Limpador de Para-brisa</div>
+              <div class="product-price">R$ 49,90</div>
+              <div class="product-add-btn">Adicionar</div>
+            </a>
+            <a class="product-card" href="#produto">
+              <div class="product-thumb">🌬️</div>
+              <div class="product-name">Filtro de Ar Automotivo</div>
+              <div class="product-price">R$ 59,90</div>
+              <div class="product-add-btn">Adicionar</div>
+            </a>
+            <a class="product-card" href="#produto">
+              <div class="product-thumb">🛑</div>
+              <div class="product-name">Pastilhas de Freio (jogo)</div>
+              <div class="product-old-price">R$ 179,90</div>
+              <div class="product-price">R$ 149,90</div>
+              <div class="product-add-btn">Adicionar</div>
+            </a>
+            <a class="product-card" href="#produto">
+              <div class="product-thumb">🛢️</div>
+              <div class="product-name">Óleo de Motor Sintético 5W30</div>
+              <div class="product-price">R$ 44,90</div>
+              <div class="product-add-btn">Adicionar</div>
+            </a>
+            <a class="product-card" href="#produto">
+              <div class="product-thumb">❄️</div>
+              <div class="product-name">Aditivo / Refrigerante de Radiador</div>
+              <div class="product-price">R$ 29,90</div>
+              <div class="product-add-btn">Adicionar</div>
+            </a>
+            <a class="product-card" href="#produto">
+              <div class="product-thumb">✨</div>
+              <div class="product-name">Cera Carnaúba</div>
+              <div class="product-price">R$ 39,90</div>
+              <div class="product-add-btn">Adicionar</div>
+            </a>
+            <a class="product-card" href="#produto">
+              <div class="product-thumb">🔋</div>
+              <div class="product-name">Aspirador Portátil Automotivo</div>
+              <div class="product-old-price">R$ 99,90</div>
+              <div class="product-price">R$ 79,90</div>
+              <div class="product-add-btn">Adicionar</div>
+            </a>
+            <a class="product-card" href="#produto">
+              <div class="product-thumb">🗂️</div>
+              <div class="product-name">Organizador de Porta-malas</div>
+              <div class="product-price">R$ 59,90</div>
+              <div class="product-add-btn">Adicionar</div>
+            </a>
+            <a class="product-card" href="#produto">
+              <div class="product-thumb">🎒</div>
+              <div class="product-name">Organizador de Banco Traseiro</div>
+              <div class="product-price">R$ 44,90</div>
+              <div class="product-add-btn">Adicionar</div>
+            </a>
+          </div>
+        </div>
+        <div class="nav-float">
+          <a class="nav-item" href="#home"><div class="nav-icon">🏠</div>Home</a>
+          <a class="nav-item active" href="#loja"><div class="nav-icon">🛍️</div>Loja</a>
+          <a class="nav-item" href="#pedidos"><div class="nav-icon">📋</div>Pedidos</a>
+          <a class="nav-item" href="#perfil"><div class="nav-icon">👤</div>Perfil</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <!-- DETALHE DO PRODUTO -->
+  <div class="phone-wrap" id="produto">
+    <div class="phone-label">Detalhe do Produto</div>
+  <div class="phone">
+    <div class="screen">
+      <div class="status">
+        <span class="time">9:41</span>
+        <div class="battery"><div class="battery-bar"><div class="battery-fill"></div></div></div>
+      </div>
+      <div class="page" style="position:relative;">
+        <div class="page-header" style="display:flex; align-items:center; gap:12px; padding-top:52px;">
+          <a href="#loja" style="color:#00F2C2; text-decoration:none; font-size:20px;">‹</a>
+          <h2 style="font-size:16px;">Capa de Couro para Bancos</h2>
+        </div>
+        <div class="content" style="padding-bottom:100px;">
+          <div class="product-hero">🛋️</div>
+          <div class="product-detail-category">Capas &amp; Bancos</div>
+          <div class="product-detail-name">Capa de Couro para Bancos</div>
+          <div style="color:#ffb800; font-size:13px; font-weight:700;">★ 4.8</div>
+          <div class="product-detail-price">R$ 189,90 <span style="font-size:14px; color:#4a5578; font-weight:500; text-decoration:line-through;">R$ 229,90</span></div>
+          <div class="card-neon">
+            <h3 style="margin-bottom:8px;">Descrição</h3>
+            <p style="color:rgba(255,255,255,0.72); line-height:1.5;">Proteção e conforto premium, jogo completo para bancos dianteiros e traseiros, acabamento em couro sintético de alta durabilidade.</p>
+          </div>
+          <div class="qty-row">
+            <span style="font-weight:700; color:#fff;">Quantidade</span>
+            <div class="qty-controls">
+              <div class="qty-btn">−</div>
+              <span style="color:#fff; font-weight:800;">1</span>
+              <div class="qty-btn">+</div>
+            </div>
+          </div>
+        </div>
+        <div class="detail-cta">
+          <a href="#carrinho" class="login-btn">Adicionar ao carrinho · R$ 189,90</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <!-- CARRINHO / CHECKOUT -->
+  <div class="phone-wrap" id="carrinho">
+    <div class="phone-label">Carrinho</div>
+  <div class="phone">
+    <div class="screen">
+      <div class="status">
+        <span class="time">9:41</span>
+        <div class="battery"><div class="battery-bar"><div class="battery-fill"></div></div></div>
+      </div>
+      <div class="page">
+        <div class="page-header" style="display:flex; align-items:center; gap:12px;">
+          <a href="#loja" style="color:#00F2C2; text-decoration:none; font-size:20px;">‹</a>
+          <h2 style="font-size:18px;">Carrinho</h2>
+        </div>
+        <div class="content">
+          <div class="cart-item">
+            <div class="cart-item-thumb">🌸</div>
+            <div class="cart-item-info">
+              <div class="cart-item-name">Aromatizante Premium</div>
+              <div class="cart-item-price">R$ 24,90</div>
+              <div class="qty-controls">
+                <div class="qty-btn" style="width:22px; height:22px; font-size:13px;">−</div>
+                <span style="color:#fff; font-weight:800; font-size:12px;">2</span>
+                <div class="qty-btn" style="width:22px; height:22px; font-size:13px;">+</div>
+              </div>
+            </div>
+          </div>
+          <div class="cart-item">
+            <div class="cart-item-thumb">🛋️</div>
+            <div class="cart-item-info">
+              <div class="cart-item-name">Capa de Couro para Bancos</div>
+              <div class="cart-item-price">R$ 189,90</div>
+              <div class="qty-controls">
+                <div class="qty-btn" style="width:22px; height:22px; font-size:13px;">−</div>
+                <span style="color:#fff; font-weight:800; font-size:12px;">1</span>
+                <div class="qty-btn" style="width:22px; height:22px; font-size:13px;">+</div>
+              </div>
+            </div>
+          </div>
+          <div class="cart-item">
+            <div class="cart-item-thumb">🔋</div>
+            <div class="cart-item-info">
+              <div class="cart-item-name">Aspirador Portátil Automotivo</div>
+              <div class="cart-item-price">R$ 79,90</div>
+              <div class="qty-controls">
+                <div class="qty-btn" style="width:22px; height:22px; font-size:13px;">−</div>
+                <span style="color:#fff; font-weight:800; font-size:12px;">1</span>
+                <div class="qty-btn" style="width:22px; height:22px; font-size:13px;">+</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="checkout-sheet">
+          <div class="summary-row"><span>Subtotal</span><span>R$ 319,60</span></div>
+          <div class="summary-row"><span>Frete</span><span class="free-shipping">Grátis</span></div>
+          <div class="summary-row total"><span>Total</span><span>R$ 319,60</span></div>
+          <div style="margin-top:14px; margin-bottom:6px; font-size:12px; color:#9d4edd; font-weight:700;">Forma de pagamento</div>
+          <div class="payment-option selected">
+            <span>💳</span><span style="color:#fff; font-size:13px; font-weight:600;">Cartão de Crédito</span><div class="radio"></div>
+          </div>
+          <div class="payment-option">
+            <span>🔳</span><span style="color:#fff; font-size:13px; font-weight:600;">Pix</span><div class="radio"></div>
+          </div>
+          <div class="payment-option">
+            <span>👛</span><span style="color:#fff; font-size:13px; font-weight:600;">Carteira GIUCAR</span><div class="radio"></div>
+          </div>
+          <a href="#home" class="login-btn" style="display:block; text-align:center; text-decoration:none; margin-top:6px;">Confirmar Pagamento (mock)</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
 
   <!-- AUTOS CADASTRADOS -->
+  <div class="phone-wrap" id="veiculos">
+    <div class="phone-label">Meus Veículos</div>
   <div class="phone">
     <div class="screen">
       <div class="status">
@@ -353,15 +688,19 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
           <button class="add-btn">+ Adicionar novo veículo</button>
         </div>
         <div class="nav-float">
-          <div class="nav-item"><div class="nav-icon">🏠</div>Home</div>
-          <div class="nav-item"><div class="nav-icon">📋</div>Pedidos</div>
-          <div class="nav-item"><div class="nav-icon">👤</div>Perfil</div>
+          <a class="nav-item" href="#home"><div class="nav-icon">🏠</div>Home</a>
+          <a class="nav-item" href="#loja"><div class="nav-icon">🛍️</div>Loja</a>
+          <a class="nav-item" href="#pedidos"><div class="nav-icon">📋</div>Pedidos</a>
+          <a class="nav-item" href="#perfil"><div class="nav-icon">👤</div>Perfil</a>
         </div>
       </div>
     </div>
   </div>
+  </div>
 
   <!-- PERFIL -->
+  <div class="phone-wrap" id="perfil">
+    <div class="phone-label">Perfil</div>
   <div class="phone">
     <div class="screen">
       <div class="status">
@@ -390,72 +729,75 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
             </div>
           </div>
 
-          <div class="menu-item">
+          <a class="menu-item" href="#perfil" style="text-decoration:none;">
             <div class="menu-item-icon">👤</div>
             <div class="menu-item-text">
               <div class="menu-item-title">Dados pessoais</div>
               <div class="menu-item-subtitle">Nome, email, telefone</div>
             </div>
             <span class="menu-item-arrow">›</span>
-          </div>
+          </a>
 
-          <div class="menu-item">
+          <a class="menu-item" href="#perfil" style="text-decoration:none;">
             <div class="menu-item-icon">📍</div>
             <div class="menu-item-text">
               <div class="menu-item-title">Endereços</div>
               <div class="menu-item-subtitle">2 endereços salvos</div>
             </div>
             <span class="menu-item-arrow">›</span>
-          </div>
+          </a>
 
-          <div class="menu-item">
+          <a class="menu-item" href="#veiculos" style="text-decoration:none;">
             <div class="menu-item-icon">🚗</div>
             <div class="menu-item-text">
               <div class="menu-item-title">Meus veículos</div>
               <div class="menu-item-subtitle">3 veículos cadastrados</div>
             </div>
             <span class="menu-item-arrow">›</span>
-          </div>
+          </a>
 
-          <div class="menu-item">
+          <a class="menu-item" href="#perfil" style="text-decoration:none;">
             <div class="menu-item-icon">💳</div>
             <div class="menu-item-text">
               <div class="menu-item-title">Pagamentos</div>
               <div class="menu-item-subtitle">Cartões e histórico</div>
             </div>
             <span class="menu-item-arrow">›</span>
-          </div>
+          </a>
 
-          <div class="menu-item">
+          <a class="menu-item" href="#perfil" style="text-decoration:none;">
             <div class="menu-item-icon">🏆</div>
             <div class="menu-item-text">
               <div class="menu-item-title">Programa de fidelidade</div>
               <div class="menu-item-subtitle">245 pontos · nível Prata</div>
             </div>
             <span class="menu-item-arrow">›</span>
-          </div>
+          </a>
 
-          <div class="menu-item">
+          <a class="menu-item" href="#perfil" style="text-decoration:none;">
             <div class="menu-item-icon">⚙️</div>
             <div class="menu-item-text">
               <div class="menu-item-title">Configurações</div>
               <div class="menu-item-subtitle">Notificações, idioma, segurança</div>
             </div>
             <span class="menu-item-arrow">›</span>
-          </div>
+          </a>
 
-          <button class="add-btn" style="color:#ff5b8a; border-color:rgba(255,91,138,0.3);">Sair da conta</button>
+          <a class="add-btn" href="#splash" style="color:#ff5b8a; border-color:rgba(255,91,138,0.3); display:block; text-align:center; text-decoration:none;">Sair da conta</a>
         </div>
         <div class="nav-float">
-          <div class="nav-item"><div class="nav-icon">🏠</div>Home</div>
-          <div class="nav-item"><div class="nav-icon">📋</div>Pedidos</div>
-          <div class="nav-item active"><div class="nav-icon">👤</div>Perfil</div>
+          <a class="nav-item" href="#home"><div class="nav-icon">🏠</div>Home</a>
+          <a class="nav-item" href="#loja"><div class="nav-icon">🛍️</div>Loja</a>
+          <a class="nav-item" href="#pedidos"><div class="nav-icon">📋</div>Pedidos</a>
+          <a class="nav-item active" href="#perfil"><div class="nav-icon">👤</div>Perfil</a>
         </div>
       </div>
     </div>
   </div>
+  </div>
 
 </div>
+
 </body>
 </html>
 
