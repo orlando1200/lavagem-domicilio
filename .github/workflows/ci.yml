@@ -212,115 +212,42 @@ jobs:
   #       run: flutter analyze --no-fatal-infos
 
   # -------------------------------------------------------------------
-  # Validacao dos Dockerfiles (build de teste, sem push)
+  # Validacao dos Dockerfiles - DESATIVADA temporariamente em modo eco
   # -------------------------------------------------------------------
-  docker:
-    name: Validate Dockerfiles
-    runs-on: ubuntu-latest
-    needs: [api, admin-web]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Validate API Dockerfile (build stage)
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./services/api/Dockerfile
-          push: false
-          target: builder
-          cache-from: type=gha,scope=api
-          cache-to: type=gha,mode=max,scope=api
-
-      - name: Validate Admin Web Dockerfile (build stage)
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./apps/admin-web/Dockerfile
-          push: false
-          target: builder
-          cache-from: type=gha,scope=admin-web
-          cache-to: type=gha,mode=max,scope=admin-web
-          build-args: |
-            API_URL=http://localhost:3000/api/v1
+  # docker:
+  #   name: Validate Dockerfiles
+  #   runs-on: ubuntu-latest
+  #   needs: [api, admin-web]
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
+  #
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@v3
+  #
+  #     - name: Validate API Dockerfile (build stage)
+  #       uses: docker/build-push-action@v5
+  #       with:
+  #         context: .
+  #         file: ./services/api/Dockerfile
+  #         push: false
+  #         target: builder
+  #         cache-from: type=gha,scope=api
+  #         cache-to: type=gha,mode=max,scope=api
+  #
+  #     - name: Validate Admin Web Dockerfile (build stage)
+  #       uses: docker/build-push-action@v5
+  #       with:
+  #         context: .
+  #         file: ./apps/admin-web/Dockerfile
+  #         push: false
+  #         target: builder
+  #         cache-from: type=gha,scope=admin-web
+  #         cache-to: type=gha,mode=max,scope=admin-web
+  #         build-args: |
+  #           API_URL=http://localhost:3000/api/v1
 
   # -------------------------------------------------------------------
   # CD (opcional): build e push das imagens para Amazon ECR em push p/ main
-  # Nao faz deploy em ECS; apenas publica as imagens no registry.
-  # Requer os secrets: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION,
-  # ECR_REPOSITORY_API, ECR_REPOSITORY_ADMIN_WEB.
+  # DESATIVADO junto com a validacao Docker.
   # -------------------------------------------------------------------
-  push-to-ecr:
-    name: Build and push images to Amazon ECR
-    runs-on: ubuntu-latest
-    needs: docker
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-
-      - name: Login to Amazon ECR
-        id: ecr-login
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Extract metadata for API image
-        id: meta-api
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ steps.ecr-login.outputs.registry }}/${{ secrets.ECR_REPOSITORY_API }}
-          tags: |
-            type=sha,prefix=
-            type=ref,event=branch
-            latest
-
-      - name: Build and push API image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./services/api/Dockerfile
-          push: true
-          tags: ${{ steps.meta-api.outputs.tags }}
-          labels: ${{ steps.meta-api.outputs.labels }}
-          cache-from: type=gha,scope=api
-          cache-to: type=gha,mode=max,scope=api
-
-      - name: Extract metadata for Admin Web image
-        id: meta-admin
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ steps.ecr-login.outputs.registry }}/${{ secrets.ECR_REPOSITORY_ADMIN_WEB }}
-          tags: |
-            type=sha,prefix=
-            type=ref,event=branch
-            latest
-
-      - name: Build and push Admin Web image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./apps/admin-web/Dockerfile
-          push: true
-          tags: ${{ steps.meta-admin.outputs.tags }}
-          labels: ${{ steps.meta-admin.outputs.labels }}
-          cache-from: type=gha,scope=admin-web
-          cache-to: type=gha,mode=max,scope=admin-web
-          build-args: |
-            API_URL=http://localhost:3000/api/v1
-
-      - name: Output image tags
-        run: |
-          echo "API image: ${{ steps.ecr-login.outputs.registry }}/${{ secrets.ECR_REPOSITORY_API }}:${{ github.sha }}"
-          echo "Admin Web image: ${{ steps.ecr-login.outputs.registry }}/${{ secrets.ECR_REPOSITORY_ADMIN_WEB }}:${{ github.sha }}"
