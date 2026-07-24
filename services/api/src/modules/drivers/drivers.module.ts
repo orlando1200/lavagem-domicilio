@@ -1,14 +1,11 @@
 import { Module } from '@nestjs/common';
-import { DatabaseModule } from '@database/database.module';
-import { DriversService } from './drivers.service';
-import { DriversController, AdminDriversController } from './drivers.controller';
+import { DriversController } from './drivers.controller';
 import { AdminWashersController } from './washers.admin.controller';
+import { DriversService } from './drivers.service';
 
 @Module({
-  imports: [DatabaseModule],
-  controllers: [DriversController, AdminDriversController, AdminWashersController],
+  controllers: [DriversController, AdminWashersController],
   providers: [DriversService],
   exports: [DriversService],
 })
 export class DriversModule {}
-

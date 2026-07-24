@@ -1,83 +1,100 @@
-import { RolesGuard } from '@common/guards/roles.guard';
-import { Roles } from '@common/decorators/roles.decorator';
-import { CurrentUser, AuthenticatedUser } from '@common/decorators/current-user.decorator';
-import { SendMessageDto } from './dto/chat.dto';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { UserRole } from '@prisma/client';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import {
+  AuthenticatedUser,
+  CurrentUser,
+} from '../../common/decorators/current-user.decorator';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { CancelOrderDto, ListOrdersDto } from './dto/list-orders.dto';
-import { UserRole } from '@prisma/client';
+import { ListOrdersDto } from './dto/list-orders.dto';
+import { CancelOrderDto, UpdateOrderStatusDto } from './dto/update-order-status.dto';
 
+@ApiTags('orders')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
+@Controller('orders')
+export class OrdersController {
+  constructor(private readonly ordersService: OrdersService) {}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    return this.ordersService.cancel(id, user.userId, user.role, dto);
-  }
-
-  @Get(':id/history')
-  @Roles(UserRole.client, UserRole.driver, UserRole.admin)
-  @ApiOperation({ summary: 'Get status history of an order' })
-  getHistory(@Param('id', ParseUUIDPipe) id: string) {
-    return this.ordersService.getStatusHistory(id);
-  }
-
-  @Get(':id/chat')
-  @Roles(UserRole.client, UserRole.driver, UserRole.admin)
-  @ApiOperation({ summary: 'Get chat messages for an order' })
-  getChatMessages(
-    @Param('id', ParseUUIDPipe) id: string,
+  @Post()
+  @Roles(UserRole.CLIENTE)
+  @UseGuards(RolesGuard)
+  @ApiOperation({ summary: 'Cliente cria um novo pedido de lavagem' })
+  createOrder(
     @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: CreateOrderDto,
   ) {
-    return this.ordersService.getChatMessages(id, user.userId, user.role);
+    return this.ordersService.createOrder(user.id, dto);
   }
 
-  @Post(':id/chat')
-  @Roles(UserRole.client, UserRole.driver, UserRole.admin)
-  @ApiOperation({ summary: 'Send chat message in an order' })
-  sendChatMessage(
-    @Param('id', ParseUUIDPipe) id: string,
+  @Get()
+  @Roles(UserRole.CLIENTE)
+  @UseGuards(RolesGuard)
+  @ApiOperation({ summary: 'Lista os pedidos do cliente autenticado' })
+  listMyOrders(
     @CurrentUser() user: AuthenticatedUser,
-    @Body() dto: SendMessageDto,
+    @Query() query: ListOrdersDto,
   ) {
-    return this.ordersService.sendChatMessage(id, user.userId, dto.message);
+    return this.ordersService.listMyOrders(user.id, query);
+  }
+
+  @Get(':id')
+  @Roles(UserRole.CLIENTE)
+  @UseGuards(RolesGuard)
+  @ApiOperation({ summary: 'Acompanha um pedido especifico do cliente' })
+  getMyOrder(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.ordersService.getMyOrderById(user.id, id);
+  }
+
+  @Patch(':id/cancel')
+  @Roles(UserRole.CLIENTE)
+  @UseGuards(RolesGuard)
+  @ApiOperation({ summary: 'Cliente cancela um pedido' })
+  cancelOrder(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: CancelOrderDto,
+  ) {
+    return this.ordersService.cancelOrder(user.id, id, dto);
+  }
+
+  @Patch(':id/accept')
+  @Roles(UserRole.LAVADOR)
+  @UseGuards(RolesGuard)
+  @ApiOperation({ summary: 'Lavador aceita um pedido disponivel' })
+  acceptOrder(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.ordersService.acceptOrder(user.id, id);
+  }
+
+  @Patch(':id/status')
+  @Roles(UserRole.LAVADOR)
+  @UseGuards(RolesGuard)
+  @ApiOperation({ summary: 'Lavador atualiza o status do pedido atribuido a ele' })
+  updateStatus(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateOrderStatusDto,
+  ) {
+    return this.ordersService.updateOrderStatusAsWasher(user.id, id, dto);
   }
 }
-

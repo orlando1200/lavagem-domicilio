@@ -1,1198 +1,320 @@
-// CLIENT & VEHICLES
-// ========================================
+// Schema Prisma unificado - Lavagem a Domicilio
+//
+// Reconstruido na rodada de recuperacao do backend (services/api).
+// O schema original (~1447 linhas) foi corrompido/truncado em uma
+// restauracao anterior do repositorio e esta preservado em
+// `schema.prisma.corrupted-backup` para consulta manual.
+// Ver docs/BACKEND_RECOVERY_AUDIT.md e docs/FASE9_CORRUPTED_MODULES.md.
+//
+// Este arquivo cobre o dominio completo do produto: usuarios, veiculos,
+// pedidos de lavagem, pagamentos, marketplace dual (lojista -> lavador e
+// lojista -> cliente), cupons, cashback, avaliacoes, suporte, zonas de
+// cobertura, verificacao de documentos/rosto, kit inicial, aluguel de moto,
+// fidelidade e eventos de analytics.
 
-model ClientProfile {
-  userId                 String   @id @map("user_id") @db.Uuid
-  defaultPaymentMethodId String?  @map("default_payment_method_id") @db.Uuid
-  averageRating          Decimal? @map("average_rating") @db.Decimal(3, 2)
-  totalOrders            Int      @default(0) @map("total_orders")
-  cancellationRate       Decimal  @default(0) @map("cancellation_rate") @db.Decimal(5, 2)
-  loyaltyPoints          Int      @default(0) @map("loyalty_points")
-  createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt              DateTime @updatedAt @map("updated_at") @db.Timestamptz
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("client_profiles")
+generator client {
+  provider = "prisma-client-js"
 }
 
-enum VehicleCategory {
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// USERS & AUTH
+// ────────────────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  CLIENTE
+  LAVADOR
+  ADMIN
+}
+
+enum UserStatus {
+  active
+  inactive
+  blocked
+  pending_verification
+}
+
+model User {
+  id           String     @id @default(uuid()) @db.Uuid
+  name         String     @db.VarChar(180)
+  email        String     @unique @db.VarChar(180)
+  phone        String?    @db.VarChar(20)
+  passwordHash String     @map("password_hash") @db.VarChar(255)
+  role         UserRole
+  status       UserStatus @default(active)
+  avatarUrl    String?    @map("avatar_url") @db.VarChar(500)
+  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime   @updatedAt @map("updated_at") @db.Timestamptz
+
+  addresses            Address[]
+  vehicles             Vehicle[]
+  driver                Driver?
+  washer                Washer?
+  ordersAsCustomer      Order[]                @relation("OrderCustomer")
+  payments              Payment[]
+  store                 Store?
+  productOrders         ProductOrder[]
+  cashbackBalance       CashbackBalance?
+  reviewsGiven          Review[]               @relation("ReviewAuthor")
+  reviewsReceived       Review[]               @relation("ReviewTarget")
+  supportTickets        SupportTicket[]
+  documentVerifications DocumentVerification[]
+  faceChecks            FaceCheck[]
+  rentals               Rental[]
+  couponCampaignRedemptions CouponRedemption[]
+  analyticsEvents       AnalyticsEvent[]
+
+  @@map("users")
+}
+
+model Address {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  label        String?  @db.VarChar(80)
+  street       String   @db.VarChar(200)
+  number       String   @db.VarChar(20)
+  complement   String?  @db.VarChar(120)
+  neighborhood String   @db.VarChar(120)
+  city         String   @db.VarChar(120)
+  state        String   @db.Char(2)
+  zipCode      String   @map("zip_code") @db.VarChar(12)
+  latitude     Decimal? @db.Decimal(10, 7)
+  longitude    Decimal? @db.Decimal(10, 7)
+  isDefault    Boolean  @default(false) @map("is_default")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders Order[]
+
+  @@map("addresses")
+}
+
+enum VehicleType {
+  carro
   moto
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  expired
+  caminhonete
+  van
 }
 
-enum DriverOnboardingStatus {
+model Vehicle {
+  id           String      @id @default(uuid()) @db.Uuid
+  userId       String      @map("user_id") @db.Uuid
+  type         VehicleType
+  brand        String      @db.VarChar(80)
+  model        String      @db.VarChar(80)
+  color        String?     @db.VarChar(40)
+  plate        String      @db.VarChar(10)
+  createdAt    DateTime    @default(now()) @map("created_at") @db.Timestamptz
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders Order[]
+
+  @@map("vehicles")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// DRIVER (LOGISTICA) & WASHER (LAVADOR)
+// ────────────────────────────────────────────────────────────────────────────
+
+enum DriverStatus {
+  draft
   pending_documents
   awaiting_kit
   active
+  inactive
   rejected
-  completed
+  blocked
 }
 
-model DriverProfile {
-  userId                       String             @id @map("user_id") @db.Uuid
-  displayName                  String             @map("display_name") @db.VarChar(120)
-  status                       DriverStatus       @default(draft)
-  onboardingStatus             DriverOnboardingStatus @default(pending_documents) @map("onboarding_status")
-  serviceRadiusKm              Decimal            @map("service_radius_km") @db.Decimal(6, 2)
-  currentZoneId                String?            @map("current_zone_id") @db.Uuid
-  averageRating                Decimal?           @map("average_rating") @db.Decimal(3, 2)
-  totalCompletedOrders         Int                @default(0) @map("total_completed_orders")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// SERVICE CATALOG
-// ========================================
-
-model ServiceCategory {
-  id          String    @id @default(uuid()) @db.Uuid
-  name        String    @db.VarChar(120)
-  slug        String    @unique @db.VarChar(120)
-  description String?   @db.Text
-  icon        String?   @db.VarChar(80)
-  sortOrder   Int       @default(0) @map("sort_order")
-  isActive    Boolean   @default(true) @map("is_active")
-
-  services Service[]
-
-  @@map("service_categories")
+model Driver {
+  userId           String       @id @map("user_id") @db.Uuid
+  status           DriverStatus @default(draft)
+  vehiclePlate     String?      @map("vehicle_plate") @db.VarChar(10)
+  currentZoneId    String?      @map("current_zone_id") @db.Uuid
+  averageRating    Decimal?     @map("average_rating") @db.Decimal(3, 2)
+  totalDeliveries  Int          @default(0) @map("total_deliveries")
+  createdAt        DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime     @updatedAt @map("updated_at") @db.Timestamptz
+
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  zone    Zone?           @relation(fields: [currentZoneId], references: [id])
+  orders  Order[]
+  rentals Rental[]
+
+  @@map("drivers")
 }
 
-enum ServiceMode {
-  main
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// COVERAGE ZONES
-// ========================================
-
-model CoverageZone {
-  id             String    @id @default(uuid()) @db.Uuid
-  city           String    @db.VarChar(120)
-  state          String    @db.Char(2)
-  name           String    @db.VarChar(120)
-  slug           String    @unique @db.VarChar(120)
-  neighborhoods  String[]  @default([]) @map("neighborhoods")
-  surgeEnabled   Boolean   @default(false) @map("surge_enabled")
-  isActive       Boolean   @default(true) @map("is_active")
-  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
-
-  pricingRules   ZonePricingRule[]
-  serviceRegions ServiceRegion[]
-  drivers        DriverProfile[]
-  orders         Order[]
-
-  @@map("coverage_zones")
-}
-
-model ZonePricingRule {
-  id                   String    @id @default(uuid()) @db.Uuid
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  platformFee           Decimal       @map("platform_fee") @db.Decimal(12, 2)
-  driverPayoutAmount    Decimal       @map("driver_payout_amount") @db.Decimal(12, 2)
-  totalAmount           Decimal       @map("total_amount") @db.Decimal(12, 2)
-  paymentStatus         PaymentStatus @default(pending) @map("payment_status")
-  paymentMethod         PaymentMethod @map("payment_method")
-  source                String?       @map("source") @db.VarChar(30)
-  isRecurring           Boolean       @default(false) @map("is_recurring")
-  customerNotes         String?       @map("customer_notes") @db.Text
-  internalNotes         String?       @map("internal_notes") @db.Text
-  pricingSnapshot       Json          @map("pricing_snapshot")
-  createdAt             DateTime      @default(now()) @map("created_at") @db.Timestamptz
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  referral
-}
-
-model Promotion {
-  id            String        @id @default(uuid()) @db.Uuid
-  name          String        @db.VarChar(120)
-  promotionType PromotionType @map("promotion_type")
-  config        Json
-  startsAt      DateTime      @map("starts_at") @db.Timestamptz
-  endsAt        DateTime      @map("ends_at") @db.Timestamptz
-  isActive      Boolean       @default(true) @map("is_active")
-
-  @@map("promotions")
-}
-
-// ========================================
-// LOYALTY
-// ========================================
-
-enum LoyaltyRewardType {
-  discount
-  cashback
-  free_service
-}
-
-enum LoyaltyCampaignStatus {
+enum WasherStatus {
   draft
+  pending_documents
   active
-  paused
-  finished
+  inactive
+  rejected
+  blocked
 }
 
-model LoyaltyCampaign {
-  id          String                @id @default(uuid()) @db.Uuid
-  name        String                @db.VarChar(120)
-  description String?               @db.Text
-  rewardType  LoyaltyRewardType     @map("reward_type")
-  pointsCost  Int                   @map("points_cost")
-  rewardValue Decimal               @map("reward_value") @db.Decimal(12, 2)
-  status      LoyaltyCampaignStatus @default(draft)
-  startsAt    DateTime?             @map("starts_at") @db.Timestamptz
-  endsAt      DateTime?             @map("ends_at") @db.Timestamptz
-  redemptions Int                   @default(0) @map("redemptions")
-  createdAt   DateTime              @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt   DateTime              @updatedAt @map("updated_at") @db.Timestamptz
+model Washer {
+  userId          String       @id @map("user_id") @db.Uuid
+  status          WasherStatus @default(draft)
+  serviceRadiusKm Decimal      @default(5) @map("service_radius_km") @db.Decimal(6, 2)
+  currentZoneId   String?      @map("current_zone_id") @db.Uuid
+  averageRating   Decimal?     @map("average_rating") @db.Decimal(3, 2)
+  totalOrders     Int          @default(0) @map("total_orders")
+  createdAt       DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime     @updatedAt @map("updated_at") @db.Timestamptz
 
-  @@map("loyalty_campaigns")
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  zone           Zone?           @relation(fields: [currentZoneId], references: [id])
+  orders         Order[]
+  starterKit     StarterKit?
+  productOrders  ProductOrder[]  @relation("ProductOrderWasher")
+  deliveries     ProductOrder[]  @relation("ProductOrderDeliveryDriver")
+  payouts        Payout[]
+
+  @@map("washers")
 }
 
-// ========================================
-// REVIEWS
-// ========================================
+// ────────────────────────────────────────────────────────────────────────────
+// ORDERS (SERVICO DE LAVAGEM)
+// ────────────────────────────────────────────────────────────────────────────
 
-enum ReviewStatus {
-  published
+enum OrderStatus {
+  pending
+  searching_washer
+  accepted
+  en_route
+  in_progress
+  completed
+  cancelled
+}
 
+model Order {
+  id           String      @id @default(uuid()) @db.Uuid
+  customerId   String      @map("customer_id") @db.Uuid
+  washerId     String?     @map("washer_id") @db.Uuid
+  driverId     String?     @map("driver_id") @db.Uuid
+  vehicleId    String      @map("vehicle_id") @db.Uuid
+  addressId    String      @map("address_id") @db.Uuid
+  zoneId       String?     @map("zone_id") @db.Uuid
+  status       OrderStatus @default(pending)
+  scheduledAt  DateTime?   @map("scheduled_at") @db.Timestamptz
+  startedAt    DateTime?   @map("started_at") @db.Timestamptz
+  completedAt  DateTime?   @map("completed_at") @db.Timestamptz
+  totalAmount  Decimal     @map("total_amount") @db.Decimal(12, 2)
+  notes        String?     @db.Text
+  createdAt    DateTime    @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime    @updatedAt @map("updated_at") @db.Timestamptz
 
+  customer User      @relation("OrderCustomer", fields: [customerId], references: [id])
+  washer   Washer?   @relation(fields: [washerId], references: [userId])
+  driver   Driver?   @relation(fields: [driverId], references: [userId])
+  vehicle  Vehicle   @relation(fields: [vehicleId], references: [id])
+  address  Address   @relation(fields: [addressId], references: [id])
+  zone     Zone?     @relation(fields: [zoneId], references: [id])
+  items    OrderItem[]
+  payment  Payment?
+  reviews  Review[]
 
+  @@map("orders")
+}
 
+model OrderItem {
+  id        String   @id @default(uuid()) @db.Uuid
+  orderId   String   @map("order_id") @db.Uuid
+  name      String   @db.VarChar(180)
+  price     Decimal  @db.Decimal(12, 2)
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
+  @@map("order_items")
+}
 
+enum PaymentMethod {
+  credit_card
+  debit_card
+  pix
+  cash
+  wallet
+}
 
+enum PaymentStatus {
+  pending
+  authorized
+  paid
+  failed
+  refunded
+}
 
+model Payment {
+  id            String        @id @default(uuid()) @db.Uuid
+  orderId       String        @unique @map("order_id") @db.Uuid
+  userId        String        @map("user_id") @db.Uuid
+  method        PaymentMethod
+  status        PaymentStatus @default(pending)
+  amount        Decimal       @db.Decimal(12, 2)
+  couponId      String?       @map("coupon_id") @db.Uuid
+  cashbackUsed  Decimal       @default(0) @map("cashback_used") @db.Decimal(12, 2)
+  externalRef   String?       @map("external_ref") @db.VarChar(120)
+  createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime      @updatedAt @map("updated_at") @db.Timestamptz
 
+  order  Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user   User    @relation(fields: [userId], references: [id])
+  coupon Coupon? @relation(fields: [couponId], references: [id])
 
+  @@map("payments")
+}
 
+// ────────────────────────────────────────────────────────────────────────────
+// MARKETPLACE DUAL — STORE / PRODUCT
+// ────────────────────────────────────────────────────────────────────────────
 
+enum StoreType {
+  LAVADOR
+  CLIENTE
+}
 
+enum LogisticsPlan {
+  INTEGRATED
+  OWN
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// MARKETPLACE
-// ========================================
-
-enum SupplierStatus {
+enum StoreStatus {
   pending
   active
   inactive
   blocked
 }
 
-enum StorePlan {
-  integrated_logistics
-  own_logistics
-}
-
-enum LogisticsType {
-  platform
-  supplier
-}
-
-enum ProductApprovalStatus {
-  pending_approval
-  approved
-  rejected
-}
-
-enum ProductStorefront {
-  washer
-  customer
-  both
-}
-
-model Supplier {
-  id                String         @id @default(uuid()) @db.Uuid
-  name              String         @db.VarChar(180)
-  slug              String         @unique @db.VarChar(180)
-  document          String         @db.VarChar(20)
-  contactName       String?        @map("contact_name") @db.VarChar(180)
-  email             String?        @db.Citext
-  phone             String?        @db.VarChar(20)
-  status            SupplierStatus @default(pending)
-  plan              StorePlan      @default(integrated_logistics)
-  logisticsType     LogisticsType  @default(platform) @map("logistics_type")
-  monthlyFee        Decimal        @default(150.00) @map("monthly_fee") @db.Decimal(12, 2)
-  takeRate          Decimal        @default(0.23) @map("take_rate") @db.Decimal(5, 4)
-  minimumBilling    Decimal        @default(1800.00) @map("minimum_billing") @db.Decimal(12, 2)
-  billingActivated  Boolean        @default(false) @map("billing_activated")
+model Store {
+  id                String        @id @default(uuid()) @db.Uuid
+  ownerUserId       String        @unique @map("owner_user_id") @db.Uuid
+  name              String        @db.VarChar(180)
+  document          String        @db.VarChar(20)
+  contactName       String?       @map("contact_name") @db.VarChar(180)
+  email             String?       @db.VarChar(180)
+  phone             String?       @db.VarChar(20)
+  storeType         StoreType     @map("store_type")
+  logisticsPlan     LogisticsPlan @default(INTEGRATED) @map("logistics_plan")
+  status            StoreStatus   @default(pending)
   address           Json?
-  bankInfo          Json?          @map("bank_info")
-  createdAt         DateTime       @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt         DateTime       @updatedAt @map("updated_at") @db.Timestamptz
+  bankInfo          Json?         @map("bank_info")
+  createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime      @updatedAt @map("updated_at") @db.Timestamptz
 
-  products          Product[]
-  marketplaceOrders MarketplaceOrder[]
-  payouts           SupplierPayout[]
+  owner          User             @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  products       Product[]
+  commissionPlan CommissionPlan?
+  productOrders  ProductOrder[]
+  payouts        Payout[]
 
-  @@map("suppliers")
-}
-
-model SupplierPayout {
-  id              String   @id @default(uuid()) @db.Uuid
-  supplierId      String   @map("supplier_id") @db.Uuid
-  periodStart     DateTime @map("period_start") @db.Timestamptz
-  periodEnd       DateTime @map("period_end") @db.Timestamptz
-  totalSales      Decimal  @map("total_sales") @db.Decimal(12, 2)
-  commission      Decimal  @map("commission") @db.Decimal(12, 2)
-  monthlyFee      Decimal  @map("monthly_fee") @db.Decimal(12, 2)
-  shippingCost    Decimal  @default(0) @map("shipping_cost") @db.Decimal(12, 2)
-  netAmount       Decimal  @map("net_amount") @db.Decimal(12, 2)
-  status          String   @default("pending") @db.VarChar(20)
-  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz
-
-  supplier Supplier @relation(fields: [supplierId], references: [id])
-
-  @@index([supplierId])
-  @@index([status])
-  @@map("supplier_payouts")
-}
-
-enum CommissionType {
-  percent
-  fixed
+  @@map("stores")
 }
 
 enum ProductStatus {
@@ -1203,245 +325,440 @@ enum ProductStatus {
   rejected
 }
 
+// Catalogo de destino do produto: para quem ele aparece (lavador, cliente ou ambos)
+enum CatalogTarget {
+  LAVADOR
+  CLIENTE
+  AMBOS
+}
+
 model Product {
-  id                String                @id @default(uuid()) @db.Uuid
-  supplierId        String                @map("supplier_id") @db.Uuid
-  name              String                @db.VarChar(180)
-  slug              String                @unique @db.VarChar(180)
-  description       String                @db.Text
-  sku               String                @unique @db.VarChar(60)
-  category          String                @db.VarChar(120)
-  price             Decimal               @db.Decimal(12, 2)
-  commissionType    CommissionType        @map("commission_type")
-  commissionValue   Decimal               @map("commission_value") @db.Decimal(12, 2)
-  stockQuantity     Int                   @default(0) @map("stock_quantity")
-  weightGrams       Int?                  @map("weight_grams")
-  isStarterKit      Boolean               @default(false) @map("is_starter_kit")
-  status            ProductStatus         @default(draft)
-  storefront        ProductStorefront     @default(both)
-  approvalStatus    ProductApprovalStatus @default(pending_approval) @map("approval_status")
-  rejectionReason   String?               @map("rejection_reason") @db.Text
-  approvedAt        DateTime?             @map("approved_at") @db.Timestamptz
-  approvedByUserId  String?               @map("approved_by_user_id") @db.Uuid
-  createdAt         DateTime              @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt         DateTime              @updatedAt @map("updated_at") @db.Timestamptz
+  id              String        @id @default(uuid()) @db.Uuid
+  storeId         String        @map("store_id") @db.Uuid
+  name            String        @db.VarChar(180)
+  slug            String        @unique @db.VarChar(200)
+  description     String?       @db.Text
+  sku             String?       @db.VarChar(60)
+  category        String?       @db.VarChar(80)
+  price           Decimal       @db.Decimal(12, 2)
+  stockQuantity   Int           @default(0) @map("stock_quantity")
+  status          ProductStatus @default(draft)
+  catalogTarget   CatalogTarget @default(AMBOS) @map("catalog_target")
+  rejectionReason String?       @map("rejection_reason") @db.Text
+  approvedAt      DateTime?     @map("approved_at") @db.Timestamptz
+  approvedByUserId String?      @map("approved_by_user_id") @db.Uuid
+  weightGrams     Int?          @map("weight_grams")
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime      @updatedAt @map("updated_at") @db.Timestamptz
 
-  supplier              Supplier               @relation(fields: [supplierId], references: [id])
-  images                ProductImage[]
-  marketplaceOrderItems MarketplaceOrderItem[]
-  starterKitConfigs     StarterKitConfig[]
+  store Store          @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  items ProductOrderItem[]
 
-  @@index([supplierId])
-  @@index([status])
-  @@index([approvalStatus])
-  @@index([storefront])
-  @@index([isStarterKit])
   @@map("products")
 }
 
-model StarterKitConfig {
-  id              String   @id @default(uuid()) @db.Uuid
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+enum ProductOrderStatus {
+  pending
+  confirmed
+  shipped
+  delivered
+  cancelled
+  refunded
+}
+
+// Status da ENTREGA de um ProductOrder por um lavador-entregador
+// (Entregas Loja do Lavador). Distinto de `ProductOrderStatus`, que
+// representa o status comercial do pedido (pagamento/confirmacao).
+// Este enum controla o fluxo logistico: da disponibilizacao da entrega
+// para aceite ate a confirmacao de entrega ao comprador.
+enum ProductOrderDeliveryStatus {
+  PENDING
+  ACCEPTED
+  ON_THE_WAY
+  DELIVERED
+  CANCELLED
+}
+
+model ProductOrder {
+  id               String             @id @default(uuid()) @db.Uuid
+  orderNumber      String             @unique @map("order_number") @db.VarChar(30)
+  buyerUserId      String             @map("buyer_user_id") @db.Uuid
+  buyerWasherId    String?            @map("buyer_washer_id") @db.Uuid
+  storeId          String             @map("store_id") @db.Uuid
+  status           ProductOrderStatus @default(pending)
+  subtotal         Decimal            @db.Decimal(12, 2)
+  shippingAmount   Decimal            @default(0) @map("shipping_amount") @db.Decimal(12, 2)
+  commissionAmount Decimal            @default(0) @map("commission_amount") @db.Decimal(12, 2)
+  totalAmount      Decimal            @map("total_amount") @db.Decimal(12, 2)
+  paymentStatus    PaymentStatus      @default(pending) @map("payment_status")
+
+  // ── Entrega (Entregas Loja do Lavador) ──────────────────────────────
+  // Reaproveita ProductOrder em vez de criar um model separado: uma
+  // entrega e sempre a logistica de um pedido de produto ja existente.
+  deliveryStatus   ProductOrderDeliveryStatus @default(PENDING) @map("delivery_status")
+  deliveryDriverId String?                    @map("delivery_driver_id") @db.Uuid
+  assignedAt       DateTime?                  @map("assigned_at") @db.Timestamptz
+  deliveredAt      DateTime?                  @map("delivered_at") @db.Timestamptz
+
+  createdAt        DateTime           @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime           @updatedAt @map("updated_at") @db.Timestamptz
+
+  buyer         User               @relation(fields: [buyerUserId], references: [id])
+  buyerWasher   Washer?            @relation("ProductOrderWasher", fields: [buyerWasherId], references: [userId])
+  store         Store              @relation(fields: [storeId], references: [id])
+  deliveryDriver Washer?           @relation("ProductOrderDeliveryDriver", fields: [deliveryDriverId], references: [userId])
+  items         ProductOrderItem[]
+
+  @@map("product_orders")
+  @@index([deliveryStatus])
+  @@index([deliveryDriverId])
+}
+
+model ProductOrderItem {
+  id             String  @id @default(uuid()) @db.Uuid
+  productOrderId String  @map("product_order_id") @db.Uuid
+  productId      String  @map("product_id") @db.Uuid
+  quantity       Int     @default(1)
+  unitPrice      Decimal @map("unit_price") @db.Decimal(12, 2)
+  totalPrice     Decimal @map("total_price") @db.Decimal(12, 2)
+
+  productOrder ProductOrder @relation(fields: [productOrderId], references: [id], onDelete: Cascade)
+  product      Product      @relation(fields: [productId], references: [id])
+
+  @@map("product_order_items")
+}
+
+// Plano de comissao/mensalidade por loja, conforme tipo de loja e plano
+// de logistica escolhido:
+//   LAVADOR + INTEGRATED -> mensalidade R$150, take rate 23%
+//   LAVADOR + OWN        -> mensalidade R$110, take rate 15%
+//   CLIENTE + INTEGRATED -> mensalidade R$59,  take rate 18%
+//   CLIENTE + OWN        -> mensalidade R$29,  take rate 12%
+model CommissionPlan {
+  id              String        @id @default(uuid()) @db.Uuid
+  storeId         String        @unique @map("store_id") @db.Uuid
+  storeType       StoreType     @map("store_type")
+  logisticsPlan   LogisticsPlan @map("logistics_plan")
+  monthlyFee      Decimal       @map("monthly_fee") @db.Decimal(12, 2)
+  takeRate        Decimal       @map("take_rate") @db.Decimal(5, 4)
+  minimumBilling  Decimal       @default(0) @map("minimum_billing") @db.Decimal(12, 2)
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@map("commission_plans")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// PAYOUTS — REPASSES (LAVADOR E LOJISTA)
+// ────────────────────────────────────────────────────────────────────────────
+
+// Nao havia model de repasse no schema original recuperado (nenhuma
+// referencia a "payout"/"repayment" sobreviveu na versao truncada). Model
+// novo, adicionado nesta rodada (Fase 9 - Phase B) para suportar o modulo
+// `payouts`: cobre tanto repasse para lavador (`recipientWasherId`) quanto
+// para lojista (`recipientStoreId`) - exatamente um dos dois deve ser
+// informado por registro.
+enum PayoutRecipientType {
+  WASHER
+  STORE
+}
+
+enum PayoutStatus {
+  pending
+  approved
+  paid
+  rejected
+}
+
+model Payout {
+  id                String              @id @default(uuid()) @db.Uuid
+  recipientType     PayoutRecipientType @map("recipient_type")
+  recipientWasherId String?             @map("recipient_washer_id") @db.Uuid
+  recipientStoreId  String?             @map("recipient_store_id") @db.Uuid
+  periodStart       DateTime            @map("period_start") @db.Timestamptz
+  periodEnd         DateTime            @map("period_end") @db.Timestamptz
+  ordersCount       Int                 @default(0) @map("orders_count")
+  grossAmount       Decimal             @map("gross_amount") @db.Decimal(12, 2)
+  commissionAmount  Decimal             @default(0) @map("commission_amount") @db.Decimal(12, 2)
+  netAmount         Decimal             @map("net_amount") @db.Decimal(12, 2)
+  status            PayoutStatus        @default(pending)
+  rejectionReason   String?             @map("rejection_reason") @db.Text
+  providerReference String?             @map("provider_reference") @db.VarChar(120)
+  approvedAt        DateTime?           @map("approved_at") @db.Timestamptz
+  paidAt            DateTime?           @map("paid_at") @db.Timestamptz
+  createdAt         DateTime            @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime            @updatedAt @map("updated_at") @db.Timestamptz
+
+  recipientWasher Washer? @relation(fields: [recipientWasherId], references: [userId])
+  recipientStore  Store?  @relation(fields: [recipientStoreId], references: [id])
+
+  @@map("payouts")
+  @@index([recipientWasherId])
+  @@index([recipientStoreId])
+  @@index([status])
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// COUPONS & CASHBACK
+// ────────────────────────────────────────────────────────────────────────────
+
+enum CouponDiscountType {
+  percent
+  fixed
+}
+
+model Coupon {
+  id            String             @id @default(uuid()) @db.Uuid
+  code          String             @unique @db.VarChar(40)
+  discountType  CouponDiscountType @map("discount_type")
+  discountValue Decimal            @map("discount_value") @db.Decimal(12, 2)
+  maxUses       Int?               @map("max_uses")
+  usedCount     Int                @default(0) @map("used_count")
+  minOrderAmount Decimal?          @map("min_order_amount") @db.Decimal(12, 2)
+  expiresAt     DateTime?          @map("expires_at") @db.Timestamptz
+  isActive      Boolean            @default(true) @map("is_active")
+  campaignId    String?            @map("campaign_id") @db.Uuid
+  createdAt     DateTime           @default(now()) @map("created_at") @db.Timestamptz
+
+  campaign  CouponCampaign?    @relation(fields: [campaignId], references: [id])
+  payments  Payment[]
+  redemptions CouponRedemption[]
+
+  @@map("coupons")
+}
+
+model CouponCampaign {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @db.VarChar(180)
+  description String?  @db.Text
+  startsAt    DateTime @map("starts_at") @db.Timestamptz
+  endsAt      DateTime? @map("ends_at") @db.Timestamptz
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  coupons Coupon[]
+
+  @@map("coupon_campaigns")
+}
+
+model CouponRedemption {
+  id        String   @id @default(uuid()) @db.Uuid
+  couponId  String   @map("coupon_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  redeemedAt DateTime @default(now()) @map("redeemed_at") @db.Timestamptz
+
+  coupon Coupon @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@map("coupon_redemptions")
+}
+
+model CashbackBalance {
+  userId    String   @id @map("user_id") @db.Uuid
+  balance   Decimal  @default(0) @db.Decimal(12, 2)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("cashback_balances")
+}
+
+model LoyaltyCampaign {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @db.VarChar(180)
+  description String?  @db.Text
+  pointsPerReal Decimal @default(1) @map("points_per_real") @db.Decimal(6, 2)
+  startsAt    DateTime @map("starts_at") @db.Timestamptz
+  endsAt      DateTime? @map("ends_at") @db.Timestamptz
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("loyalty_campaigns")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// REVIEWS & SUPPORT
+// ────────────────────────────────────────────────────────────────────────────
+
+model Review {
+  id           String   @id @default(uuid()) @db.Uuid
+  orderId      String   @map("order_id") @db.Uuid
+  authorUserId String   @map("author_user_id") @db.Uuid
+  targetUserId String   @map("target_user_id") @db.Uuid
+  rating       Int      @db.SmallInt
+  comment      String?  @db.Text
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  order  Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  author User  @relation("ReviewAuthor", fields: [authorUserId], references: [id])
+  target User  @relation("ReviewTarget", fields: [targetUserId], references: [id])
+
+  @@map("reviews")
+}
+
+enum SupportTicketStatus {
+  open
+  in_progress
+  resolved
   closed
 }
 
-enum SupportChannel {
-  app
-  whatsapp
-  email
-  phone
+model SupportTicket {
+  id        String              @id @default(uuid()) @db.Uuid
+  userId    String              @map("user_id") @db.Uuid
+  subject   String              @db.VarChar(180)
+  message   String              @db.Text
+  status    SupportTicketStatus @default(open)
+  createdAt DateTime            @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime            @updatedAt @map("updated_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("support_tickets")
 }
 
-model SupportTicket {
-  id                String         @id @default(uuid()) @db.Uuid
-  requesterUserId   String         @map("requester_user_id") @db.Uuid
-  orderId           String?        @map("order_id") @db.Uuid
-  category          TicketCategory
-  channel           SupportChannel   @default(app) @map("channel")
-  priority          TicketPriority @default(medium)
-  status            TicketStatus   @default(open)
-  subject           String         @db.VarChar(180)
-  description       String         @db.Text
+// ────────────────────────────────────────────────────────────────────────────
+// ZONES
+// ────────────────────────────────────────────────────────────────────────────
+
+model Zone {
+  id            String   @id @default(uuid()) @db.Uuid
+  city          String   @db.VarChar(120)
+  state         String   @db.Char(2)
+  name          String   @db.VarChar(120)
+  slug          String   @unique @db.VarChar(120)
+  neighborhoods String[] @default([])
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  drivers Driver[]
+  washers Washer[]
+  orders  Order[]
+
+  @@map("zones")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// DOCUMENT VERIFICATION & FACE CHECK
+// ────────────────────────────────────────────────────────────────────────────
+
+enum DocumentVerificationStatus {
+  pending
+  approved
+  rejected
+}
+
+model DocumentVerification {
+  id        String                     @id @default(uuid()) @db.Uuid
+  userId    String                     @map("user_id") @db.Uuid
+  docType   String                     @map("doc_type") @db.VarChar(60)
+  fileUrl   String                     @map("file_url") @db.VarChar(500)
+  status    DocumentVerificationStatus @default(pending)
+  reviewedByUserId String?             @map("reviewed_by_user_id") @db.Uuid
+  createdAt DateTime                   @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime                   @updatedAt @map("updated_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("document_verifications")
+}
+
+model FaceCheck {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  orderId     String?  @map("order_id") @db.Uuid
+  imageUrl    String   @map("image_url") @db.VarChar(500)
+  matchScore  Decimal? @map("match_score") @db.Decimal(5, 4)
+  passed      Boolean  @default(false)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("face_checks")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// STARTER KIT (LAVADOR ONBOARDING)
+// ────────────────────────────────────────────────────────────────────────────
+
+enum StarterKitStatus {
+  pending
+  paid
+  shipped
+  delivered
+  cancelled
+}
+
+model StarterKit {
+  washerId    String           @id @map("washer_id") @db.Uuid
+  status      StarterKitStatus @default(pending)
+  price       Decimal          @db.Decimal(12, 2)
+  installments Int             @default(1)
+  paidAt      DateTime?        @map("paid_at") @db.Timestamptz
+  createdAt   DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime         @updatedAt @map("updated_at") @db.Timestamptz
+
+  washer Washer @relation(fields: [washerId], references: [userId], onDelete: Cascade)
+
+  @@map("starter_kits")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// RENTAL (ALUGUEL DE MOTO)
+// ────────────────────────────────────────────────────────────────────────────
+
+enum RentalStatus {
+  requested
+  active
+  completed
+  cancelled
+  overdue
+}
+
+model Rental {
+  id         String       @id @default(uuid()) @db.Uuid
+  userId     String       @map("user_id") @db.Uuid
+  driverId   String?      @map("driver_id") @db.Uuid
+  status     RentalStatus @default(requested)
+  weeklyRate Decimal      @map("weekly_rate") @db.Decimal(12, 2)
+  startedAt  DateTime?    @map("started_at") @db.Timestamptz
+  endedAt    DateTime?    @map("ended_at") @db.Timestamptz
+  createdAt  DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime     @updatedAt @map("updated_at") @db.Timestamptz
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  driver Driver? @relation(fields: [driverId], references: [userId])
+
+  @@map("rentals")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// ANALYTICS
+// ────────────────────────────────────────────────────────────────────────────
+
+model AnalyticsEvent {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String?  @map("user_id") @db.Uuid
+  eventName String   @map("event_name") @db.VarChar(120)
+  payload   Json?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("analytics_events")
+  @@index([eventName])
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// HEALTH CHECK (mantido da rodada anterior — usado pelo modulo health)
+// ────────────────────────────────────────────────────────────────────────────
+
+model HealthCheck {
+  id        String   @id @default(uuid()) @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("health_checks")
+}

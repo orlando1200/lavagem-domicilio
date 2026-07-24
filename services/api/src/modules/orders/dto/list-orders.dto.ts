@@ -1,14 +1,22 @@
-import { IsEnum, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsEnum, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
 import { OrderStatus } from '@prisma/client';
+import { CursorPaginationDto } from '../../../common/dto/pagination.dto';
+
+export class ListOrdersDto extends CursorPaginationDto {
+  @ApiPropertyOptional({ enum: OrderStatus })
+  @IsOptional()
+  @IsEnum(OrderStatus)
+  status?: OrderStatus;
+}
 
 export class AdminListOrdersDto {
   @ApiPropertyOptional({ enum: OrderStatus })
   @IsOptional()
-  @IsString()
-  status?: string;
+  @IsEnum(OrderStatus)
+  status?: OrderStatus;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ maxLength: 100 })
   @IsOptional()
   @IsString()
   @MaxLength(100)
@@ -38,29 +46,8 @@ export class AdminListOrdersDto {
   limit?: string;
 }
 
-export class AdminAssignDriverDto {
+export class AdminAssignWasherDto {
   @ApiPropertyOptional()
   @IsUUID()
-  driverUserId: string;
+  washerId: string;
 }
-
-export class AdminUpdateStatusDto {
-  @ApiPropertyOptional()
-  @IsString()
-  @MaxLength(50)
-  status: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  @MaxLength(500)
-  note?: string;
-}
-
-export class AdminSendChatMessageDto {
-  @ApiPropertyOptional()
-  @IsString()
-  @MaxLength(2000)
-  message: string;
-}
-
