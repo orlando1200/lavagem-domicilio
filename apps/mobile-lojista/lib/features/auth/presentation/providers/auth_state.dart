@@ -1,45 +1,58 @@
-/// Modelo simples de usuario autenticado, espelhando o retorno
-/// sanitizado do backend (GET /users/me, POST /auth/login).
-class AppUser {
-  const AppUser({
+import '../../../../core/constants/app_constants.dart';
+
+/// Modelo simples de lojista autenticado.
+class StoreUser {
+  const StoreUser({
     required this.id,
-    required this.name,
+    required this.storeName,
     required this.email,
-    this.phone,
-    this.role,
+    required this.storeType,
+    required this.logisticsMode,
+    this.storeId,
   });
 
   final String id;
-  final String name;
+  final String storeName;
   final String email;
-  final String? phone;
-  final String? role;
+  final StoreType storeType;
+  final LogisticsMode logisticsMode;
 
-  factory AppUser.fromJson(Map<String, dynamic> json) {
-    return AppUser(
-      id: json['id'] as String,
-      name: json['name'] as String? ?? '',
-      email: json['email'] as String? ?? '',
-      phone: json['phone'] as String?,
-      role: json['role'] as String?,
+  /// Id da Store no backend (POST /stores), usado nas chamadas de
+  /// produtos (GET/POST /stores/:id/products). Nulo enquanto a loja
+  /// ainda nao foi criada no backend real.
+  final String? storeId;
+
+  StoreUser copyWith({
+    StoreType? storeType,
+    LogisticsMode? logisticsMode,
+    String? storeId,
+  }) {
+    return StoreUser(
+      id: id,
+      storeName: storeName,
+      email: email,
+      storeType: storeType ?? this.storeType,
+      logisticsMode: logisticsMode ?? this.logisticsMode,
+      storeId: storeId ?? this.storeId,
     );
   }
 }
 
-/// Estado de autenticacao do app (padrao selado simples, sem codegen).
+/// Estado de autenticacao do app do lojista (padrao selado simples, sem
+/// codegen).
 sealed class AuthState {
   const AuthState();
 
   const factory AuthState.initial() = AuthInitial;
   const factory AuthState.loading() = AuthLoading;
-  const factory AuthState.authenticated(AppUser user) = AuthAuthenticated;
+  const factory AuthState.authenticated(StoreUser user) = AuthAuthenticated;
   const factory AuthState.unauthenticated() = AuthUnauthenticated;
   const factory AuthState.error(String message) = AuthError;
 
   T when<T>({
     required T Function() initial,
     required T Function() loading,
-    required T Function(AppUser user) authenticated,
+    required T Function(StoreUser user) authenticated,
     required T Function() unauthenticated,
     required T Function(String message) error,
   }) {
@@ -53,7 +66,7 @@ sealed class AuthState {
   }
 
   T maybeWhen<T>({
-    T Function(AppUser user)? authenticated,
+    T Function(StoreUser user)? authenticated,
     required T Function() orElse,
   }) {
     final state = this;
@@ -74,7 +87,7 @@ class AuthLoading extends AuthState {
 
 class AuthAuthenticated extends AuthState {
   const AuthAuthenticated(this.user);
-  final AppUser user;
+  final StoreUser user;
 }
 
 class AuthUnauthenticated extends AuthState {

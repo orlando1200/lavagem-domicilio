@@ -19,14 +19,32 @@ extension DeliveryOrderStatusX on DeliveryOrderStatus {
         return 'Entregue';
     }
   }
+
+  /// Mapeia o status local para o enum `ProductOrderDeliveryStatus` do
+  /// backend (PENDING, ACCEPTED, ON_THE_WAY, DELIVERED), usado nas
+  /// chamadas PATCH /driver/deliveries/:id/status.
+  String get backendStatus {
+    switch (this) {
+      case DeliveryOrderStatus.pending:
+        return 'PENDING';
+      case DeliveryOrderStatus.accepted:
+        return 'ACCEPTED';
+      case DeliveryOrderStatus.onTheWay:
+        return 'ON_THE_WAY';
+      case DeliveryOrderStatus.delivered:
+        return 'DELIVERED';
+    }
+  }
 }
 
-/// Modelo simples de entrega de produto comprado na Loja do Lavador
-/// (mock local, sem backend real).
+/// Modelo simples de entrega de produto comprado na Loja do Lavador.
 ///
 /// Fluxo: o lavador recebe a solicitacao de entrega de um produto
 /// comprado por outro lavador na Loja do Lavador, aceita, faz a rota de
-/// coleta na loja/parceiro e entrega ao comprador.
+/// coleta na loja/parceiro e entrega ao comprador. A lista disponivel e
+/// mockada localmente como fallback, mas as acoes (aceitar/avancar
+/// status) chamam o backend real (`DeliveryOrdersRepository`) quando o
+/// id da entrega existir de fato no servidor.
 class DeliveryOrder {
   const DeliveryOrder({
     required this.id,

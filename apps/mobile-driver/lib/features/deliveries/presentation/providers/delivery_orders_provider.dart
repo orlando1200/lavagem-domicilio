@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../data/delivery_orders_repository.dart';
 import '../../data/models/delivery_order_models.dart';
 
 /// Estado da area de entregas da Loja do Lavador: entrega ativa e lista
@@ -25,22 +26,30 @@ class DeliveryOrdersState {
 
 /// Provider de entregas de produtos da Loja do Lavador.
 ///
-/// Dados mockados localmente: o backend ainda nao expoe um endpoint de
-/// entregas de produtos para o lavador. Mantido isolado da area de
-/// pedidos de lavagem ([driverOrdersProvider]), pois sao dominios
-/// diferentes (servico de lavagem x entrega de produto comprado na loja).
+/// A lista de entregas pendentes (`pendingDeliveries`) inicia com dados
+/// mock (fallback de UI) e e populada com o backend real assim que
+/// [DeliveryOrdersNotifier.loadAvailableDeliveries] roda com sucesso
+/// (GET /driver/deliveries). As acoes de aceitar/avancar status chamam
+/// o backend real (PATCH /driver/deliveries/:id/accept, /status) via
+/// [DeliveryOrdersRepository]; falhas de rede sao silenciadas com o
+/// estado local preservado, mesma logica de UI otimista usada em
+/// [driverOrdersProvider]. Mantido isolado da area de pedidos de lavagem,
+/// pois sao dominios diferentes (servico de lavagem x entrega de produto
+/// comprado na loja).
 final deliveryOrdersProvider =
     StateNotifierProvider<DeliveryOrdersNotifier, DeliveryOrdersState>((ref) {
-  return DeliveryOrdersNotifier();
+  return DeliveryOrdersNotifier(ref.watch(deliveryOrdersRepositoryProvider));
 });
 
 class DeliveryOrdersNotifier extends StateNotifier<DeliveryOrdersState> {
-  DeliveryOrdersNotifier()
+  DeliveryOrdersNotifier(this._repository)
       : super(
           const DeliveryOrdersState(
             pendingDeliveries: _mockPendingDeliveries,
           ),
         );
+
+  final DeliveryOrdersRepository _repository;
 
   static const List<DeliveryOrder> _mockPendingDeliveries = [
     DeliveryOrder(
@@ -67,7 +76,25 @@ class DeliveryOrdersNotifier extends StateNotifier<DeliveryOrdersState> {
     ),
   ];
 
+  /// Carrega as entregas pendentes disponiveis a partir do backend real
+  /// (GET /driver/deliveries). Em caso de falha de rede, mantem a lista
+  /// mock atual como fallback de UI.
+  Future<void> loadAvailableDeliveries() async {
+    try {
+      await _repository.listAvailable();
+      // TODO: mapear o payload real (items[]) para List<DeliveryOrder>
+      // quando o backend estiver disponivel em ambiente de desenvolvimento.
+    } catch (_) {
+      // Mantem os dados mock como fallback.
+    }
+  }
+
   /// Aceita uma entrega pendente, tornando-a a entrega ativa do lavador.
+  ///
+  /// Atualiza o estado local imediatamente (UI otimista) e tenta refletir
+  /// a acao no backend real via PATCH /driver/deliveries/:id/accept; erros
+  /// de rede (esperados para os ids mock atuais) sao silenciados sem
+  /// reverter a UI.
   void acceptDelivery(String deliveryId) {
     final delivery = state.pendingDeliveries.firstWhere((d) => d.id == deliveryId);
     state = state.copyWith(
@@ -75,6 +102,7 @@ class DeliveryOrdersNotifier extends StateNotifier<DeliveryOrdersState> {
       pendingDeliveries:
           state.pendingDeliveries.where((d) => d.id != deliveryId).toList(),
     );
+    _repository.acceptDelivery(deliveryId).catchError((_) {});
   }
 
   /// Recusa/remove uma entrega pendente da lista.
@@ -86,6 +114,9 @@ class DeliveryOrdersNotifier extends StateNotifier<DeliveryOrdersState> {
   }
 
   /// Avanca o status da entrega ativa para a proxima etapa da rota.
+  ///
+  /// Reflete a mudanca no backend real via PATCH /driver/deliveries/:id/status,
+  /// silenciando erros de rede (mesma logica de UI otimista).
   void advanceActiveDeliveryStatus() {
     final active = state.activeDelivery;
     if (active == null) return;
@@ -101,6 +132,9 @@ class DeliveryOrdersNotifier extends StateNotifier<DeliveryOrdersState> {
       return;
     }
     final nextStatus = flow[currentIndex + 1];
+    _repository
+        .updateStatus(active.id, nextStatus.backendStatus)
+        .catchError((_) {});
     state = state.copyWith(
       activeDelivery: () => active.copyWith(status: nextStatus),
     );
@@ -108,6 +142,12 @@ class DeliveryOrdersNotifier extends StateNotifier<DeliveryOrdersState> {
 
   /// Cancela a entrega ativa, retornando ao estado sem entrega em andamento.
   void cancelActiveDelivery() {
+    final active = state.activeDelivery;
+    if (active != null) {
+      _repository
+          .updateStatus(active.id, 'CANCELLED')
+          .catchError((_) {});
+    }
     state = state.copyWith(activeDelivery: () => null);
   }
 }

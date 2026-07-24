@@ -35,6 +35,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       body: _pages[_currentIndex],
       currentIndex: _currentIndex,
       onDestinationSelected: (i) => setState(() => _currentIndex = i),
+      onDeliveriesTap: () => context.push('/deliveries'),
     );
   }
 }
