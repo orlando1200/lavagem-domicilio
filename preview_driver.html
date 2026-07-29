@@ -92,6 +92,45 @@ a.tool-card, a.menu-item { text-decoration: none; display: block; color: inherit
 </div>
 <div class="app-container">
 
+  <!-- Escolha de Perfil -->
+  <div class="phone-wrap" id="escolha-perfil">
+    <div class="phone-label">Escolha seu Perfil</div>
+  <div class="phone">
+    <div class="screen">
+      <div class="status"><span class="time">9:41</span></div>
+      <div class="login-screen">
+        <div class="logo-icon">🚿</div>
+        <h1>GIUCAR Pro</h1>
+        <div class="tagline">Como você vai atuar na plataforma?</div>
+
+        <a href="#cadastro-moto" class="select-card" style="width:100%; margin-bottom:14px; text-decoration:none; color:inherit;">
+          <div style="font-size:32px;">🏍️</div>
+          <div>
+            <h4 style="font-size:15px; font-weight:800; color:#fff; margin-bottom:4px;">Moto Lavador</h4>
+            <p style="font-size:12px; color:#8b9bb4;">Alta mobilidade urbana. Ideal para Lavado a Seco e Express com kit leve no baú.</p>
+          </div>
+        </a>
+
+        <a href="#cadastro-carro" class="select-card" style="width:100%; margin-bottom:14px; text-decoration:none; color:inherit;">
+          <div style="font-size:32px;">🚐</div>
+          <div>
+            <h4 style="font-size:15px; font-weight:800; color:#fff; margin-bottom:4px;">Carro Lavador</h4>
+            <p style="font-size:12px; color:#8b9bb4;">Equipamento maior (hidrolavadora autônoma, tanque, aspiradora/gerador). Limpezas profundas e tapizados a domicílio.</p>
+          </div>
+        </a>
+
+        <a href="#cadastro-loja" class="select-card" style="width:100%; margin-bottom:14px; text-decoration:none; color:inherit;">
+          <div style="font-size:32px;">🏪</div>
+          <div>
+            <h4 style="font-size:15px; font-weight:800; color:#fff; margin-bottom:4px;">Loja de Carwash</h4>
+            <p style="font-size:12px; color:#8b9bb4;">Infraestrutura fixa. Recebe pedidos de alto valor via leilão e vende no marketplace.</p>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+  </div>
+
   <!-- Login do Lavador -->
   <div class="phone-wrap" id="login">
     <div class="phone-label">Login</div>
@@ -105,7 +144,7 @@ a.tool-card, a.menu-item { text-decoration: none; display: block; color: inherit
         <input class="input" type="text" placeholder="E-mail ou CPF" value="carlos.lavador@email.com">
         <input class="input" type="password" placeholder="Senha" value="••••••••">
         <a href="#home" class="login-btn" style="display:block; text-align:center; text-decoration:none;">Entrar como lavador</a>
-        <div class="login-footer">Ainda não é parceiro? <a href="#login">Cadastre-se</a></div>
+        <div class="login-footer">Ainda não é parceiro? <a href="#escolha-perfil">Cadastre-se</a></div>
       </div>
     </div>
   </div>
@@ -163,6 +202,14 @@ a.tool-card, a.menu-item { text-decoration: none; display: block; color: inherit
             <div class="label">Entregas Loja do Lavador</div>
             <div class="sub">Aceite e entregue produtos comprados por outros lavadores</div>
           </a>
+        </div>
+        <div class="section-title" style="margin-top:18px;">Seu perfil</div>
+        <div class="order-card" style="display:flex; align-items:center; gap:14px;">
+          <div style="font-size:28px;">🚐</div>
+          <div>
+            <div style="font-size:14px; font-weight:800; color:#fff;">Carro Lavador</div>
+            <div style="font-size:12px; color:#8b9bb4;">Seco, Express e Limpeza Profunda a domicílio · nota 4.9</div>
+          </div>
         </div>
       </div>
       <div class="nav-float">
@@ -405,13 +452,14 @@ a.tool-card, a.menu-item { text-decoration: none; display: block; color: inherit
         <p>Aceite uma oferta próxima a você</p>
       </div>
       <div class="content">
+        <div class="section-title">Pedidos disponíveis para seu perfil</div>
         <div class="order-card">
           <div class="row">
             <span class="customer">Orlando Silva</span>
             <span class="price">R$ 89,90</span>
           </div>
-          <div class="detail">🚗 Lavagem Premium · Honda Civic</div>
-          <div class="detail">📍 Rua Augusta, 150 · 2,3 km · 8 min</div>
+          <div class="detail">🌿 Lavagem Express · Honda Civic · 2,3 km · 8 min</div>
+          <div class="detail" style="color:#00F2C2; font-size:11px;">Compatível com Carro Lavador</div>
           <div class="actions">
             <a class="btn btn-primary" href="#pedido-ativo" style="text-decoration:none;text-align:center;display:block;">Aceitar</a>
             <a class="btn btn-secondary" href="#pedidos-disponiveis" style="text-decoration:none;text-align:center;display:block;">Recusar</a>
@@ -423,25 +471,21 @@ a.tool-card, a.menu-item { text-decoration: none; display: block; color: inherit
             <span class="customer">Mariana Costa</span>
             <span class="price">R$ 59,90</span>
           </div>
-          <div class="detail">🚙 Lavagem Express · Toyota Corolla</div>
-          <div class="detail">📍 Av. Paulista, 1000 · 4,1 km · 15 min</div>
+          <div class="detail">🌿 Lavagem a Seco · Toyota Corolla · 4,1 km · 15 min</div>
+          <div class="detail" style="color:#00F2C2; font-size:11px;">Compatível com Carro Lavador</div>
           <div class="actions">
             <a class="btn btn-primary" href="#pedido-ativo" style="text-decoration:none;text-align:center;display:block;">Aceitar</a>
             <a class="btn btn-secondary" href="#pedidos-disponiveis" style="text-decoration:none;text-align:center;display:block;">Recusar</a>
           </div>
         </div>
 
-        <div class="order-card">
+        <div class="order-card" style="opacity:.6;">
           <div class="row">
             <span class="customer">Pedro Lima</span>
-            <span class="price">R$ 129,90</span>
+            <span class="price">R$ 699,90</span>
           </div>
-          <div class="detail">🚘 Lavagem Detalhada · BMW X3</div>
-          <div class="detail">📍 Alameda Santos, 700 · 1,8 km · 6 min</div>
-          <div class="actions">
-            <a class="btn btn-primary" href="#pedido-ativo" style="text-decoration:none;text-align:center;display:block;">Aceitar</a>
-            <a class="btn btn-secondary" href="#pedidos-disponiveis" style="text-decoration:none;text-align:center;display:block;">Recusar</a>
-          </div>
+          <div class="detail">🛡️ Polimento · BMW X3 · 1,8 km · leilão Loja de Carwash</div>
+          <div class="detail" style="color:#ffc107; font-size:11px;">Exclusivo para Loja de Carwash</div>
         </div>
       </div>
       <div class="nav-float">
@@ -509,7 +553,8 @@ a.tool-card, a.menu-item { text-decoration: none; display: block; color: inherit
           <span class="arrow">›</span>
         </div>
 
-        <a class="logout-btn" href="#login" style="display:block; text-align:center; text-decoration:none;">Sair da conta</a>
+        <a class="logout-btn" href="#escolha-perfil" style="display:block; text-align:center; text-decoration:none;">Trocar perfil de atuação</a>
+        <a class="logout-btn" href="#login" style="display:block; text-align:center; text-decoration:none; margin-top:10px;">Sair da conta</a>
       </div>
       <div class="nav-float">
         <a class="nav-item" href="#home"><div class="nav-icon">🏠</div>Home</a>
