@@ -67,7 +67,25 @@ class _HomeTab extends ConsumerWidget {
               const SizedBox(height: 16),
               const _ServicesSection(),
               const SizedBox(height: 16),
-              const _MarketplaceBanner(),
+              Row(
+                children: [
+                  _MarketplaceBanner(
+                    title: 'Serviços Pesados',
+                    subtitle: 'Leilão InDrive em Lojas de Carwash',
+                    emoji: '🏪',
+                    onTap: () => context.push('/auction'),
+                    backgroundColor: AppColors.surfaceAlt,
+                  ),
+                  const SizedBox(width: 12),
+                  _MarketplaceBanner(
+                    title: 'Loja de Acessórios',
+                    subtitle: 'Acessórios e souvenirs pro seu carro',
+                    emoji: '🛒',
+                    onTap: () => context.push('/shop'),
+                    backgroundColor: AppColors.surfaceAlt,
+                  ),
+                ],
+              ),
               const SizedBox(height: 16),
               const _PromoSection(),
             ]),
@@ -397,24 +415,24 @@ class _QuickActionsCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _QuickAction(
-                icon: Icons.shopping_bag_outlined,
-                label: 'Loja\nAcessórios',
-                onTap: () => context.push('/shop'),
-              ),
-              _QuickAction(
-                icon: Icons.two_wheeler,
-                label: 'Aluguel\nMoto',
-                onTap: () => context.push('/moto-rental'),
-              ),
-              _QuickAction(
-                icon: Icons.car_repair,
-                label: 'Solicitar\nLavagem',
+                icon: Icons.eco_outlined,
+                label: 'Seco /\nExpress',
                 onTap: () => context.push('/catalog'),
+              ),
+              _QuickAction(
+                icon: Icons.storefront_outlined,
+                label: 'Serviços\nPesados',
+                onTap: () => context.push('/auction'),
               ),
               _QuickAction(
                 icon: Icons.directions_car,
                 label: 'Meus\nVeículos',
                 onTap: () => context.push('/vehicles'),
+              ),
+              _QuickAction(
+                icon: Icons.workspace_premium_outlined,
+                label: 'GIUCAR\nPoints',
+                onTap: () => context.push('/engagement'),
               ),
             ],
           ),
@@ -498,10 +516,10 @@ class _ServicesSection extends StatelessWidget {
           child: ListView(
             scrollDirection: Axis.horizontal,
             children: const [
-              _ServiceChip(title: 'Lavagem Simples', price: 'R\$ 29,90', icon: Icons.water_drop),
-              _ServiceChip(title: 'Lavagem Completa', price: 'R\$ 59,90', icon: Icons.local_car_wash),
-              _ServiceChip(title: 'Polimento', price: 'R\$ 89,90', icon: Icons.auto_fix_high),
-              _ServiceChip(title: 'Higienização', price: 'R\$ 149,90', icon: Icons.cleaning_services),
+              _ServiceChip(title: 'Lavagem a Seco', price: 'R\$ 59,90', icon: Icons.eco),
+              _ServiceChip(title: 'Lavagem Express', price: 'R\$ 89,90', icon: Icons.local_car_wash),
+              _ServiceChip(title: 'Polimento', price: 'a partir R\$ 499,90', icon: Icons.auto_fix_high),
+              _ServiceChip(title: 'Cristalização', price: 'Leilão', icon: Icons.shield_moon),
             ],
           ),
         ),
@@ -562,97 +580,65 @@ class _ServiceChip extends StatelessWidget {
 }
 
 class _MarketplaceBanner extends StatelessWidget {
-  const _MarketplaceBanner();
+  const _MarketplaceBanner({
+    required this.title,
+    required this.subtitle,
+    required this.emoji,
+    required this.onTap,
+    required this.backgroundColor,
+    this.borderColor,
+  });
+
+  final String title;
+  final String subtitle;
+  final String emoji;
+  final VoidCallback? onTap;
+  final Color backgroundColor;
+  final Color? borderColor;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: NeonSurface(
-            radius: 14,
-            backgroundColor: AppColors.surfaceAlt,
-            child: InkWell(
-              onTap: () => context.push('/shop'),
-              borderRadius: BorderRadius.circular(14),
-              child: Container(
-                height: 88,
-                padding: const EdgeInsets.all(12),
-                child: Row(
-                  children: [
-                    const Text('🛒', style: TextStyle(fontSize: 28)),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Loja de Acessórios',
-                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.textPrimary,
-                                ),
-                          ),
-                          Text(
-                            'Acessórios e souvenirs pro seu carro',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: AppColors.textSecondary,
-                                ),
-                          ),
-                        ],
+    return Expanded(
+      child: NeonSurface(
+        radius: 14,
+        backgroundColor: backgroundColor,
+        borderColor: borderColor,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
+            height: 88,
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                Text(emoji, style: const TextStyle(fontSize: 28)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        title,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
+                            ),
                       ),
-                    ),
-                  ],
+                      Text(
+                        subtitle,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: NeonSurface(
-            radius: 14,
-            backgroundColor: AppColors.accentContainer,
-            borderColor: AppColors.accent,
-            child: InkWell(
-              onTap: () => context.push('/moto-rental'),
-              borderRadius: BorderRadius.circular(14),
-              child: Container(
-                height: 88,
-                padding: const EdgeInsets.all(12),
-                child: Row(
-                  children: [
-                    const Text('🏍️', style: TextStyle(fontSize: 28)),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Motos',
-                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.textPrimary,
-                                ),
-                          ),
-                          Text(
-                            'Aluguel parceiros',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: AppColors.textSecondary,
-                                ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

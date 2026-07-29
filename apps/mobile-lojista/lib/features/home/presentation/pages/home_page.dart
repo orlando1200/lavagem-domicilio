@@ -75,6 +75,8 @@ class _HomeTab extends ConsumerWidget {
               const SizedBox(height: 20),
               const _RecentOrdersSection(),
               const SizedBox(height: 16),
+              const _AuctionEntryCard(),
+              const SizedBox(height: 16),
               FilledButton.icon(
                 onPressed: () => context.push('/products/new'),
                 icon: const Icon(Icons.add_rounded),
@@ -478,6 +480,57 @@ class _OrderCard extends StatelessWidget {
               ),
             ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AuctionEntryCard extends StatelessWidget {
+  const _AuctionEntryCard();
+  @override
+  Widget build(BuildContext context) {
+    return NeonSurface(
+      child: InkWell(
+        onTap: () => context.push('/auction'),
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.accentContainer,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(Icons.storefront_rounded, color: AppColors.accent),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Leilão de Serviços Pesados',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textPrimary,
+                          ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Envie ofertas para polimento, cristalização e mais',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
+            ],
+          ),
         ),
       ),
     );

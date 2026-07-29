@@ -182,7 +182,7 @@ class _HomeHeader extends ConsumerWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Pronto para mais lavagens hoje?',
+                          'Pronto para mais lavagens hoje? · Carro Lavador',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                 color: AppColors.textSecondary,
                               ),
@@ -880,6 +880,11 @@ class _ProfileView extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 24),
+          _ProfileMenuItem(
+            icon: Icons.badge_outlined,
+            title: 'Perfil de atuação',
+            onTap: () {},
+          ),
           _ProfileMenuItem(
             icon: Icons.account_balance_wallet_outlined,
             title: 'Minhas contas bancárias',
