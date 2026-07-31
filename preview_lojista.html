@@ -157,9 +157,14 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
       <div class="status">
         <span class="time">9:41</span>
       </div>
-      <div class="header">
-        <h2>Olá, AutoLimpeza SP!</h2>
-        <p>Resumo da sua loja</p>
+      <div class="header" style="display:flex; align-items:center; gap:14px;">
+        <div style="width:56px; height:56px; border-radius:18px; overflow:hidden; background:rgba(0,242,194,0.08);">
+          <img src="assets/logo_lojista.png" alt="GIUCAR Loja" style="width:100%; height:100%; object-fit:cover;">
+        </div>
+        <div>
+          <h2>Olá, AutoLimpeza SP!</h2>
+          <p>Resumo da sua loja</p>
+        </div>
       </div>
       <div class="content">
         <div class="balance-card">
@@ -211,95 +216,59 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
           <div class="services">Status: Entregue</div>
         </div>
 
-        <a class="btn btn-primary btn-block" href="#leilao" style="text-decoration:none; text-align:center; display:block; margin-top: 12px;">🏪 Leilão de Serviços Pesados</a>
+        <a class="btn btn-primary btn-block" href="#meus-produtos" style="text-decoration:none; text-align:center; display:block; margin-top: 12px;">+ Cadastrar novo produto</a>
       </div>
       <div class="nav-float">
         <a class="nav-item active" href="#home"><div class="nav-icon">🏠</div>Home</a>
         <a class="nav-item" href="#meus-produtos"><div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M19 6h-2c0-2.76-2.24-5-5-5S7 3.24 7 6H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-7-3c1.66 0 3 1.34 3 3H9c0-1.66 1.34-3 3-3zm7 17H5V8h2v2h2V8h8v2h2V8h2v12z"/></svg></div>Produtos</a>
-        <a class="nav-item" href="#leilao"><div class="nav-icon">🏪</div>Leilão</a>
+        <a class="nav-item" href="#pedidos"><div class="nav-icon">📦</div>Pedidos</a>
         <a class="nav-item" href="#plano"><div class="nav-icon">👤</div>Perfil</a>
       </div>
     </div>
   </div>
   </div>
 
-  <!-- Leilão InDrive -->
-  <div class="phone-wrap" id="leilao">
-    <div class="phone-label">Leilão de Serviços</div>
+  <!-- Pedidos de Produtos -->
+  <div class="phone-wrap" id="pedidos">
+    <div class="phone-label">Pedidos de Produtos</div>
   <div class="phone">
     <div class="screen">
       <div class="status">
-        <a href="#home" style="color:#c77dff;text-decoration:none;">‹</a>
         <span class="time">9:41</span>
-        <span style="font-size:14px;">Leilão</span>
       </div>
       <div class="header">
-        <h2>Leilão InDrive</h2>
-        <p>Receba pedidos pesados e envie sua oferta</p>
+        <h2>Pedidos de produtos</h2>
+        <p>Vendas do seu marketplace</p>
       </div>
       <div class="content">
-        <div class="section-title">Solicitações abertas</div>
-
-        <div class="offer-card selected">
-          <div class="row">
-            <span class="title">Cristalização · BMW X3</span>
-            <span class="price" style="font-size:14px; color:#ffc107;">Sem oferta</span>
-          </div>
-          <div class="meta">
-            Cliente: Orlando Silva<br>
-            Local: Alameda Santos, 700 · 2,1 km<br>
-            Prazo desejado: até 3 dias úteis · Garantia solicitada
-          </div>
-          <input class="input-field" type="text" value="R$ 549,90" style="font-weight:800; color:#00F2C2;">
-          <input class="input-field" type="text" value="2 dias úteis">
-          <input class="input-field" type="text" value="Garantia 30 dias + fotos antes/depois">
-          <div class="actions">
-            <button class="btn btn-primary">Enviar oferta</button>
-            <button class="btn btn-secondary">Recusar</button>
-          </div>
-        </div>
-
-        <div class="offer-card">
-          <div class="row">
-            <span class="title">Polimento · Jeep Compass</span>
-            <span class="price">R$ 699,90</span>
-          </div>
-          <div class="meta">
-            Cliente: Mariana Costa<br>
-            Local: Rua Oscar Freire, 88 · 4,5 km<br>
-            Sua oferta já enviada. Aguardando escolha do cliente.
-          </div>
-          <div class="actions">
-            <button class="btn btn-secondary">Ver detalhes</button>
-          </div>
-        </div>
-
-        <div class="offer-card" style="opacity:.6;">
-          <div class="row">
-            <span class="title">Higienização de tapeçaria · Honda Civic</span>
-            <span class="price" style="color:#4a5578;">Encerrado</span>
-          </div>
-          <div class="meta">
-            Cliente: Pedro Lima<br>
-            Oferta vencedora: R$ 349,90 · 1 dia útil<br>
-            Ganho por outra loja.
-          </div>
-        </div>
-
-        <div class="section-title">Como funciona</div>
+        <div class="section-title">Pendentes de envio</div>
         <div class="order-card">
-          <div class="customer" style="font-size:13px; line-height:1.6; color:#8b9bb4;">
-            1. Cliente publica serviço pesado.<br>
-            2. Lojas enviam preço, prazo e garantia.<br>
-            3. Cliente escolhe por preço, nota e fotos.<br>
-            4. Pagamento fica retido até aprovação · + pontos GIUCAR.
+          <div class="row">
+            <span class="customer">Shampoo Automotivo 5L</span>
+            <span class="price">R$ 89,90</span>
           </div>
+          <div class="address">Carlos Silva · Lavador</div>
+          <div class="services">Status: Aguardando envio</div>
+          <div class="actions">
+            <button class="btn btn-secondary">Detalhes</button>
+            <button class="btn btn-primary">Preparar</button>
+          </div>
+        </div>
+
+        <div class="section-title">Entregues</div>
+        <div class="order-card">
+          <div class="row">
+            <span class="customer">Cera Líquida Premium 1L</span>
+            <span class="price">R$ 129,90</span>
+          </div>
+          <div class="address">João Souza · Lavador</div>
+          <div class="services">Status: Entregue · 10/07</div>
         </div>
       </div>
       <div class="nav-float">
         <a class="nav-item" href="#home"><div class="nav-icon">🏠</div>Home</a>
         <a class="nav-item" href="#meus-produtos"><div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M19 6h-2c0-2.76-2.24-5-5-5S7 3.24 7 6H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-7-3c1.66 0 3 1.34 3 3H9c0-1.66 1.34-3 3-3zm7 17H5V8h2v2h2V8h8v2h2V8h2v12z"/></svg></div>Produtos</a>
-        <a class="nav-item active" href="#leilao"><div class="nav-icon">🏪</div>Leilão</a>
+        <a class="nav-item active" href="#pedidos"><div class="nav-icon">📦</div>Pedidos</a>
         <a class="nav-item" href="#plano"><div class="nav-icon">👤</div>Perfil</a>
       </div>
     </div>
@@ -510,7 +479,7 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
       <div class="nav-float">
         <a class="nav-item" href="#home"><div class="nav-icon">🏠</div>Home</a>
         <a class="nav-item" href="#meus-produtos"><div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M19 6h-2c0-2.76-2.24-5-5-5S7 3.24 7 6H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-7-3c1.66 0 3 1.34 3 3H9c0-1.66 1.34-3 3-3zm7 17H5V8h2v2h2V8h8v2h2V8h2v12z"/></svg></div>Produtos</a>
-        <a class="nav-item" href="#leilao"><div class="nav-icon">🏪</div>Leilão</a>
+        <a class="nav-item" href="#pedidos"><div class="nav-icon">📦</div>Pedidos</a>
         <a class="nav-item active" href="#plano"><div class="nav-icon">👤</div>Perfil</a>
       </div>
     </div>

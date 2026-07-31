@@ -57,7 +57,8 @@ body { font-family: 'Inter', sans-serif; background: radial-gradient(circle at t
 .tool-card .sub { font-size: 11px; color: #8b9bb4; margin-top: 2px; }
 .logout-btn { width: 100%; padding: 16px; border-radius: 14px; border: 1px solid rgba(255,107,107,0.3); background: rgba(255,107,107,0.08); color: #ff6b6b; font-size: 14px; font-weight: 800; margin-top: 20px; cursor: pointer; }
 .login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 32px 24px; text-align: center; background: radial-gradient(circle at 50% 0%, rgba(0,242,194,0.08), transparent 50%); }
-.logo-icon { width: 110px; height: 110px; border-radius: 32px; background: linear-gradient(135deg, #00F2C2 0%, #9D4EDD 100%); display: flex; align-items: center; justify-content: center; font-size: 56px; margin-bottom: 20px; box-shadow: 0 0 40px rgba(0,242,194,0.2); }
+.logo-icon { width: 110px; height: 110px; border-radius: 32px; background: transparent; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; overflow: hidden; }
+.logo-icon img { width: 100%; height: 100%; object-fit: cover; border-radius: 32px; box-shadow: 0 0 40px rgba(0,242,194,0.2); }
 .login-screen h1 { font-size: 26px; font-weight: 900; color: #fff; margin-bottom: 6px; }
 .login-screen .tagline { font-size: 14px; color: #8b9bb4; margin-bottom: 36px; }
 .login-screen .input { width: 100%; padding: 16px; border-radius: 14px; border: 1px solid rgba(148,163,255,0.12); background: rgba(13,18,36,0.6); color: #fff; font-size: 14px; margin-bottom: 12px; outline: none; }
@@ -99,7 +100,7 @@ a.tool-card, a.menu-item { text-decoration: none; display: block; color: inherit
     <div class="screen">
       <div class="status"><span class="time">9:41</span></div>
       <div class="login-screen">
-        <div class="logo-icon">🚿</div>
+        <div class="logo-icon"><img src="assets/logo_driver.png" alt="GIUCAR Pro"></div>
         <h1>GIUCAR Pro</h1>
         <div class="tagline">Como você vai atuar na plataforma?</div>
 
@@ -138,7 +139,7 @@ a.tool-card, a.menu-item { text-decoration: none; display: block; color: inherit
     <div class="screen">
       <div class="status"><span class="time">9:41</span></div>
       <div class="login-screen">
-        <div class="logo-icon">🚿</div>
+        <div class="logo-icon"><img src="assets/logo_driver.png" alt="GIUCAR Pro"></div>
         <h1>GIUCAR Pro</h1>
         <div class="tagline">Área do lavador parceiro</div>
         <input class="input" type="text" placeholder="E-mail ou CPF" value="carlos.lavador@email.com">
@@ -493,6 +494,83 @@ a.tool-card, a.menu-item { text-decoration: none; display: block; color: inherit
         <a class="nav-item" href="#loja"><div class="nav-icon">🛒</div>Loja</a>
         <a class="nav-item" href="#entregas"><div class="nav-icon">📦</div>Entregas</a>
         <a class="nav-item active" href="#pedidos-disponiveis"><div class="nav-icon">📋</div>Pedidos</a>
+        <a class="nav-item" href="#perfil"><div class="nav-icon">👤</div>Perfil</a>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <!-- Leilão de Serviços Pesados (perfil Loja de Carwash) -->
+  <div class="phone-wrap" id="leilao">
+    <div class="phone-label">Leilão de Serviços</div>
+  <div class="phone">
+    <div class="screen">
+      <div class="status">
+        <a href="#home" style="color:#c77dff;text-decoration:none;">‹</a>
+        <span class="time">9:41</span>
+        <span style="font-size:14px;">Leilão</span>
+      </div>
+      <div class="header">
+        <h2>Leilão InDrive</h2>
+        <p>Receba pedidos pesados e envie sua oferta</p>
+      </div>
+      <div class="content">
+        <div class="section-title">Solicitações abertas</div>
+
+        <div class="offer-card selected">
+          <div class="row">
+            <span class="customer">Cristalização · BMW X3</span>
+            <span class="price" style="font-size:14px; color:#ffc107;">Sem oferta</span>
+          </div>
+          <div class="detail">Cliente: Orlando Silva</div>
+          <div class="detail">Local: Alameda Santos, 700 · 2,1 km</div>
+          <div class="detail">Prazo desejado: até 3 dias úteis · Garantia solicitada</div>
+          <input class="input" type="text" value="R$ 549,90" style="margin-top:12px; font-weight:800; color:#00F2C2; background:rgba(13,18,36,0.6); border:1px solid rgba(148,163,255,0.12); border-radius:14px; padding:14px; width:100%; color:#fff;">
+          <input class="input" type="text" value="2 dias úteis" style="margin-top:10px; background:rgba(13,18,36,0.6); border:1px solid rgba(148,163,255,0.12); border-radius:14px; padding:14px; width:100%; color:#fff;">
+          <input class="input" type="text" value="Garantia 30 dias + fotos antes/depois" style="margin-top:10px; background:rgba(13,18,36,0.6); border:1px solid rgba(148,163,255,0.12); border-radius:14px; padding:14px; width:100%; color:#fff;">
+          <div class="actions" style="margin-top:14px;">
+            <a class="btn btn-primary" style="text-decoration:none;text-align:center;display:block;" href="#leilao">Enviar oferta</a>
+            <a class="btn btn-secondary" style="text-decoration:none;text-align:center;display:block;" href="#leilao">Recusar</a>
+          </div>
+        </div>
+
+        <div class="offer-card">
+          <div class="row">
+            <span class="customer">Polimento · Jeep Compass</span>
+            <span class="price">R$ 699,90</span>
+          </div>
+          <div class="detail">Cliente: Mariana Costa</div>
+          <div class="detail">Local: Rua Oscar Freire, 88 · 4,5 km</div>
+          <div class="detail">Sua oferta já enviada. Aguardando escolha.</div>
+          <div class="actions">
+            <a class="btn btn-secondary" style="text-decoration:none;text-align:center;display:block;" href="#leilao">Ver detalhes</a>
+          </div>
+        </div>
+
+        <div class="offer-card" style="opacity:.6;">
+          <div class="row">
+            <span class="customer">Martelinho de ouro · Honda Civic</span>
+            <span class="price" style="color:#4a5578;">Encerrado</span>
+          </div>
+          <div class="detail">Oferta vencedora: R$ 449,90 · 1 dia útil</div>
+          <div class="detail">Ganho por outra loja.</div>
+        </div>
+
+        <div class="section-title">Como funciona</div>
+        <div class="order-card">
+          <div class="detail" style="font-size:13px; line-height:1.6;">
+            1. Cliente publica serviço pesado.<br>
+            2. Lojas enviam preço, prazo e garantia.<br>
+            3. Cliente escolhe por preço, nota e fotos.<br>
+            4. Pagamento retido até aprovação · + pontos GIUCAR.
+          </div>
+        </div>
+      </div>
+      <div class="nav-float">
+        <a class="nav-item" href="#home"><div class="nav-icon">🏠</div>Home</a>
+        <a class="nav-item" href="#loja"><div class="nav-icon">🛒</div>Loja</a>
+        <a class="nav-item active" href="#leilao"><div class="nav-icon">🏪</div>Leilão</a>
+        <a class="nav-item" href="#pedidos-disponiveis"><div class="nav-icon">📋</div>Pedidos</a>
         <a class="nav-item" href="#perfil"><div class="nav-icon">👤</div>Perfil</a>
       </div>
     </div>
