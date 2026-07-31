@@ -295,34 +295,48 @@ td { padding: 14px 12px; border-bottom: 1px solid rgba(148,163,255,0.06); }
 
       <!-- ENTREGAS -->
       <div class="section-panel" id="entregas">
-        <div class="tabs">
-          <div class="tab active">Frota GIUCAR</div>
-          <div class="tab">Terceirizadas</div>
-        </div>
         <div class="metric-grid">
           <div class="metric-card"><div class="value">14</div><div class="label">Entregas hoje — frota GIUCAR</div></div>
           <div class="metric-card"><div class="value">4</div><div class="label">Entregas hoje — terceirizadas</div></div>
           <div class="metric-card"><div class="value">R$ 412</div><div class="label">Receita de entregas hoje</div></div>
         </div>
-        <div class="card" style="margin-bottom: 24px;">
-          <h3>Modelo de entregas GIUCAR</h3>
-          <div style="color: #8b9bb4; line-height: 1.8; font-size: 14px;">
-            • Produtos da Loja do Lavador são entregues pela frota de motoqueiros GIUCAR<br>
-            • Quando a frota está cheia, entregas são terceirizadas (motoboy parceiro)<br>
-            • Custo médio pago ao motoqueiro: R$ 5,00 - R$ 8,00 por entrega<br>
-            • Cliente/lavador paga taxa de entrega: R$ 8,90 - R$ 12,90<br>
-            • Margem GIUCAR sobre entrega: R$ 2,00 - R$ 4,00 por entrega
+
+        <div class="charts">
+          <div class="card">
+            <h3>🛵 Frota GIUCAR — Loja do Lavador</h3>
+            <div style="color: #8b9bb4; line-height: 1.8; font-size: 14px; margin-bottom: 16px;">
+              Produtos vendidos pela Loja do Lavador (B2B) entregues pelos nossos motoqueiros. A GIUCAR controla a rota, o pagamento e a comissão.
+            </div>
+            <div style="background: rgba(0,242,194,0.04); border: 1px solid rgba(0,242,194,0.1); border-radius: 12px; padding: 14px; font-size: 13px; color: #fff; line-height: 1.6;">
+              • Taxa ao lavador: <strong>R$ 8,90 - R$ 10,90</strong><br>
+              • Custo motoqueiro: <strong>R$ 5,00 - R$ 7,00</strong><br>
+              • Margem GIUCAR: <strong>R$ 2,00 - R$ 4,00</strong> por entrega<br>
+              • Comissão sobre venda do produto: <strong>15% - 23%</strong>
+            </div>
+          </div>
+          <div class="card">
+            <h3>🚚 Entregas Terceirizadas — Logística da Loja</h3>
+            <div style="color: #8b9bb4; line-height: 1.8; font-size: 14px; margin-bottom: 16px;">
+              Lojas que optaram por logística própria ou parceira. A GIUCAR só intermediou a venda e cobra comissão reduzida.
+            </div>
+            <div style="background: rgba(157,78,221,0.04); border: 1px solid rgba(157,78,221,0.1); border-radius: 12px; padding: 14px; font-size: 13px; color: #fff; line-height: 1.6;">
+              • Taxa ao comprador: <strong>R$ 12,90+</strong> (definida pela loja)<br>
+              • Logística: <strong>responsabilidade do vendedor</strong><br>
+              • Margem GIUCAR sobre entrega: <strong>R$ 1,00 - R$ 3,00</strong> (quando aplicável)<br>
+              • Comissão sobre venda: <strong>12% - 15%</strong>
+            </div>
           </div>
         </div>
         <div class="table-wrap">
           <h3>Entregas em andamento</h3>
           <table>
-            <thead><tr><th>Código</th><th>Produto</th><th>Origem</th><th>Destino</th><th>Motoboy</th><th>Taxa</th><th>Status</th></tr></thead>
+            <thead><tr><th>Código</th><th>Produto</th><th>Tipo de venda</th><th>Origem</th><th>Destino</th><th>Entregador</th><th>Taxa entrega</th><th>Status</th></tr></thead>
             <tbody>
-              <tr><td>#ENT-1204</td><td>Shampoo 5L</td><td>AutoLimpeza SP</td><td>André Souza · Moto Lavador</td><td>🏍️ Carlos M. (GIUCAR)</td><td class="price-tag">R$ 8,90</td><td><span class="status-badge status-progress">A caminho</span></td></tr>
-              <tr><td>#ENT-1203</td><td>Aspirador 12V</td><td>AutoLimpeza SP</td><td>Carlos Silva · Carro Lavador</td><td>🏍️ Bruno T. (GIUCAR)</td><td class="price-tag">R$ 10,90</td><td><span class="status-badge status-completed">Entregue</span></td></tr>
-              <tr><td>#ENT-1202</td><td>Cera Premium 1L</td><td>AutoLimpeza SP</td><td>João Souza · Moto Lavador</td><td>🚚 Motoboy Terceirizado</td><td class="price-tag">R$ 12,90</td><td><span class="status-badge status-progress">Em rota</span></td></tr>
-              <tr><td>#ENT-1201</td><td>Capa de Couro</td><td>CouroTop</td><td>Orlando Silva · Cliente</td><td>🏍️ Felipe R. (GIUCAR)</td><td class="price-tag">R$ 9,90</td><td><span class="status-badge status-completed">Entregue</span></td></tr>
+              <tr><td>#ENT-1204</td><td>Shampoo 5L</td><td>🏪 Loja do Lavador (local)</td><td>AutoLimpeza SP</td><td>André Souza · Moto Lavador</td><td>🏍️ Carlos M. (GIUCAR)</td><td class="price-tag">R$ 8,90</td><td><span class="status-badge status-progress">A caminho</span></td></tr>
+              <tr><td>#ENT-1203</td><td>Aspirador 12V</td><td>🏪 Loja do Lavador (local)</td><td>AutoLimpeza SP</td><td>Carlos Silva · Carro Lavador</td><td>🏍️ Bruno T. (GIUCAR)</td><td class="price-tag">R$ 10,90</td><td><span class="status-badge status-completed">Entregue</span></td></tr>
+              <tr><td>#ENT-1202</td><td>Cera Premium 1L</td><td>🏪 Loja do Lavador (própria)</td><td>AutoLimpeza SP</td><td>João Souza · Moto Lavador</td><td>🚚 Motoboy Terceirizado</td><td class="price-tag">R$ 12,90</td><td><span class="status-badge status-progress">Em rota</span></td></tr>
+              <tr><td>#ENT-1201</td><td>Capa de Couro</td><td>🏪 Loja do Cliente (global)</td><td>CouroTop</td><td>Orlando Silva · Cliente</td><td>🏍️ Felipe R. (GIUCAR)</td><td class="price-tag">R$ 9,90</td><td><span class="status-badge status-completed">Entregue</span></td></tr>
+              <tr><td>#ENT-1200</td><td>Aromatizante Premium</td><td>🏪 Loja do Cliente (global)</td><td>AromaCar</td><td>Mariana Costa · Cliente</td><td>🚚 Correios/Parceiro</td><td class="price-tag">R$ 14,90</td><td><span class="status-badge status-progress">Em trânsito</span></td></tr>
             </tbody>
           </table>
         </div>
@@ -379,28 +393,47 @@ td { padding: 14px 12px; border-bottom: 1px solid rgba(148,163,255,0.06); }
       <!-- MARKETPLACE -->
       <div class="section-panel" id="marketplace">
         <div class="metric-grid">
-          <div class="metric-card"><div class="value">14</div><div class="label">Lojas ativas</div></div>
-          <div class="metric-card"><div class="value">186</div><div class="label">Produtos ativos</div></div>
-          <div class="metric-card"><div class="value">R$ 42.300</div><div class="label">GMV marketplace (mês)</div></div>
+          <div class="metric-card"><div class="value">R$ 28.400</div><div class="label">GMV Loja do Lavador (local)</div></div>
+          <div class="metric-card"><div class="value">R$ 13.900</div><div class="label">GMV Loja do Cliente (global)</div></div>
+          <div class="metric-card"><div class="value">R$ 6.880</div><div class="label">Comissão marketplace (mês)</div></div>
         </div>
+
         <div class="charts">
           <div class="card">
-            <h3>Tipos de loja</h3>
-            <div class="chart-placeholder">Loja do Lavador B2B: 9 lojas · Loja do Cliente B2C: 5 lojas</div>
+            <h3>🏪 Vendas Locais — Loja do Lavador</h3>
+            <div style="color: #8b9bb4; line-height: 1.8; font-size: 14px; margin-bottom: 16px;">
+              Produtos vendidos para lavadores dentro da cidade. Entrega feita pela frota GIUCAR de motoqueiros. Maior controle operacional e maior comissão.
+            </div>
+            <div style="background: rgba(0,242,194,0.04); border: 1px solid rgba(0,242,194,0.1); border-radius: 12px; padding: 14px; font-size: 13px; color: #fff; line-height: 1.6;">
+              • Comissão sobre venda: <strong>15% - 23%</strong><br>
+              • Mensalidade: <strong>R$ 110 - R$ 150/mês</strong><br>
+              • Entrega: <strong>frota GIUCAR</strong> (B2B)<br>
+              • Prazo médio: <strong>same day / next day</strong>
+            </div>
           </div>
           <div class="card">
-            <h3>Planos de assinatura</h3>
-            <div class="chart-placeholder">Logística Integrada: 10 · Logística Própria: 4</div>
+            <h3>🌍 Vendas Globais — Loja do Cliente (Marketplace Automotivo)</h3>
+            <div style="color: #8b9bb4; line-height: 1.8; font-size: 14px; margin-bottom: 16px;">
+              Produtos vendidos para clientes finais (B2C) em qualquer lugar. Pode usar frota GIUCAR, Correios ou logística do vendedor.
+            </div>
+            <div style="background: rgba(157,78,221,0.04); border: 1px solid rgba(157,78,221,0.1); border-radius: 12px; padding: 14px; font-size: 13px; color: #fff; line-height: 1.6;">
+              • Comissão sobre venda: <strong>12% - 18%</strong><br>
+              • Mensalidade: <strong>R$ 29 - R$ 59/mês</strong><br>
+              • Entrega: <strong>frota GIUCAR + Correios + terceirizada</strong><br>
+              • Alcance: <strong>todo Brasil</strong> (conforme logística)
+            </div>
           </div>
         </div>
         <div class="table-wrap">
-          <h3>Produtos mais vendidos</h3>
+          <h3>Vendas recentes por canal</h3>
           <table>
-            <thead><tr><th>Produto</th><th>Loja</th><th>Catálogo</th><th>Preço</th><th>Vendas</th><th>Comissão</th></tr></thead>
+            <thead><tr><th>Produto</th><th>Loja</th><th>Canal</th><th>Comprador</th><th>Preço</th><th>Entrega</th><th>Comissão</th></tr></thead>
             <tbody>
-              <tr><td>Shampoo Automotivo 5L</td><td>AutoLimpeza SP</td><td>Loja do Lavador</td><td class="price-tag">R$ 89,90</td><td>42</td><td class="commission-tag">23%</td></tr>
-              <tr><td>Capa de Couro para Bancos</td><td>CouroTop</td><td>Loja do Cliente</td><td class="price-tag">R$ 189,90</td><td>28</td><td class="commission-tag">18%</td></tr>
-              <tr><td>Aspirador GT 3000 12V</td><td>AutoLimpeza SP</td><td>Loja do Lavador</td><td class="price-tag">R$ 349,90</td><td>15</td><td class="commission-tag">23%</td></tr>
+              <tr><td>Shampoo Automotivo 5L</td><td>AutoLimpeza SP</td><td>🏪 Loja do Lavador</td><td>André Souza · Lavador</td><td class="price-tag">R$ 89,90</td><td>🏍️ Frota GIUCAR</td><td class="commission-tag">23%</td></tr>
+              <tr><td>Aspirador GT 3000 12V</td><td>AutoLimpeza SP</td><td>🏪 Loja do Lavador</td><td>Carlos Silva · Lavador</td><td class="price-tag">R$ 349,90</td><td>🏍️ Frota GIUCAR</td><td class="commission-tag">23%</td></tr>
+              <tr><td>Capa de Couro para Bancos</td><td>CouroTop</td><td>🌍 Loja do Cliente</td><td>Orlando Silva · Cliente</td><td class="price-tag">R$ 189,90</td><td>🏍️ Frota GIUCAR</td><td class="commission-tag">18%</td></tr>
+              <tr><td>Aromatizante Premium</td><td>AromaCar</td><td>🌍 Loja do Cliente</td><td>Mariana Costa · Cliente</td><td class="price-tag">R$ 34,90</td><td>🚚 Correios/Parceiro</td><td class="commission-tag">12%</td></tr>
+              <tr><td>Cera Líquida Premium 1L</td><td>AutoLimpeza SP</td><td>🏪 Loja do Lavador (própria)</td><td>João Souza · Lavador</td><td class="price-tag">R$ 129,90</td><td>🚚 Logística loja</td><td class="commission-tag">15%</td></tr>
             </tbody>
           </table>
         </div>
