@@ -9,13 +9,13 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: 'Inter', sans-serif; background: #050811; min-height: 100vh; color: #fff; }
 .admin { display: flex; min-height: 100vh; }
-.sidebar { width: 260px; background: linear-gradient(180deg, #0b1020 0%, #070b18 100%); border-right: 1px solid rgba(148,163,255,0.08); padding: 24px 0; }
+.sidebar { width: 270px; background: linear-gradient(180deg, #0b1020 0%, #070b18 100%); border-right: 1px solid rgba(148,163,255,0.08); padding: 24px 0; position: fixed; height: 100vh; overflow-y: auto; }
 .logo { display: flex; align-items: center; gap: 12px; padding: 0 24px 30px; }
 .logo-icon { width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, #00F2C2 0%, #9D4EDD 100%); display: flex; align-items: center; justify-content: center; font-size: 22px; }
 .logo span { font-size: 22px; font-weight: 900; letter-spacing: 2px; }
-.nav-item { display: flex; align-items: center; gap: 12px; padding: 14px 24px; color: #8b9bb4; font-size: 14px; font-weight: 500; cursor: pointer; transition: 0.2s; }
+.nav-item { display: flex; align-items: center; gap: 12px; padding: 14px 24px; color: #8b9bb4; font-size: 14px; font-weight: 500; cursor: pointer; transition: 0.2s; text-decoration: none; }
 .nav-item:hover, .nav-item.active { background: rgba(0,242,194,0.08); color: #00F2C2; border-left: 3px solid #00F2C2; }
-.main { flex: 1; display: flex; flex-direction: column; }
+.main { flex: 1; display: flex; flex-direction: column; margin-left: 270px; }
 .topbar { height: 70px; background: rgba(11,16,32,0.92); border-bottom: 1px solid rgba(148,163,255,0.08); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; }
 .topbar h1 { font-size: 20px; font-weight: 700; }
 .topbar .user { display: flex; align-items: center; gap: 12px; }
@@ -23,15 +23,16 @@ body { font-family: 'Inter', sans-serif; background: #050811; min-height: 100vh;
 .dashboard { flex: 1; padding: 32px; overflow-y: auto; }
 .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 28px; }
 .kpi { background: linear-gradient(180deg, rgba(13,18,36,0.98) 0%, rgba(10,14,28,0.98) 100%); border: 1px solid rgba(148,163,255,0.12); border-radius: 16px; padding: 20px; }
-.kpi .label { font-size: 12px; color: #8b9bb4; text-transform: uppercase; letter-spacing: 1px; }
-.kpi .value { font-size: 28px; font-weight: 800; margin-top: 8px; }
+.kpi .label { font-size: 11px; color: #8b9bb4; text-transform: uppercase; letter-spacing: 1px; }
+.kpi .value { font-size: 26px; font-weight: 800; margin-top: 8px; }
 .kpi .delta { font-size: 12px; margin-top: 6px; color: #00F2C2; }
 .kpi .delta.negative { color: #ff6b6b; }
+.kpi .sub { font-size: 11px; color: #4a5578; margin-top: 4px; }
 .charts { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 28px; }
 .card { background: linear-gradient(180deg, rgba(13,18,36,0.98) 0%, rgba(10,14,28,0.98) 100%); border: 1px solid rgba(148,163,255,0.12); border-radius: 16px; padding: 20px; }
 .card h3 { font-size: 15px; font-weight: 700; margin-bottom: 16px; }
 .chart-placeholder { height: 180px; background: rgba(0,242,194,0.04); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #4a5578; font-size: 13px; border: 1px dashed rgba(0,242,194,0.15); }
-.table-wrap { background: linear-gradient(180deg, rgba(13,18,36,0.98) 0%, rgba(10,14,28,0.98) 100%); border: 1px solid rgba(148,163,255,0.12); border-radius: 16px; padding: 20px; }
+.table-wrap { background: linear-gradient(180deg, rgba(13,18,36,0.98) 0%, rgba(10,14,28,0.98) 100%); border: 1px solid rgba(148,163,255,0.12); border-radius: 16px; padding: 20px; margin-bottom: 28px; }
 .table-wrap h3 { font-size: 15px; font-weight: 700; margin-bottom: 16px; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
 th { text-align: left; padding: 12px; color: #8b9bb4; font-weight: 600; border-bottom: 1px solid rgba(148,163,255,0.08); }
@@ -42,8 +43,6 @@ td { padding: 14px 12px; border-bottom: 1px solid rgba(148,163,255,0.06); }
 .status-progress { background: rgba(157,78,221,0.12); color: #9D4EDD; }
 .status-cancelled { background: rgba(255,107,107,0.12); color: #ff6b6b; }
 .btn-sm { padding: 8px 14px; border-radius: 8px; border: none; background: linear-gradient(90deg, #00d9ae 0%, #00F2C2 100%); color: #050811; font-size: 12px; font-weight: 800; cursor: pointer; }
-.nav-item { text-decoration: none; }
-.nav-item, .nav-item:visited { color: #8b9bb4; }
 .top-link { color: #00F2C2; text-decoration: none; font-size: 13px; font-weight: 700; padding: 8px 14px; border: 1px solid rgba(0,242,194,0.3); border-radius: 20px; }
 .top-link:hover { background: rgba(0,242,194,0.08); }
 .section-panel { display: none; }
@@ -53,6 +52,7 @@ td { padding: 14px 12px; border-bottom: 1px solid rgba(148,163,255,0.06); }
 #clientes:target ~ #dashboard-panel,
 #lavadores:target ~ #dashboard-panel,
 #marketplace:target ~ #dashboard-panel,
+#leilao:target ~ #dashboard-panel,
 #servicos:target ~ #dashboard-panel,
 #cupons:target ~ #dashboard-panel,
 #zonas:target ~ #dashboard-panel,
@@ -61,13 +61,25 @@ td { padding: 14px 12px; border-bottom: 1px solid rgba(148,163,255,0.06); }
 #configuracoes:target ~ #dashboard-panel { display: none; }
 .empty-panel { background: linear-gradient(180deg, rgba(13,18,36,0.98) 0%, rgba(10,14,28,0.98) 100%); border: 1px solid rgba(148,163,255,0.12); border-radius: 16px; padding: 40px; text-align: center; color: #8b9bb4; }
 .empty-panel h2 { color: #fff; font-size: 20px; margin-bottom: 10px; }
-@media (max-width: 1200px) {
+.tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+.tab { padding: 10px 18px; border-radius: 12px; background: rgba(13,18,36,0.98); border: 1px solid rgba(148,163,255,0.12); color: #8b9bb4; font-size: 13px; font-weight: 700; cursor: pointer; }
+.tab.active { background: rgba(0,242,194,0.12); color: #00F2C2; border-color: #00F2C2; }
+.price-tag { color: #00F2C2; font-weight: 800; }
+.commission-tag { color: #9D4EDD; font-weight: 600; }
+.metric-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+.metric-card { background: rgba(0,242,194,0.04); border: 1px solid rgba(0,242,194,0.1); border-radius: 14px; padding: 18px; }
+.metric-card .value { font-size: 24px; font-weight: 800; color: #00F2C2; }
+.metric-card .label { font-size: 12px; color: #8b9bb4; margin-top: 6px; }
+@media (max-width: 1400px) {
   .kpis { grid-template-columns: repeat(2, 1fr); }
-  .charts { grid-template-columns: 1fr; }
+  .metric-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 768px) {
   .sidebar { display: none; }
+  .main { margin-left: 0; }
   .kpis { grid-template-columns: 1fr; }
+  .metric-grid { grid-template-columns: 1fr; }
+  .charts { grid-template-columns: 1fr; }
 }
 </style>
 </head>
@@ -84,11 +96,12 @@ td { padding: 14px 12px; border-bottom: 1px solid rgba(148,163,255,0.06); }
       <a class="nav-item" href="#clientes">👥 Clientes</a>
       <a class="nav-item" href="#lavadores">🧤 Lavadores</a>
       <a class="nav-item" href="#marketplace">🏪 Marketplace</a>
+      <a class="nav-item" href="#leilao">🏆 Leilão</a>
       <a class="nav-item" href="#servicos">🧼 Serviços</a>
-      <a class="nav-item" href="#cupons">🏷️ Cupons</a>
-      <a class="nav-item" href="#zonas">🗺️ Zonas</a>
+      <a class="nav-item" href="#fidelidade">🎁 GIUCAR Points</a>
       <a class="nav-item" href="#financeiro">💰 Financeiro</a>
-      <a class="nav-item" href="#fidelidade">🎁 Fidelidade</a>
+      <a class="nav-item" href="#zonas">🗺️ Zonas</a>
+      <a class="nav-item" href="#cupons">🏷️ Cupons</a>
       <a class="nav-item" href="#configuracoes">⚙️ Configurações</a>
     </nav>
   </aside>
@@ -104,164 +117,383 @@ td { padding: 14px 12px; border-bottom: 1px solid rgba(148,163,255,0.06); }
     </header>
 
     <section class="dashboard">
+
+      <!-- DASHBOARD -->
       <div class="section-panel" id="dashboard-panel">
-      <div class="kpis">
-        <div class="kpi">
-          <div class="label">Pedidos hoje</div>
-          <div class="value">24</div>
-          <div class="delta">↑ 12% vs ontem</div>
+        <div class="kpis">
+          <div class="kpi">
+            <div class="label">Pedidos hoje</div>
+            <div class="value">34</div>
+            <div class="delta">↑ 18% vs ontem</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Receita bruta hoje</div>
+            <div class="value">R$ 5.247</div>
+            <div class="delta">↑ 12% vs ontem</div>
+            <div class="sub">lavagens + marketplace + leilão</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Comissão GIUCAR hoje</div>
+            <div class="value">R$ 892</div>
+            <div class="delta">↑ 15% vs ontem</div>
+            <div class="sub">média 17% sobre transações</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Lavadores online</div>
+            <div class="value">21</div>
+            <div class="delta negative">↓ 3 vs pico</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Lojas ativas</div>
+            <div class="value">14</div>
+            <div class="delta">↑ 2 novas</div>
+          </div>
+          <div class="kpi">
+            <div class="label">GMV marketplace</div>
+            <div class="value">R$ 1.840</div>
+            <div class="delta">↑ 9% vs ontem</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Pontos GIUCAR emitidos</div>
+            <div class="value">245</div>
+            <div class="delta">5% de cashback</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Clientes novos</div>
+            <div class="value">9</div>
+            <div class="delta">↑ 4 vs ontem</div>
+          </div>
         </div>
-        <div class="kpi">
-          <div class="label">Receita hoje</div>
-          <div class="value">R$ 3.842</div>
-          <div class="delta">↑ 8% vs ontem</div>
+
+        <div class="charts">
+          <div class="card">
+            <h3>Receita dos últimos 7 dias</h3>
+            <div class="chart-placeholder">Gráfico: lavagens (seco/express/completa) + marketplace + leilão</div>
+          </div>
+          <div class="card">
+            <h3>Mix de serviços e perfis</h3>
+            <div class="chart-placeholder">Gráfico: Moto 45% · Carro 30% · Loja 15% · Marketplace 10%</div>
+          </div>
         </div>
-        <div class="kpi">
-          <div class="label">Lavadores online</div>
-          <div class="value">18</div>
-          <div class="delta negative">↓ 2 vs ontem</div>
-        </div>
-        <div class="kpi">
-          <div class="label">Clientes novos</div>
-          <div class="value">7</div>
-          <div class="delta">↑ 3 vs ontem</div>
+
+        <div class="table-wrap">
+          <h3>Pedidos recentes</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Cliente</th>
+                <th>Serviço</th>
+                <th>Perfil</th>
+                <th>Valor</th>
+                <th>Comissão</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>#GIU-4825</td>
+                <td>Orlando Silva</td>
+                <td>Lavagem Completa</td>
+                <td>🚐 Carro Lavador</td>
+                <td class="price-tag">R$ 129,90</td>
+                <td class="commission-tag">R$ 22,08 (17%)</td>
+                <td><span class="status-badge status-progress">Em andamento</span></td>
+                <td><button class="btn-sm">Ver</button></td>
+              </tr>
+              <tr>
+                <td>#GIU-4824</td>
+                <td>Mariana Costa</td>
+                <td>Lavagem Express</td>
+                <td>🏍️ Moto Lavador</td>
+                <td class="price-tag">R$ 89,90</td>
+                <td class="commission-tag">R$ 13,49 (15%)</td>
+                <td><span class="status-badge status-completed">Concluído</span></td>
+                <td><button class="btn-sm">Ver</button></td>
+              </tr>
+              <tr>
+                <td>#GIU-4823</td>
+                <td>Pedro Lima</td>
+                <td>Cristalização (Leilão)</td>
+                <td>🏪 Loja de Carwash</td>
+                <td class="price-tag">R$ 549,90</td>
+                <td class="commission-tag">R$ 109,98 (20%)</td>
+                <td><span class="status-badge status-pending">Aguardando</span></td>
+                <td><button class="btn-sm">Ver</button></td>
+              </tr>
+              <tr>
+                <td>#GIU-4822</td>
+                <td>Ana Paula</td>
+                <td>Capa de Couro</td>
+                <td>🏪 Marketplace B2C</td>
+                <td class="price-tag">R$ 189,90</td>
+                <td class="commission-tag">R$ 34,18 (18%)</td>
+                <td><span class="status-badge status-completed">Entregue</span></td>
+                <td><button class="btn-sm">Ver</button></td>
+              </tr>
+              <tr>
+                <td>#GIU-4821</td>
+                <td>João Souza</td>
+                <td>Lavagem a Seco</td>
+                <td>🏍️ Moto Lavador</td>
+                <td class="price-tag">R$ 59,90</td>
+                <td class="commission-tag">R$ 8,99 (15%)</td>
+                <td><span class="status-badge status-progress">Em andamento</span></td>
+                <td><button class="btn-sm">Ver</button></td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
-      <div class="charts">
-        <div class="card">
-          <h3>Receita dos últimos 7 dias</h3>
-          <div class="chart-placeholder">Gráfico de receita (integração futura)</div>
-        </div>
-        <div class="card">
-          <h3>Serviços mais pedidos</h3>
-          <div class="chart-placeholder">Gráfico de serviços (integração futura)</div>
-        </div>
-      </div>
-
-      <div class="table-wrap">
-        <h3>Pedidos recentes</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Código</th>
-              <th>Cliente</th>
-              <th>Serviço</th>
-              <th>Lavador</th>
-              <th>Total</th>
-              <th>Status</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>#GIU-4821</td>
-              <td>Orlando Silva</td>
-              <td>Lavagem Completa</td>
-              <td>Carlos Silva</td>
-              <td>R$ 59,90</td>
-              <td><span class="status-badge status-progress">Em andamento</span></td>
-              <td><button class="btn-sm">Ver</button></td>
-            </tr>
-            <tr>
-              <td>#GIU-4820</td>
-              <td>Maria Oliveira</td>
-              <td>Polimento</td>
-              <td>João Souza</td>
-              <td>R$ 89,90</td>
-              <td><span class="status-badge status-completed">Concluído</span></td>
-              <td><button class="btn-sm">Ver</button></td>
-            </tr>
-            <tr>
-              <td>#GIU-4819</td>
-              <td>Pedro Costa</td>
-              <td>Lavagem Simples</td>
-              <td>—</td>
-              <td>R$ 29,90</td>
-              <td><span class="status-badge status-pending">Pendente</span></td>
-              <td><button class="btn-sm">Atribuir</button></td>
-            </tr>
-            <tr>
-              <td>#GIU-4818</td>
-              <td>Ana Paula</td>
-              <td>Higienização Interna</td>
-              <td>Lucas Mendes</td>
-              <td>R$ 119,90</td>
-              <td><span class="status-badge status-cancelled">Cancelado</span></td>
-              <td><button class="btn-sm">Ver</button></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      </div>
-
+      <!-- PEDIDOS -->
       <div class="section-panel" id="pedidos">
-        <div class="empty-panel">
-          <h2>📋 Pedidos</h2>
-          <p>Listagem completa de pedidos em desenvolvimento. Consulte "Pedidos recentes" no Dashboard.</p>
+        <div class="metric-grid">
+          <div class="metric-card"><div class="value">156</div><div class="label">Pedidos no mês</div></div>
+          <div class="metric-card"><div class="value">R$ 18.420</div><div class="label">GMV acumulado</div></div>
+          <div class="metric-card"><div class="value">R$ 3.210</div><div class="label">Comissão acumulada</div></div>
+        </div>
+        <div class="table-wrap">
+          <h3>Todos os pedidos</h3>
+          <table>
+            <thead><tr><th>Código</th><th>Cliente</th><th>Serviço/Produto</th><th>Perfil</th><th>Valor</th><th>Comissão</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>#GIU-4825</td><td>Orlando Silva</td><td>Lavagem Completa</td><td>🚐 Carro</td><td class="price-tag">R$ 129,90</td><td class="commission-tag">R$ 22,08</td><td><span class="status-badge status-progress">Em andamento</span></td></tr>
+              <tr><td>#GIU-4824</td><td>Mariana Costa</td><td>Lavagem Express</td><td>🏍️ Moto</td><td class="price-tag">R$ 89,90</td><td class="commission-tag">R$ 13,49</td><td><span class="status-badge status-completed">Concluído</span></td></tr>
+              <tr><td>#GIU-4823</td><td>Pedro Lima</td><td>Cristalização (Leilão)</td><td>🏪 Loja</td><td class="price-tag">R$ 549,90</td><td class="commission-tag">R$ 109,98</td><td><span class="status-badge status-pending">Aguardando</span></td></tr>
+              <tr><td>#GIU-4822</td><td>Ana Paula</td><td>Capa de Couro</td><td>🏪 Marketplace</td><td class="price-tag">R$ 189,90</td><td class="commission-tag">R$ 34,18</td><td><span class="status-badge status-completed">Entregue</span></td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
+      <!-- CLIENTES -->
       <div class="section-panel" id="clientes">
-        <div class="empty-panel">
-          <h2>👥 Clientes</h2>
-          <p>Gestão de clientes em desenvolvimento.</p>
+        <div class="metric-grid">
+          <div class="metric-card"><div class="value">1.247</div><div class="label">Clientes ativos</div></div>
+          <div class="metric-card"><div class="value">4.8</div><div class="label">Avaliação média</div></div>
+          <div class="metric-card"><div class="value">312</div><div class="label">Clientes com pontos</div></div>
+        </div>
+        <div class="table-wrap">
+          <h3>Clientes recentes</h3>
+          <table>
+            <thead><tr><th>Cliente</th><th>Telefone</th><th>Veículos</th><th>Pedidos</th><th>Pontos</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>Orlando Silva</td><td>(11) 99999-1111</td><td>3</td><td>12</td><td>245</td><td><span class="status-badge status-completed">Ativo</span></td></tr>
+              <tr><td>Mariana Costa</td><td>(11) 98888-2222</td><td>2</td><td>8</td><td>134</td><td><span class="status-badge status-completed">Ativo</span></td></tr>
+              <tr><td>Pedro Lima</td><td>(11) 97777-3333</td><td>1</td><td>3</td><td>89</td><td><span class="status-badge status-progress">Em leilão</span></td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
+      <!-- LAVADORES -->
       <div class="section-panel" id="lavadores">
-        <div class="empty-panel">
-          <h2>🧤 Lavadores</h2>
-          <p>Gestão de lavadores parceiros em desenvolvimento.</p>
+        <div class="tabs">
+          <div class="tab active">Todos</div>
+          <div class="tab">🏍️ Moto Lavador</div>
+          <div class="tab">🚐 Carro Lavador</div>
+          <div class="tab">🏪 Loja de Carwash</div>
+        </div>
+        <div class="metric-grid">
+          <div class="metric-card"><div class="value">89</div><div class="label">Lavadores ativos</div></div>
+          <div class="metric-card"><div class="value">52</div><div class="label">🏍️ Moto</div></div>
+          <div class="metric-card"><div class="value">23</div><div class="label">🚐 Carro</div></div>
+          <div class="metric-card"><div class="value">14</div><div class="label">🏪 Loja</div></div>
+        </div>
+        <div class="table-wrap">
+          <h3>Lavadores e lojas cadastrados</h3>
+          <table>
+            <thead><tr><th>Parceiro</th><th>Perfil</th><th>Nota</th><th>Pedidos</th><th>Ganhos</th><th>Status</th><th>Verificação</th></tr></thead>
+            <tbody>
+              <tr><td>Carlos Silva</td><td>🚐 Carro Lavador</td><td>⭐ 4.9</td><td>127</td><td class="price-tag">R$ 12.450</td><td><span class="status-badge status-completed">Ativo</span></td><td>✓ Completa</td></tr>
+              <tr><td>André Souza</td><td>🏍️ Moto Lavador</td><td>⭐ 4.7</td><td>203</td><td class="price-tag">R$ 9.870</td><td><span class="status-badge status-completed">Ativo</span></td><td>✓ Completa</td></tr>
+              <tr><td>AutoBrilho Premium</td><td>🏪 Loja de Carwash</td><td>⭐ 4.9</td><td>45</td><td class="price-tag">R$ 24.780</td><td><span class="status-badge status-completed">Ativa</span></td><td>✓ Credenciada</td></tr>
+              <tr><td>Crystal Car Wash</td><td>🏪 Loja de Carwash</td><td>⭐ 4.7</td><td>32</td><td class="price-tag">R$ 15.430</td><td><span class="status-badge status-progress">Pendente</span></td><td>⏳ Documentação</td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
+      <!-- MARKETPLACE -->
       <div class="section-panel" id="marketplace">
-        <div class="empty-panel">
-          <h2>🏪 Marketplace</h2>
-          <p>Gestão de lojas e produtos do marketplace em desenvolvimento.</p>
+        <div class="metric-grid">
+          <div class="metric-card"><div class="value">14</div><div class="label">Lojas ativas</div></div>
+          <div class="metric-card"><div class="value">186</div><div class="label">Produtos ativos</div></div>
+          <div class="metric-card"><div class="value">R$ 42.300</div><div class="label">GMV marketplace (mês)</div></div>
+        </div>
+        <div class="charts">
+          <div class="card">
+            <h3>Tipos de loja</h3>
+            <div class="chart-placeholder">Loja do Lavador B2B: 9 lojas · Loja do Cliente B2C: 5 lojas</div>
+          </div>
+          <div class="card">
+            <h3>Planos de assinatura</h3>
+            <div class="chart-placeholder">Logística Integrada: 10 · Logística Própria: 4</div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <h3>Produtos mais vendidos</h3>
+          <table>
+            <thead><tr><th>Produto</th><th>Loja</th><th>Catálogo</th><th>Preço</th><th>Vendas</th><th>Comissão</th></tr></thead>
+            <tbody>
+              <tr><td>Shampoo Automotivo 5L</td><td>AutoLimpeza SP</td><td>Loja do Lavador</td><td class="price-tag">R$ 89,90</td><td>42</td><td class="commission-tag">23%</td></tr>
+              <tr><td>Capa de Couro para Bancos</td><td>CouroTop</td><td>Loja do Cliente</td><td class="price-tag">R$ 189,90</td><td>28</td><td class="commission-tag">18%</td></tr>
+              <tr><td>Aspirador GT 3000 12V</td><td>AutoLimpeza SP</td><td>Loja do Lavador</td><td class="price-tag">R$ 349,90</td><td>15</td><td class="commission-tag">23%</td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
+      <!-- LEILÃO -->
+      <div class="section-panel" id="leilao">
+        <div class="metric-grid">
+          <div class="metric-card"><div class="value">18</div><div class="label">Leilões ativos</div></div>
+          <div class="metric-card"><div class="value">R$ 12.450</div><div class="label">GMV leilão (mês)</div></div>
+          <div class="metric-card"><div class="value">R$ 2.490</div><div class="label">Comissão leilão (mês)</div></div>
+        </div>
+        <div class="table-wrap">
+          <h3>Serviços em leilão</h3>
+          <table>
+            <thead><tr><th>Serviço</th><th>Cliente</th><th>Melhor oferta</th><th>Lojas participando</th><th>Prazo</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>Cristalização · BMW X3</td><td>Orlando Silva</td><td class="price-tag">R$ 549,90</td><td>3 lojas</td><td>3 dias úteis</td><td><span class="status-badge status-progress">Aberto</span></td></tr>
+              <tr><td>Polimento · Jeep Compass</td><td>Mariana Costa</td><td class="price-tag">R$ 699,90</td><td>2 lojas</td><td>2 dias úteis</td><td><span class="status-badge status-progress">Aberto</span></td></tr>
+              <tr><td>Martelinho de Ouro · Honda Civic</td><td>Pedro Lima</td><td class="price-tag">R$ 449,90</td><td>4 lojas</td><td>1 dia útil</td><td><span class="status-badge status-pending">Encerrado</span></td></tr>
+              <tr><td>Tapeçaria Completa · Corolla</td><td>Ana Paula</td><td class="price-tag">R$ 890,00</td><td>2 lojas</td><td>5 dias úteis</td><td><span class="status-badge status-progress">Aberto</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SERVIÇOS -->
       <div class="section-panel" id="servicos">
-        <div class="empty-panel">
-          <h2>🧼 Serviços</h2>
-          <p>Catálogo de tipos de lavagem e preços em desenvolvimento.</p>
+        <div class="metric-grid">
+          <div class="metric-card"><div class="value">4</div><div class="label">Lavagens diretas</div></div>
+          <div class="metric-card"><div class="value">6</div><div class="label">Serviços pesados (leilão)</div></div>
+          <div class="metric-card"><div class="value">SP Capital</div><div class="label">Zona piloto</div></div>
+        </div>
+        <div class="table-wrap">
+          <h3>Catálogo de lavagens diretas</h3>
+          <table>
+            <thead><tr><th>Serviço</th><th>Perfil</th><th>Descrição</th><th>Preço base</th><th>Duração</th></tr></thead>
+            <tbody>
+              <tr><td>🌿 Lavagem a Seco</td><td>🏍️ Moto Lavador</td><td>Carroceria e vidros com produtos biodegradáveis</td><td class="price-tag">R$ 59,90</td><td>30 min</td></tr>
+              <tr><td>⚡ Lavagem Express</td><td>🏍️ Moto Lavador</td><td>Externa + aspirado leve + acondicionador de pneus</td><td class="price-tag">R$ 89,90</td><td>45 min</td></tr>
+              <tr><td>🚐 Lavagem Completa</td><td>🚐 Carro Lavador</td><td>Externa completa + aspiração profunda (Fiorino)</td><td class="price-tag">R$ 129,90</td><td>90 min</td></tr>
+              <tr><td>🪣 Lavagem Detalhada</td><td>🚐 Carro Lavador</td><td>Limpeza profunda interna e externa (Fiorino)</td><td class="price-tag">R$ 179,90</td><td>120 min</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="table-wrap">
+          <h3>Serviços pesados — apenas via leilão de Lojas de Carwash</h3>
+          <table>
+            <thead><tr><th>Serviço</th><th>Descrição</th><th>Faixa de preço</th><th>Taxa GIUCAR</th></tr></thead>
+            <tbody>
+              <tr><td>✨ Cristalização de Pintura</td><td>Proteção e brilho duradouro</td><td class="price-tag">R$ 499 - R$ 899</td><td class="commission-tag">20%</td></tr>
+              <tr><td>🪞 Polimento</td><td>Correção de riscos superficiais</td><td class="price-tag">R$ 399 - R$ 699</td><td class="commission-tag">20%</td></tr>
+              <tr><td>🧼 Descontaminação de Pintura</td><td>Remoção de resíduos e ferro de freio</td><td class="price-tag">R$ 299 - R$ 499</td><td class="commission-tag">20%</td></tr>
+              <tr><td>🚿 Lavagem de Chassi</td><td>Limpeza e proteção da parte inferior</td><td class="price-tag">R$ 199 - R$ 349</td><td class="commission-tag">20%</td></tr>
+              <tr><td>🔨 Funilaria & Pintura</td><td>Martelinho de ouro e retoques</td><td class="price-tag">R$ 349 - R$ 899</td><td class="commission-tag">20%</td></tr>
+              <tr><td>🛋️ Tapeçaria e Bancos</td><td>Capas de couro e revestimento</td><td class="price-tag">R$ 599 - R$ 1.499</td><td class="commission-tag">20%</td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
+      <!-- FIDELIDADE -->
+      <div class="section-panel" id="fidelidade">
+        <div class="metric-grid">
+          <div class="metric-card"><div class="value">8.450</div><div class="label">Pontos em circulação</div></div>
+          <div class="metric-card"><div class="value">R$ 8.450</div><div class="label">Valor em pontos (1 pt = R$ 1)</div></div>
+          <div class="metric-card"><div class="value">312</div><div class="label">Clientes com saldo</div></div>
+        </div>
+        <div class="card" style="margin-bottom: 24px;">
+          <h3>Regras do programa GIUCAR Points</h3>
+          <div style="color: #8b9bb4; line-height: 1.8; font-size: 14px;">
+            • 5% de cashback em pontos sobre cada serviço pago pelo app<br>
+            • 1 ponto = R$ 1<br>
+            • Validade dos pontos: 6 meses<br>
+            • Pontos podem ser usados em lavagens futuras ou na loja de acessórios<br>
+            • Combinado com: retenção de pagamento, garantia, agendamento prioritário e ranking<br>
+            • Objetivo: combater desintermediação e aumentar recorrência
+          </div>
+        </div>
+        <div class="table-wrap">
+          <h3>Top clientes — saldo de pontos</h3>
+          <table>
+            <thead><tr><th>Cliente</th><th>Pontos</th><th>Equivalente</th><th>Última atividade</th></tr></thead>
+            <tbody>
+              <tr><td>Orlando Silva</td><td class="price-tag">245</td><td>R$ 245,00</td><td>Hoje</td></tr>
+              <tr><td>Mariana Costa</td><td class="price-tag">134</td><td>R$ 134,00</td><td>Ontem</td></tr>
+              <tr><td>Pedro Lima</td><td class="price-tag">89</td><td>R$ 89,00</td><td>3 dias</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- FINANCEIRO -->
+      <div class="section-panel" id="financeiro">
+        <div class="metric-grid">
+          <div class="metric-card"><div class="value">R$ 124.500</div><div class="label">Receita bruta (mês)</div></div>
+          <div class="metric-card"><div class="value">R$ 23.650</div><div class="label">Comissão GIUCAR (mês)</div></div>
+          <div class="metric-card"><div class="value">R$ 2.140</div><div class="label">Mensalidades lojas</div></div>
+        </div>
+        <div class="charts">
+          <div class="card">
+            <h3>Mix de receita</h3>
+            <div class="chart-placeholder">Lavagens diretas 58% · Leilão 22% · Marketplace 15% · Mensalidades 5%</div>
+          </div>
+          <div class="card">
+            <h3>Repasses pendentes</h3>
+            <div class="chart-placeholder">Lavadores: R$ 18.420 · Lojas: R$ 12.890</div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <h3>Taxas e comissões</h3>
+          <table>
+            <thead><tr><th>Linha de negócio</th><th>Taxa</th><th>Observação</th></tr></thead>
+            <tbody>
+              <tr><td>Lavagem direta (Moto/Carro)</td><td class="commission-tag">15% - 18%</td><td>Sobre valor do serviço</td></tr>
+              <tr><td>Leilão de serviços pesados</td><td class="commission-tag">20%</td><td>Sobre valor negociado com loja</td></tr>
+              <tr><td>Marketplace — Loja do Lavador (Integrada)</td><td class="commission-tag">23% + R$ 150/mês</td><td>Logística pela GIUCAR</td></tr>
+              <tr><td>Marketplace — Loja do Lavador (Própria)</td><td class="commission-tag">15% + R$ 110/mês</td><td>Logística do vendedor</td></tr>
+              <tr><td>Marketplace — Loja do Cliente (Integrada)</td><td class="commission-tag">18% + R$ 59/mês</td><td>Logística pela GIUCAR</td></tr>
+              <tr><td>Marketplace — Loja do Cliente (Própria)</td><td class="commission-tag">12% + R$ 29/mês</td><td>Logística do vendedor</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ZONAS -->
+      <div class="section-panel" id="zonas">
+        <div class="metric-grid">
+          <div class="metric-card"><div class="value">1</div><div class="label">Zona ativa</div></div>
+          <div class="metric-card"><div class="value">SP Capital</div><div class="label">Piloto</div></div>
+          <div class="metric-card"><div class="value">R$ 0,00</div><div class="label">Taxa de zona (fixo no MVP)</div></div>
+        </div>
+        <div class="card">
+          <h3>Zona única — São Paulo Capital</h3>
+          <div style="color: #8b9bb4; line-height: 1.8; font-size: 14px;">
+            Preços fixos para o MVP piloto. Após validação, expandir por regiões (Zona Norte, Sul, Leste, Oeste, Centro) com preços dinâmicos por distância lavador→cliente.
+          </div>
+        </div>
+      </div>
+
+      <!-- CUPONS -->
       <div class="section-panel" id="cupons">
         <div class="empty-panel">
-          <h2>🏷️ Cupons</h2>
-          <p>Gestão de cupons e promoções em desenvolvimento.</p>
+          <h2>🏷️ Cupons e Promoções</h2>
+          <p>Criação de cupons de desconto, promoções sazonais e campanhas de indicação em desenvolvimento.</p>
         </div>
       </div>
 
-      <div class="section-panel" id="zonas">
-        <div class="empty-panel">
-          <h2>🗺️ Zonas</h2>
-          <p>Configuração de zonas de atendimento em desenvolvimento.</p>
-        </div>
-      </div>
-
-      <div class="section-panel" id="financeiro">
-        <div class="empty-panel">
-          <h2>💰 Financeiro</h2>
-          <p>Relatórios financeiros e repasses em desenvolvimento.</p>
-        </div>
-      </div>
-
-      <div class="section-panel" id="fidelidade">
-        <div class="empty-panel">
-          <h2>🎁 Fidelidade</h2>
-          <p>Programa de fidelidade e recompensas em desenvolvimento.</p>
-        </div>
-      </div>
-
+      <!-- CONFIGURAÇÕES -->
       <div class="section-panel" id="configuracoes">
         <div class="empty-panel">
           <h2>⚙️ Configurações</h2>
-          <p>Configurações gerais da plataforma em desenvolvimento.</p>
+          <p>Configurações gerais da plataforma, integrações (Mercado Pago, Google Maps, AWS Rekognition) e notificações.</p>
         </div>
       </div>
 
