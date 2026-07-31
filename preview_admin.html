@@ -48,6 +48,7 @@ td { padding: 14px 12px; border-bottom: 1px solid rgba(148,163,255,0.06); }
 .section-panel { display: none; }
 .section-panel:target { display: block; }
 #dashboard-panel { display: block; }
+#entregas:target ~ #dashboard-panel,
 #pedidos:target ~ #dashboard-panel,
 #clientes:target ~ #dashboard-panel,
 #lavadores:target ~ #dashboard-panel,
@@ -93,6 +94,7 @@ td { padding: 14px 12px; border-bottom: 1px solid rgba(148,163,255,0.06); }
     <nav>
       <a class="nav-item active" href="#dashboard-panel">📊 Dashboard</a>
       <a class="nav-item" href="#pedidos">📋 Pedidos</a>
+      <a class="nav-item" href="#entregas">🛵 Entregas</a>
       <a class="nav-item" href="#clientes">👥 Clientes</a>
       <a class="nav-item" href="#lavadores">🧤 Lavadores</a>
       <a class="nav-item" href="#marketplace">🏪 Marketplace</a>
@@ -149,9 +151,16 @@ td { padding: 14px 12px; border-bottom: 1px solid rgba(148,163,255,0.06); }
             <div class="delta">↑ 2 novas</div>
           </div>
           <div class="kpi">
-            <div class="label">GMV marketplace</div>
-            <div class="value">R$ 1.840</div>
-            <div class="delta">↑ 9% vs ontem</div>
+            <div class="label">Entregas hoje</div>
+            <div class="value">18</div>
+            <div class="delta">↑ 5 vs ontem</div>
+            <div class="sub">GIUCAR + terceirizadas</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Receita de entregas hoje</div>
+            <div class="value">R$ 412</div>
+            <div class="delta">↑ 22% vs ontem</div>
+            <div class="sub">média R$ 8,90 por entrega</div>
           </div>
           <div class="kpi">
             <div class="label">Pontos GIUCAR emitidos</div>
@@ -164,15 +173,14 @@ td { padding: 14px 12px; border-bottom: 1px solid rgba(148,163,255,0.06); }
             <div class="delta">↑ 4 vs ontem</div>
           </div>
         </div>
-
         <div class="charts">
           <div class="card">
             <h3>Receita dos últimos 7 dias</h3>
-            <div class="chart-placeholder">Gráfico: lavagens (seco/express/completa) + marketplace + leilão</div>
+            <div class="chart-placeholder">Gráfico: lavagens (seco/express/completa) + marketplace + leilão + entregas</div>
           </div>
           <div class="card">
             <h3>Mix de serviços e perfis</h3>
-            <div class="chart-placeholder">Gráfico: Moto 45% · Carro 30% · Loja 15% · Marketplace 10%</div>
+            <div class="chart-placeholder">Gráfico: Moto Seco 40% · Fiorino 35% · Loja 15% · Marketplace/Entregas 10%</div>
           </div>
         </div>
 
@@ -206,7 +214,7 @@ td { padding: 14px 12px; border-bottom: 1px solid rgba(148,163,255,0.06); }
                 <td>#GIU-4824</td>
                 <td>Mariana Costa</td>
                 <td>Lavagem Express</td>
-                <td>🏍️ Moto Lavador</td>
+                <td>🚐 Carro Lavador (Fiorino)</td>
                 <td class="price-tag">R$ 89,90</td>
                 <td class="commission-tag">R$ 13,49 (15%)</td>
                 <td><span class="status-badge status-completed">Concluído</span></td>
@@ -215,21 +223,21 @@ td { padding: 14px 12px; border-bottom: 1px solid rgba(148,163,255,0.06); }
               <tr>
                 <td>#GIU-4823</td>
                 <td>Pedro Lima</td>
-                <td>Cristalização (Leilão)</td>
-                <td>🏪 Loja de Carwash</td>
-                <td class="price-tag">R$ 549,90</td>
-                <td class="commission-tag">R$ 109,98 (20%)</td>
-                <td><span class="status-badge status-pending">Aguardando</span></td>
+                <td>Lavagem a Seco</td>
+                <td>🏍️ Moto Lavador</td>
+                <td class="price-tag">R$ 59,90</td>
+                <td class="commission-tag">R$ 8,99 (15%)</td>
+                <td><span class="status-badge status-completed">Concluído</span></td>
                 <td><button class="btn-sm">Ver</button></td>
               </tr>
               <tr>
                 <td>#GIU-4822</td>
                 <td>Ana Paula</td>
-                <td>Capa de Couro</td>
-                <td>🏪 Marketplace B2C</td>
-                <td class="price-tag">R$ 189,90</td>
-                <td class="commission-tag">R$ 34,18 (18%)</td>
-                <td><span class="status-badge status-completed">Entregue</span></td>
+                <td>Lavagem Detalhada</td>
+                <td>🚐 Carro Lavador (Fiorino)</td>
+                <td class="price-tag">R$ 179,90</td>
+                <td class="commission-tag">R$ 28,78 (16%)</td>
+                <td><span class="status-badge status-progress">Em andamento</span></td>
                 <td><button class="btn-sm">Ver</button></td>
               </tr>
               <tr>
@@ -263,6 +271,41 @@ td { padding: 14px 12px; border-bottom: 1px solid rgba(148,163,255,0.06); }
               <tr><td>#GIU-4824</td><td>Mariana Costa</td><td>Lavagem Express</td><td>🏍️ Moto</td><td class="price-tag">R$ 89,90</td><td class="commission-tag">R$ 13,49</td><td><span class="status-badge status-completed">Concluído</span></td></tr>
               <tr><td>#GIU-4823</td><td>Pedro Lima</td><td>Cristalização (Leilão)</td><td>🏪 Loja</td><td class="price-tag">R$ 549,90</td><td class="commission-tag">R$ 109,98</td><td><span class="status-badge status-pending">Aguardando</span></td></tr>
               <tr><td>#GIU-4822</td><td>Ana Paula</td><td>Capa de Couro</td><td>🏪 Marketplace</td><td class="price-tag">R$ 189,90</td><td class="commission-tag">R$ 34,18</td><td><span class="status-badge status-completed">Entregue</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ENTREGAS -->
+      <div class="section-panel" id="entregas">
+        <div class="tabs">
+          <div class="tab active">Frota GIUCAR</div>
+          <div class="tab">Terceirizadas</div>
+        </div>
+        <div class="metric-grid">
+          <div class="metric-card"><div class="value">14</div><div class="label">Entregas hoje — frota GIUCAR</div></div>
+          <div class="metric-card"><div class="value">4</div><div class="label">Entregas hoje — terceirizadas</div></div>
+          <div class="metric-card"><div class="value">R$ 412</div><div class="label">Receita de entregas hoje</div></div>
+        </div>
+        <div class="card" style="margin-bottom: 24px;">
+          <h3>Modelo de entregas GIUCAR</h3>
+          <div style="color: #8b9bb4; line-height: 1.8; font-size: 14px;">
+            • Produtos da Loja do Lavador são entregues pela frota de motoqueiros GIUCAR<br>
+            • Quando a frota está cheia, entregas são terceirizadas (motoboy parceiro)<br>
+            • Custo médio pago ao motoqueiro: R$ 5,00 - R$ 8,00 por entrega<br>
+            • Cliente/lavador paga taxa de entrega: R$ 8,90 - R$ 12,90<br>
+            • Margem GIUCAR sobre entrega: R$ 2,00 - R$ 4,00 por entrega
+          </div>
+        </div>
+        <div class="table-wrap">
+          <h3>Entregas em andamento</h3>
+          <table>
+            <thead><tr><th>Código</th><th>Produto</th><th>Origem</th><th>Destino</th><th>Motoboy</th><th>Taxa</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>#ENT-1204</td><td>Shampoo 5L</td><td>AutoLimpeza SP</td><td>André Souza · Moto Lavador</td><td>🏍️ Carlos M. (GIUCAR)</td><td class="price-tag">R$ 8,90</td><td><span class="status-badge status-progress">A caminho</span></td></tr>
+              <tr><td>#ENT-1203</td><td>Aspirador 12V</td><td>AutoLimpeza SP</td><td>Carlos Silva · Carro Lavador</td><td>🏍️ Bruno T. (GIUCAR)</td><td class="price-tag">R$ 10,90</td><td><span class="status-badge status-completed">Entregue</span></td></tr>
+              <tr><td>#ENT-1202</td><td>Cera Premium 1L</td><td>AutoLimpeza SP</td><td>João Souza · Moto Lavador</td><td>🚚 Motoboy Terceirizado</td><td class="price-tag">R$ 12,90</td><td><span class="status-badge status-progress">Em rota</span></td></tr>
+              <tr><td>#ENT-1201</td><td>Capa de Couro</td><td>CouroTop</td><td>Orlando Silva · Cliente</td><td>🏍️ Felipe R. (GIUCAR)</td><td class="price-tag">R$ 9,90</td><td><span class="status-badge status-completed">Entregue</span></td></tr>
             </tbody>
           </table>
         </div>
@@ -380,9 +423,9 @@ td { padding: 14px 12px; border-bottom: 1px solid rgba(148,163,255,0.06); }
             <thead><tr><th>Serviço</th><th>Perfil</th><th>Descrição</th><th>Preço base</th><th>Duração</th></tr></thead>
             <tbody>
               <tr><td>🌿 Lavagem a Seco</td><td>🏍️ Moto Lavador</td><td>Carroceria e vidros com produtos biodegradáveis</td><td class="price-tag">R$ 59,90</td><td>30 min</td></tr>
-              <tr><td>⚡ Lavagem Express</td><td>🏍️ Moto Lavador</td><td>Externa + aspirado leve + acondicionador de pneus</td><td class="price-tag">R$ 89,90</td><td>45 min</td></tr>
-              <tr><td>🚐 Lavagem Completa</td><td>🚐 Carro Lavador</td><td>Externa completa + aspiração profunda (Fiorino)</td><td class="price-tag">R$ 129,90</td><td>90 min</td></tr>
-              <tr><td>🪣 Lavagem Detalhada</td><td>🚐 Carro Lavador</td><td>Limpeza profunda interna e externa (Fiorino)</td><td class="price-tag">R$ 179,90</td><td>120 min</td></tr>
+              <tr><td>⚡ Lavagem Express</td><td>🚐 Carro Lavador (Fiorino)</td><td>Externa + aspirado leve + acondicionador de pneus</td><td class="price-tag">R$ 89,90</td><td>45 min</td></tr>
+              <tr><td>🚐 Lavagem Completa</td><td>🚐 Carro Lavador (Fiorino)</td><td>Externa completa + aspiração profunda (Fiorino)</td><td class="price-tag">R$ 129,90</td><td>90 min</td></tr>
+              <tr><td>🪣 Lavagem Detalhada</td><td>🚐 Carro Lavador (Fiorino)</td><td>Limpeza profunda interna e externa (Fiorino)</td><td class="price-tag">R$ 179,90</td><td>120 min</td></tr>
             </tbody>
           </table>
         </div>
@@ -455,8 +498,10 @@ td { padding: 14px 12px; border-bottom: 1px solid rgba(148,163,255,0.06); }
           <table>
             <thead><tr><th>Linha de negócio</th><th>Taxa</th><th>Observação</th></tr></thead>
             <tbody>
-              <tr><td>Lavagem direta (Moto/Carro)</td><td class="commission-tag">15% - 18%</td><td>Sobre valor do serviço</td></tr>
-              <tr><td>Leilão de serviços pesados</td><td class="commission-tag">20%</td><td>Sobre valor negociado com loja</td></tr>
+              <tr><td>Lavagem direta (Moto/Carro)</td><td class="commission-tag">15% - 18%</td><td>Sobre valor do serviço · Moto = Seco · Carro/Fiorino = Express/Completa/Detalhada</td></tr>
+              <tr><td>Leilão de serviços pesados</td><td class="commission-tag">20%</td><td>Sobre valor negociado com loja · Cristalização, Polimento, Funilaria, Tapeçaria etc.</td></tr>
+              <tr><td>Entregas — Frota GIUCAR</td><td class="commission-tag">R$ 2 - R$ 4 por entrega</td><td>Taxa ao cliente/lavador R$ 8,90 - R$ 12,90 · custo motoqueiro R$ 5 - R$ 8</td></tr>
+              <tr><td>Entregas — Terceirizadas</td><td class="commission-tag">R$ 1 - R$ 3 por entrega</td><td>Taxa ao cliente/lavador R$ 12,90+ · custo com parceiro logístico</td></tr>
               <tr><td>Marketplace — Loja do Lavador (Integrada)</td><td class="commission-tag">23% + R$ 150/mês</td><td>Logística pela GIUCAR</td></tr>
               <tr><td>Marketplace — Loja do Lavador (Própria)</td><td class="commission-tag">15% + R$ 110/mês</td><td>Logística do vendedor</td></tr>
               <tr><td>Marketplace — Loja do Cliente (Integrada)</td><td class="commission-tag">18% + R$ 59/mês</td><td>Logística pela GIUCAR</td></tr>
