@@ -2,8 +2,9 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/api/api_client.dart';
 import '../../../../core/api/api_exception.dart';
+import '../../../../core/api/token_storage.dart';
 import '../../../../core/constants/app_constants.dart';
-import 'auth_state.dart';
+import '../presentation/providers/auth_state.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository(ref.watch(dioProvider), ref.watch(tokenStorageProvider));

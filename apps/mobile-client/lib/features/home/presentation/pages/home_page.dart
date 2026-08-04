@@ -316,7 +316,7 @@ class _EngagementHighlightCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
+                  Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
                 ],
               ),
               const SizedBox(height: 14),
@@ -586,7 +586,6 @@ class _MarketplaceBanner extends StatelessWidget {
     required this.emoji,
     required this.onTap,
     required this.backgroundColor,
-    this.borderColor,
   });
 
   final String title;
@@ -594,7 +593,6 @@ class _MarketplaceBanner extends StatelessWidget {
   final String emoji;
   final VoidCallback? onTap;
   final Color backgroundColor;
-  final Color? borderColor;
 
   @override
   Widget build(BuildContext context) {
@@ -602,7 +600,6 @@ class _MarketplaceBanner extends StatelessWidget {
       child: NeonSurface(
         radius: 14,
         backgroundColor: backgroundColor,
-        borderColor: borderColor,
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(14),
@@ -892,7 +889,7 @@ class _ProfileMenuItem extends StatelessWidget {
           title,
           style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.textPrimary),
         ),
-        trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
+        trailing: Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
         onTap: onTap,
       ),
     );

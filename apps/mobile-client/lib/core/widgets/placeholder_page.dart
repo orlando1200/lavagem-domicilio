@@ -14,7 +14,7 @@ class PlaceholderPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(title: Text(title)),
-      body: const Center(
+      body: Center(
         child: Padding(
           padding: EdgeInsets.all(24),
           child: Text(

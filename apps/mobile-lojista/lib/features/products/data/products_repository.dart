@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/api/api_exception.dart';
+import '../../../core/constants/app_constants.dart';
 import 'models/store_product.dart';
 
 final productsRepositoryProvider = Provider<ProductsRepository>((ref) {

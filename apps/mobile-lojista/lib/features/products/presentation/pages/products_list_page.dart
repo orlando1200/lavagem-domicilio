@@ -87,7 +87,7 @@ class _ProductsEmpty extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 24),
       child: Column(
         children: [
-          const Icon(Icons.inventory_2_outlined, color: AppColors.textMuted, size: 44),
+          Icon(Icons.inventory_2_outlined, color: AppColors.textMuted, size: 44),
           const SizedBox(height: 12),
           Text(
             'Você ainda não cadastrou produtos.',

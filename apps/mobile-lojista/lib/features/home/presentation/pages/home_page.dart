@@ -5,7 +5,6 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_scaffold.dart';
 import '../../../../core/widgets/neon_surface.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../auth/presentation/providers/auth_state.dart';
 
 /// Home do Portal do Lojista: saldo a receber, metricas da loja e
 /// pedidos recentes.
@@ -528,7 +527,7 @@ class _AuctionEntryCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
+              Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
             ],
           ),
         ),
@@ -669,7 +668,7 @@ class _ProfileMenuItem extends StatelessWidget {
           title,
           style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.textPrimary),
         ),
-        trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
+        trailing: Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
         onTap: onTap,
       ),
     );

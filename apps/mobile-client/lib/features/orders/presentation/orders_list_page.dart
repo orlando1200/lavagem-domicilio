@@ -79,7 +79,7 @@ class _OrderCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     order.statusLabel,
-                    style: const TextStyle(color: AppColors.textSecondary),
+                    style: TextStyle(color: AppColors.textSecondary),
                   ),
                 ],
               ),
@@ -103,14 +103,14 @@ class _OrdersEmpty extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Padding(
-        padding: EdgeInsets.all(24),
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.receipt_long_outlined, color: AppColors.textMuted, size: 48),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             Text(
               'Você ainda não tem pedidos.',
               style: TextStyle(color: AppColors.textSecondary),
