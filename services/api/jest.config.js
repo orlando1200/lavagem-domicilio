@@ -21,6 +21,7 @@ module.exports = {
     'src/modules/payouts/**/*.(t|j)s',
     'src/modules/deliveries/**/*.(t|j)s',
     'src/modules/auctions/**/*.(t|j)s',
+    'src/modules/loyalty/**/*.(t|j)s',
   ],
   coverageDirectory: '../coverage',
   testPathIgnorePatterns: [
@@ -31,7 +32,6 @@ module.exports = {
     '<rootDir>/test/modules/dispatch',
     '<rootDir>/test/modules/document-verification',
     '<rootDir>/test/modules/face-check',
-    '<rootDir>/test/modules/loyalty',
     '<rootDir>/test/modules/rental',
     '<rootDir>/test/modules/services-catalog',
     '<rootDir>/test/modules/starter-kit',

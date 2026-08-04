@@ -26,7 +26,6 @@ module.exports = {
     'src/modules/dispatch',
     'src/modules/document-verification',
     'src/modules/face-check',
-    'src/modules/loyalty',
     'src/modules/rental',
     'src/modules/services-catalog',
     'src/modules/starter-kit',

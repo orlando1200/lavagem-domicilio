@@ -470,23 +470,15 @@ de `DriverProfile` (provavelmente `POST /drivers/me/shop-profile` ou
 modulo `drivers` estendido), correspondente ao item "Fluxo de registro
 com escolha de perfil (Moto/Carro/Loja)" do roadmap do app Lavador.
 
-#### Verificacao pendente (sem Node nesta maquina)
-Nao foi possivel rodar, nesta maquina: `npm run db:generate` (`prisma
-generate`), `npm run db:migrate:dev`, `npm run type-check` (`tsc
---noEmit`) nem `npm run build` (`nest build`). Todo o codigo foi escrito
-manualmente seguindo com precisao os padroes ja usados por
-`orders`/`drivers`/`deliveries` (mesmos imports, mesmos nomes de guard/
-decorator, mesmo formato de paginacao), mas **isso nao substitui rodar os
-comandos de verificacao de fato** em uma maquina com Node/npm instalados:
-
-```bash
-cd services/api
-npm install
-npm run db:generate
-npm run db:migrate:dev
-npm run type-check
-npm run build
-```
+#### Verificacao (atualizado: Node instalado na maquina numa rodada seguinte)
+A nota original desta secao dizia que nao havia Node/npm nesta maquina.
+Isso mudou (Node v24.19.0 / npm 11.17.0 instalados fora de banda) e todos
+os comandos abaixo foram de fato executados e passam limpos:
+`npm run db:generate`, `npm run lint`, `npm run type-check`, `npm run
+test` e `npm run build`. Segue faltando `npm run db:migrate:dev` — nao ha
+Postgres nem Docker nesta maquina, entao a migration precisa ser aplicada
+pelo usuario contra um banco real (local ou dev). Ver secoes 1.6+ abaixo
+para o que foi validado dessa forma nas rodadas seguintes.
 
 ### 1.4 CI deixava de ser um gate real (`continue-on-error` no job `api`)
 
@@ -541,6 +533,71 @@ necessaria la.
 
 Validado localmente (Node instalado nesta rodada): `lint`, `type-check`,
 `test` e `build` passam limpos com o modulo `drivers` estendido.
+
+### 1.6 Modulo `loyalty` (Onda 1 do roadmap pos-auditoria)
+
+O `src/modules/loyalty/**` antigo (secao "Modulos ainda excluidos" acima)
+foi **reescrito do zero**, mesma metodologia das demais recuperacoes: o
+codigo original girava em torno de `LoyaltyCampaign` com metodos
+truncados/misturados (`getSummary()` colava o corpo de outro metodo no
+meio) e tratava `clientProfile.loyaltyPoints` como escalar quando o
+schema define como relacao `LoyaltyPoint[]`. Nao reaproveitado.
+
+Escopo pedido: (a) conceder 5% do valor do pedido em pontos ao marcar
+pedido como pago; (b) `GET /loyalty/balance`; (c) job noturno de
+expiracao; (d) `POST /loyalty/redeem` para usar pontos como desconto.
+
+**Ajuste de schema necessario**: o `LoyaltyPoint` existente (adicionado
+na secao 1.3) tinha so `amount`/`usedAt`, sem como registrar consumo
+parcial de uma concessao por um resgate. Adicionado `redeemedAmount Int
+@default(0)` a `LoyaltyPoint` e um novo model `LoyaltyRedemption`
+(`userId`, `orderId` unico — no maximo um resgate por pedido, `amount`)
+para historico de resgates. Nova migration
+`prisma/migrations/20260804000000_add_loyalty_redemptions/migration.sql`.
+Tambem corrigido o nome do campo de relacao inverso em `Order` (Prisma
+havia auto-inserido `LoyaltyPoint LoyaltyPoint[]` em PascalCase numa
+rodada anterior ao rodar `generate`; renomeado para `loyaltyPoints`,
+convencao camelCase do resto do schema — sem impacto em SQL, e so nome de
+campo do lado Prisma).
+
+**Taxa assumida (nao especificada em nenhum outro lugar do produto)**:
+1 ponto = R$ 0,01 no resgate (`REAL_PER_POINT`), e concessao de 5 pontos
+por real do pedido (`POINTS_PER_REAL = EARN_RATE / REAL_PER_POINT`), de
+forma que resgatar 100% dos pontos de um pedido devolve exatamente os
+mesmos 5% do valor original, para qualquer valor de pedido. Pontos
+concedidos expiram em 90 dias (`POINTS_EXPIRY_DAYS`, tambem assumido).
+Ambos os valores sao constantes isoladas em `loyalty.service.ts`, faceis
+de ajustar quando o produto definir a regra oficial.
+
+**Job noturno de verdade** (nao so um endpoint pra cron externo chamar,
+como o `expire-overdue` do `auctions`): adicionada a dependencia
+`@nestjs/schedule` (nao existia no projeto) e `ScheduleModule.forRoot()`
+registrado em `app.module.ts`. `LoyaltyService.handleNightlyExpiration()`
+roda via `@Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)` e chama
+`expireOverduePoints()` (idempotente: `UPDATE ... WHERE expires_at < now()
+AND used_at IS NULL`), que tambem fica exposta via
+`POST /admin/loyalty/expire-overdue` para disparo manual/teste.
+
+- `loyalty.controller.ts` (`/loyalty`, `Roles(CLIENTE)`): `GET /balance`,
+  `GET /history` (concessoes + resgates recentes), `POST /redeem`.
+- `loyalty.admin.controller.ts` (`/admin/loyalty`, `Roles(ADMIN)`):
+  `POST /orders/:orderId/grant` (ponto de integracao para o futuro modulo
+  `payments`/webhook Mercado Pago chamar quando o pagamento for
+  confirmado — nao ha modulo de pagamentos ainda, entao fica exposto para
+  disparo manual por enquanto) e `POST /expire-overdue`.
+- `loyalty.service.ts`: resgate consome as concessoes mais proximas de
+  vencer primeiro (`orderBy: expiresAt asc`), com suporte a consumo
+  parcial de uma concessao — implementado com `$transaction` sobre um
+  array de updates + a criacao do `LoyaltyRedemption`, tudo ou nada.
+- `test/modules/loyalty/loyalty.service.spec.ts` — 11 testes unitarios
+  (mock de `PrismaService`) cobrindo concessao/idempotencia, calculo de
+  saldo, resgate parcial multi-concessao e expiracao. Pegou um bug real
+  durante a escrita: `REAL_PER_POINT` estava implementado como `1 /
+  POINTS_PER_REAL` (inverso errado — daria R$0,20/ponto em vez de
+  R$0,01/ponto), corrigido antes de fechar a rodada.
+
+Validado localmente: `db:generate`, `lint`, `type-check`, `test` (13/13,
+incluindo os 2 testes de health) e `build` passam limpos.
 
 ---
 

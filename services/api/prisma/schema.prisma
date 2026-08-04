@@ -68,6 +68,7 @@ model User {
   driverProfile             DriverProfile?
   couponCampaignRedemptions CouponRedemption[]
   analyticsEvents           AnalyticsEvent[]
+  loyaltyRedemptions        LoyaltyRedemption[]
 
   @@map("users")
 }
@@ -248,9 +249,10 @@ model Order {
   zone         Zone?          @relation(fields: [zoneId], references: [id])
   items        OrderItem[]
   payment      Payment?
-  reviews      Review[]
-  auction      Auction?
-  LoyaltyPoint LoyaltyPoint[]
+  reviews           Review[]
+  auction           Auction?
+  loyaltyPoints     LoyaltyPoint[]
+  loyaltyRedemption LoyaltyRedemption?
 
   @@map("orders")
 }
@@ -650,14 +652,23 @@ model AuctionBid {
   @@map("auction_bids")
 }
 
+// Ledger de concessoes de pontos GIUCAR: cada linha e uma concessao
+// (ex.: 5% de um pedido pago). `redeemedAmount` acumula o quanto dessa
+// concessao ja foi consumido por resgates (`LoyaltyRedemption`), o que
+// permite consumo parcial de uma concessao (uma concessao de 50 pontos
+// pode cobrir parte de um resgate de 30 e sobrar 20 para o proximo).
+// `usedAt` e marcado somente quando a concessao e totalmente consumida
+// (`redeemedAmount == amount`), servindo de atalho para excluir
+// concessoes ja esgotadas do calculo de saldo.
 model LoyaltyPoint {
-  id        String    @id @default(uuid()) @db.Uuid
-  userId    String    @map("user_id") @db.Uuid
-  orderId   String?   @map("order_id") @db.Uuid
-  amount    Int
-  expiresAt DateTime  @map("expires_at") @db.Timestamptz
-  usedAt    DateTime? @map("used_at") @db.Timestamptz
-  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  id             String    @id @default(uuid()) @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  orderId        String?   @map("order_id") @db.Uuid
+  amount         Int
+  redeemedAmount Int       @default(0) @map("redeemed_amount")
+  expiresAt      DateTime  @map("expires_at") @db.Timestamptz
+  usedAt         DateTime? @map("used_at") @db.Timestamptz
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
 
   user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   order Order? @relation(fields: [orderId], references: [id], onDelete: SetNull)
@@ -665,6 +676,26 @@ model LoyaltyPoint {
   @@index([userId])
   @@index([expiresAt])
   @@map("loyalty_points")
+}
+
+// Registro de resgate de pontos GIUCAR como desconto em um pedido. No
+// maximo um resgate por pedido (`orderId` unico) — o desconto e aplicado
+// uma vez, no checkout. O consumo efetivo do saldo (quais `LoyaltyPoint`
+// foram debitados) e feito no momento do resgate, mais antigos/proximos
+// de expirar primeiro; este registro guarda so o total resgatado, para
+// historico e para o calculo de desconto do pedido.
+model LoyaltyRedemption {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  orderId   String   @unique @map("order_id") @db.Uuid
+  amount    Int
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("loyalty_redemptions")
 }
 
 model Review {
