@@ -11,6 +11,7 @@ import { CouponsModule } from './modules/coupons/coupons.module';
 import { PayoutsModule } from './modules/payouts/payouts.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { DeliveriesModule } from './modules/deliveries/deliveries.module';
+import { AuctionsModule } from './modules/auctions/auctions.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { DeliveriesModule } from './modules/deliveries/deliveries.module';
     CouponsModule,
     PayoutsModule,
     DeliveriesModule,
+    AuctionsModule,
   ],
 })
 export class AppModule {}

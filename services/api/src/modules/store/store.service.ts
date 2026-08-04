@@ -7,7 +7,7 @@ import { PrismaService } from '../../database/prisma.service';
 import { CreateStoreDto } from './dto/create-store.dto';
 import { CreateStoreProductDto } from './dto/create-store-product.dto';
 import { getCommissionRate } from './store.constants';
-import { LogisticsPlan, ProductStatus } from '@prisma/client';
+import { LogisticsPlan, Prisma, ProductStatus } from '@prisma/client';
 
 @Injectable()
 export class StoreService {
@@ -35,8 +35,8 @@ export class StoreService {
         phone: dto.phone,
         storeType: dto.storeType,
         logisticsPlan,
-        address: dto.address,
-        bankInfo: dto.bankInfo,
+        address: dto.address as Prisma.InputJsonValue,
+        bankInfo: dto.bankInfo as Prisma.InputJsonValue,
         commissionPlan: {
           create: {
             storeType: dto.storeType,

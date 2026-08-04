@@ -62,7 +62,7 @@ export class UsersService {
       include: {
         addresses: true,
         vehicles: true,
-        driver: true,
+        driverProfile: true,
         washer: true,
         cashbackBalance: true,
       },
@@ -148,7 +148,7 @@ export class UsersService {
       include: {
         addresses: true,
         vehicles: true,
-        driver: true,
+        driverProfile: true,
         washer: true,
       },
     });

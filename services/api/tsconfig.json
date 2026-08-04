@@ -34,7 +34,9 @@
     "src/modules/orders/**/*",
     "src/modules/drivers/**/*",
     "src/modules/coupons/**/*",
-    "src/modules/payouts/**/*"
+    "src/modules/payouts/**/*",
+    "src/modules/deliveries/**/*",
+    "src/modules/auctions/**/*"
   ],
   "exclude": [
     "node_modules",

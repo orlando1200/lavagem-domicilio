@@ -369,6 +369,179 @@ correto (`REFERENCES "washers"("user_id")` / `REFERENCES
 (`references: [userId]` nos dois casos) para alinhar com o SQL — sem
 qualquer alteracao na migration ja escrita.
 
+### 1.3 Recuperacao de `auctions` (Phase C — leilao de servicos pesados)
+
+Pedido: fechar a camada de backend do modulo `auctions` (leilao de
+servicos pesados — cliente cria o leilao, lojas do tipo `CARWASH_SHOP`
+enviam pujas, cliente seleciona a vencedora).
+
+**Bloqueio encontrado antes de comecar:** `prisma/schema.prisma` estava
+com uma edicao nao commitada e incompleta de uma rodada anterior (fora
+deste repositorio de agentes) que renomeava o model `Driver` para
+`DriverProfile` e ja adicionava `Auction`/`AuctionBid`/`LoyaltyPoint`, mas
+sem atualizar todas as referencias: `User.driver`, `Order.driver`,
+`Rental.driver` e `Zone.drivers` continuavam tipados como `Driver`, um
+model que nao existia mais no arquivo — o que quebra `prisma generate`
+por completo (nao e um problema isolado do `auctions`, impede qualquer
+build). Corrigido:
+- Removido o campo orfao `User.driver` (duplicava `User.driverProfile`,
+  que ja cobre a mesma relacao 1:1).
+- `Order.driver`, `Rental.driver` e `Zone.drivers` retipados para
+  `DriverProfile`/`DriverProfile[]`.
+- Adicionado `expired` a `AuctionStatus` (a spec do modulo pede os quatro
+  estados "aberto, fechado, cancelado, expirado"; o enum recuperado so
+  tinha os tres primeiros).
+- Nova migration incremental
+  `prisma/migrations/20260803000000_add_auctions_and_driver_profiles/migration.sql`:
+  renomeia a tabela `drivers` para `driver_profiles` preservando dados
+  (troca a PK de `user_id` para um novo `id`, mantendo `user_id` como
+  `UNIQUE` para nao quebrar os FKs existentes de `orders`/`rentals`,
+  recriados apos o `DROP CONSTRAINT ... CASCADE`), cria os enums
+  `DriverType`/`ServiceType`/`AuctionStatus`/`BidStatus` e as tabelas
+  `auctions`, `auction_bids`, `loyalty_points`. Ainda **nao aplicada** em
+  nenhum banco (mesma limitacao ja registrada na secao 1: esta maquina
+  nao tem Node/npm instalado, entao nao foi possivel rodar `prisma
+  migrate dev`/`generate`/`validate`, nem `tsc`/`nest build` para
+  confirmar o typecheck de fato — ver "Verificacao pendente" abaixo).
+
+#### `src/modules/auctions/**` (novo modulo)
+- `auctions.module.ts` — registra `AuctionsController`,
+  `AdminAuctionsController`, `AuctionsService` e
+  `AuctionsNotificationsService`. Adicionado a `app.module.ts` e ao
+  `include` do `tsconfig.json` (junto de `deliveries`, que ja estava
+  registrada em `app.module.ts` mas faltava no `include`).
+- `auctions.controller.ts` (`/auctions`, `JwtAuthGuard`):
+  - `POST /auctions` (`CLIENTE`) — abre leilao a partir de um
+    `orderId` proprio com status `pending`; veiculo/endereco sao sempre
+    herdados do `Order` (nunca aceitos do client, para nao divergir).
+  - `GET /auctions/me`, `GET /auctions/me/:id` (`CLIENTE`) — lista/detalha
+    os proprios leiloes; o detalhe retorna as pujas **rankeadas**.
+  - `PATCH /auctions/me/:id/cancel` (`CLIENTE`) — cancela leilao aberto.
+  - `PATCH /auctions/me/:id/bids/:bidId/accept` (`CLIENTE`) — aceita a
+    puja vencedora: fecha o leilao, rejeita as demais pujas e atribui a
+    loja vencedora como `Order.driver` (`Order.status -> accepted`).
+  - `GET /auctions/available` (`LAVADOR`) — leiloes abertos disponiveis
+    para a loja autenticada pujar (filtra pela zona da loja quando ela
+    tiver uma definida).
+  - `GET /auctions/bids/me` (`LAVADOR`) — pujas enviadas pela loja.
+  - `POST /auctions/:id/bids` (`LAVADOR`) — envia puja (uma puja pendente
+    por leilao por loja).
+  - `PATCH /auctions/:id/bids/me`, `DELETE /auctions/:id/bids/me`
+    (`LAVADOR`) — atualiza/retira a propria puja pendente.
+- `auctions.admin.controller.ts` (`/admin/auctions`, `Roles(ADMIN)`):
+  `GET /admin/auctions`, `GET /admin/auctions/:id`,
+  `PATCH /admin/auctions/:id/cancel`, `POST
+  /admin/auctions/expire-overdue` (varre leiloes abertos com prazo
+  vencido e marca `expired` — nao ha scheduler no processo Nest hoje,
+  este endpoint existe para ser chamado por um cron externo).
+- `auctions.service.ts`:
+  - Elegibilidade de puja: usuario precisa ter `DriverProfile` com
+    `driverType = CARWASH_SHOP`, `HEAVY_SERVICE` em `allowedServices` e
+    `status = active`.
+  - **Ranking de pujas** (`rankBids`): score ponderado 0–1 normalizado
+    entre as pujas do proprio leilao — preco 40% (menor melhor), prazo
+    20% (menor melhor), garantia 15% (maior melhor), reputacao da loja
+    (`DriverProfile.averageRating`) 25% (maior melhor). Exposto apenas
+    para o cliente e para o admin (a lista de leiloes disponiveis para a
+    loja nao expoe pujas de concorrentes, so a contagem).
+  - Expiracao "preguicosa": qualquer leitura de um leilao aberto com
+    `deadlineHours` vencido o marca `expired` antes de responder, alem do
+    endpoint de admin para varredura em lote.
+- `auctions-notifications.service.ts` — pontos de integracao com Firebase
+  Push (FCM): `notifyAuctionOpened`, `notifyNewBid`, `notifyBidAccepted`,
+  `notifyBidRejected`, `notifyAuctionCancelled`, `notifyAuctionExpired`.
+  Hoje so loga a intencao do evento (nao ha dependencia de FCM instalada
+  no projeto); quando o Firebase for conectado, cada metodo passa a
+  enviar a notificacao real em vez de logar — nenhuma outra parte do
+  `AuctionsService` precisa mudar.
+- `dto/create-auction.dto.ts`, `dto/create-bid.dto.ts`,
+  `dto/list-auctions.dto.ts`, `dto/cancel-auction.dto.ts` — validacao via
+  `class-validator`, mesmo padrao dos demais modulos.
+
+#### Gap real encontrado (nao e so documentacao — trava o fluxo end-to-end)
+**Nao existe, em nenhum lugar do codigo, um jeito de criar um
+`DriverProfile`** (o model usado por `AuctionBid.supplier`). O
+`src/modules/drivers/**` atual (`DriversController`) so cria/gerencia o
+model `Washer` (perfil de lavador comum), nunca `DriverProfile`. Ou seja:
+hoje nenhum usuario `LAVADOR` consegue virar uma loja `CARWASH_SHOP`
+elegivel para pujar, mesmo com o `auctions` completo. Proximo passo
+recomendado antes de testar o fluxo ponta a ponta: endpoint de onboarding
+de `DriverProfile` (provavelmente `POST /drivers/me/shop-profile` ou
+modulo `drivers` estendido), correspondente ao item "Fluxo de registro
+com escolha de perfil (Moto/Carro/Loja)" do roadmap do app Lavador.
+
+#### Verificacao pendente (sem Node nesta maquina)
+Nao foi possivel rodar, nesta maquina: `npm run db:generate` (`prisma
+generate`), `npm run db:migrate:dev`, `npm run type-check` (`tsc
+--noEmit`) nem `npm run build` (`nest build`). Todo o codigo foi escrito
+manualmente seguindo com precisao os padroes ja usados por
+`orders`/`drivers`/`deliveries` (mesmos imports, mesmos nomes de guard/
+decorator, mesmo formato de paginacao), mas **isso nao substitui rodar os
+comandos de verificacao de fato** em uma maquina com Node/npm instalados:
+
+```bash
+cd services/api
+npm install
+npm run db:generate
+npm run db:migrate:dev
+npm run type-check
+npm run build
+```
+
+### 1.4 CI deixava de ser um gate real (`continue-on-error` no job `api`)
+
+Auditoria pedida pelo usuario sobre o roadmap macro do produto revelou que
+o job `api` do `.github/workflows/ci.yml` tinha `continue-on-error: true`
+nas 4 etapas (lint, type-check, test, build) — ou seja, o job aparecia
+verde no GitHub mesmo que qualquer uma delas falhasse de verdade. Corrigido
+nesta rodada, apos validar localmente (agora com Node instalado) que as 4
+etapas passam de fato:
+- `pnpm run lint` tinha 1 erro real, tambem pre-existente e sem relacao
+  com `auctions`: o script rodava sobre `"{src,test}/**/*.ts"`, mas
+  `tsconfig.json` exclui `test/**` do `parserOptions.project` do ESLint,
+  causando um erro de parsing em `test/health.controller.spec.ts`. Como
+  os testes ja sao validados pelo Jest (via `ts-jest`, config propria em
+  `jest.config.js`), o fix foi restringir o glob do lint para
+  `"src/**/*.ts"` (`package.json`), alinhando com o que o `tsconfig.json`
+  sempre pretendeu.
+- `pnpm run type-check`, `pnpm run test` e `pnpm run build` ja passavam
+  limpos (apos os fixes das secoes 1.1–1.3).
+- `jest.config.js` (`collectCoverageFrom`) ganhou as entradas de
+  `deliveries` e `auctions`, que faltavam.
+
+### 1.5 Onboarding de `DriverProfile` (Onda 1 do roadmap pos-auditoria)
+
+A auditoria da secao 1.3 identificou um gap real: nao havia, em nenhum
+lugar do codigo, um jeito de criar um `DriverProfile` (moto/carro/loja
+carwash) — `src/modules/drivers/**` so gerenciava o model `Washer`. Sem
+isso, nenhum `LAVADOR` conseguia virar elegivel para pujar em `auctions`.
+Adicionado ao mesmo modulo `drivers` (mesmo padrao de
+`DriversController`/`AdminWashersController`, para o model `Washer`):
+
+- `driver-profiles.controller.ts` (`/driver-profiles/me`, `Roles(LAVADOR)`):
+  `POST` (onboarding — status inicial `pending_documents`, igual ao
+  padrao do `Washer`), `GET`, `PATCH` (atualiza `driverType`,
+  `allowedServices`, `serviceRadiusKm`, `currentZoneId`) e `PATCH
+  /availability` (alterna `active`/`inactive`, mesma regra do `Washer`:
+  so a partir desses dois status).
+- `driver-profiles.admin.controller.ts` (`/admin/driver-profiles`,
+  `Roles(ADMIN)`): `GET` (lista com filtro de `status`/`driverType`/
+  busca), `GET /:userId`, `PATCH /:userId/status` (aprova/bloqueia/
+  rejeita, `reason` aceito mas nao persistido — mesmo comportamento do
+  `AdminUpdateWasherStatusDto` existente, o schema nao tem coluna pra
+  isso em nenhum dos dois models).
+- `driver-profiles.service.ts` / `dto/driver-profiles.dto.ts`.
+
+Uma loja so fica elegivel para pujar em `auctions` depois de: (1) criar o
+perfil com `driverType = CARWASH_SHOP`, (2) admin aprovar
+(`status -> active`), e (3) incluir `HEAVY_SERVICE` em `allowedServices`
+(no `POST` ou depois via `PATCH`) — a checagem de elegibilidade em
+`auctions.service.ts` (secao 1.3) ja exigia os tres, sem mudanca
+necessaria la.
+
+Validado localmente (Node instalado nesta rodada): `lint`, `type-check`,
+`test` e `build` passam limpos com o modulo `drivers` estendido.
+
 ---
 
 ## 2. `apps/admin-web` (Next.js)
