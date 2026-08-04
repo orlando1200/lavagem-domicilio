@@ -14,6 +14,8 @@ import { AuthModule } from './modules/auth/auth.module';
 import { DeliveriesModule } from './modules/deliveries/deliveries.module';
 import { AuctionsModule } from './modules/auctions/auctions.module';
 import { LoyaltyModule } from './modules/loyalty/loyalty.module';
+import { PaymentsModule } from './modules/payments/payments.module';
+import { MapsModule } from './modules/maps/maps.module';
 
 @Module({
   imports: [
@@ -32,6 +34,8 @@ import { LoyaltyModule } from './modules/loyalty/loyalty.module';
     DeliveriesModule,
     AuctionsModule,
     LoyaltyModule,
+    PaymentsModule,
+    MapsModule,
   ],
 })
 export class AppModule {}

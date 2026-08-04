@@ -37,7 +37,9 @@
     "src/modules/payouts/**/*",
     "src/modules/deliveries/**/*",
     "src/modules/auctions/**/*",
-    "src/modules/loyalty/**/*"
+    "src/modules/loyalty/**/*",
+    "src/modules/payments/**/*",
+    "src/modules/maps/**/*"
   ],
   "exclude": [
     "node_modules",

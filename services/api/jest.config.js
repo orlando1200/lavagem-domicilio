@@ -22,6 +22,8 @@ module.exports = {
     'src/modules/deliveries/**/*.(t|j)s',
     'src/modules/auctions/**/*.(t|j)s',
     'src/modules/loyalty/**/*.(t|j)s',
+    'src/modules/payments/**/*.(t|j)s',
+    'src/modules/maps/**/*.(t|j)s',
   ],
   coverageDirectory: '../coverage',
   testPathIgnorePatterns: [
