@@ -110,23 +110,22 @@ não há chaves configuradas nesta máquina.
 
 ## Bloqueios / débitos técnicos conhecidos
 
-- **CI falha no Linux** (`ci.yml`, job `api`, etapa "Unit tests"), mesmo
-  com tudo passando localmente — reproduzido com o comando exato do CI
-  (`pnpm run test -- --ci --coverage`) e com Node 20.18.1 (mesma versão
-  do runner), ambos passam limpo nesta máquina Windows. As anotações do
-  GitHub Actions para o check-run só trazem um aviso genérico de infra
-  (deprecação de Node 20 nas próprias actions, ex. `actions/checkout`) e
-  "Process completed with exit code 1" — nenhum detalhe do jest.
-  Investigado tambem um aviso local ("worker process has failed to exit
-  gracefully"): corrigido teardown (`module.close()`) em todos os specs
-  como boa prática, mas `--detectOpenHandles --runInBand` mostrou que o
-  aviso é uma peculiaridade do pool de workers do Jest no Windows (some
-  com `--runInBand`, sem handles reais detectados) — não é a causa da
-  falha no CI. Resta diferença de SO (`ubuntu-latest` no runner) que não
-  há como reproduzir aqui. **Bloqueado até alguém com acesso ao repo
-  colar o texto do log da etapa "Unit tests"** (o endpoint de logs da
-  API do GitHub exige token com direitos de admin — 403 confirmado
-  duas vezes nesta sessão).
+- ~~CI falha no Linux~~ — **resolvido** (run #34, commit `8900ed4`,
+  `Status: Success` nos 3 jobs). Causa real, só descoberta depois de
+  conseguir o texto do log (o endpoint de logs da API do GitHub exige
+  token de admin, então dependeu de alguém com acesso ao repo colar o
+  log manualmente): `ci.yml` rodava `pnpm run test -- --ci --coverage`,
+  e o `pnpm` estava repassando um `"--"` **literal** como primeiro
+  argumento pro jest (`jest "--" "--ci" "--coverage"`), em vez de
+  tratar como separador. O jest interpreta qualquer argumento
+  posicional como padrão de nome de teste — `"--"` não bate com nenhum
+  arquivo, daí "No tests found, exiting with code 1". Não era diferença
+  de SO/Node/pnpm (por isso nenhuma das reproduções locais pegava:
+  nenhuma delas usou exatamente `pnpm run <script> -- <args>` do jeito
+  que o workflow usava). Trocado por `pnpm exec jest --ci --coverage`,
+  que invoca o jest direto sem passar pelo forwarding de argumentos do
+  `pnpm run`. O teardown (`module.close()`) adicionado nos specs durante
+  a investigação foi mantido por ser boa prática, mas não era a causa.
 - **Sem Postgres/Docker nesta máquina** — as duas migrations novas
   (`20260803000000_add_auctions_and_driver_profiles`,
   `20260804000000_add_loyalty_redemptions`) nunca foram aplicadas a um
