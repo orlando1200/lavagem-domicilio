@@ -103,7 +103,7 @@ jobs:
         run: pnpm run type-check
 
       - name: Unit tests
-        run: pnpm run test -- --ci --coverage
+        run: pnpm exec jest --ci --coverage
 
       - name: Build
         run: pnpm run build
