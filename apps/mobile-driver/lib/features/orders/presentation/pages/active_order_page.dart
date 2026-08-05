@@ -13,14 +13,6 @@ import '../providers/driver_orders_provider.dart';
 class ActiveOrderPage extends ConsumerWidget {
   const ActiveOrderPage({super.key});
 
-  static const _flow = [
-    DriverOrderStatus.assigned,
-    DriverOrderStatus.onTheWay,
-    DriverOrderStatus.arrived,
-    DriverOrderStatus.inProgress,
-    DriverOrderStatus.completed,
-  ];
-
   String _actionLabel(DriverOrderStatus status) {
     switch (status) {
       case DriverOrderStatus.assigned:

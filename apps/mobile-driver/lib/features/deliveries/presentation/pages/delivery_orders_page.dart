@@ -296,7 +296,7 @@ class _EmptyDeliveriesState extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            const Icon(Icons.local_shipping_outlined, color: AppColors.textMuted, size: 32),
+            Icon(Icons.local_shipping_outlined, color: AppColors.textMuted, size: 32),
             const SizedBox(height: 8),
             Text(
               'Nenhuma entrega pendente no momento.',

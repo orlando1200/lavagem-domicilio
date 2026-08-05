@@ -550,7 +550,7 @@ class _EmptyOrdersState extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            const Icon(Icons.search_rounded, color: AppColors.textMuted, size: 32),
+            Icon(Icons.search_rounded, color: AppColors.textMuted, size: 32),
             const SizedBox(height: 8),
             Text(
               'Procurando pedidos próximos...',
@@ -639,6 +639,14 @@ class _ToolsSection extends StatelessWidget {
           onTap: () => context.push('/deliveries'),
           fullWidth: true,
         ),
+        const SizedBox(height: 12),
+        _ToolCard(
+          icon: Icons.storefront_outlined,
+          label: 'Leilão de Serviços Pesados',
+          sub: 'Loja de Carwash: envie ofertas para leilões de clientes',
+          onTap: () => context.push('/auctions'),
+          fullWidth: true,
+        ),
       ],
     );
   }
@@ -694,7 +702,7 @@ class _ToolCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
+                    Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
                   ],
                 )
               : Column(
@@ -945,7 +953,7 @@ class _ProfileMenuItem extends StatelessWidget {
           title,
           style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.textPrimary),
         ),
-        trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
+        trailing: Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
         onTap: onTap,
       ),
     );

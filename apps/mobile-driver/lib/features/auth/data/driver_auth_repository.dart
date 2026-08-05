@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/api/api_client.dart';
 import '../../../../core/api/api_exception.dart';
+import '../../../../core/api/token_storage.dart';
 import '../presentation/providers/driver_auth_state.dart';
 
 final driverAuthRepositoryProvider = Provider<DriverAuthRepository>((ref) {

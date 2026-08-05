@@ -6,6 +6,8 @@ import 'features/auth/presentation/pages/login_page.dart';
 import 'features/deliveries/presentation/pages/delivery_orders_page.dart';
 import 'features/home/presentation/pages/home_page.dart';
 import 'features/orders/presentation/pages/active_order_page.dart';
+import 'features/auctions/presentation/pages/auctions_page.dart';
+import 'features/auctions/presentation/pages/submit_bid_page.dart';
 
 void main() {
   runApp(const ProviderScope(child: GiucarDriverApp()));
@@ -52,6 +54,16 @@ final GoRouter _router = GoRouter(
     GoRoute(
       path: '/deliveries',
       builder: (context, state) => const DeliveryOrdersPage(),
+    ),
+    GoRoute(
+      path: '/auctions',
+      builder: (context, state) => const AuctionsPage(),
+    ),
+    GoRoute(
+      path: '/auctions/:id/bid',
+      builder: (context, state) => SubmitBidPage(
+        auctionId: state.pathParameters['id']!,
+      ),
     ),
   ],
 );
