@@ -40,7 +40,9 @@
   definida em outro lugar do produto).
 - **CI**: removido `continue-on-error` que fazia o job `api` passar
   independente do resultado real (falso-verde).
-- **Testes**: 25 testes unitários novos (`loyalty`, `payments`, `maps`).
+- **Testes**: 29 testes unitários novos (`loyalty`, `payments`,
+  `mercado-pago.adapter`, `maps`), todos os `TestingModule` do Nest com
+  teardown correto (`module.close()`).
 
 ### Apps Flutter
 - **`mobile-client`**: tela de leilão completa (lista, formulário de
@@ -72,8 +74,8 @@
 
 | Integração | Status | O que falta |
 |---|---|---|
-| **Mercado Pago** | Mock completo (PIX + cartão), nunca chama API real | `MERCADOPAGO_ACCESS_TOKEN`/`MERCADOPAGO_PUBLIC_KEY` de sandbox no `.env`; trocar `MercadoPagoAdapter` por integração real com o SDK |
-| **Google Maps** | Fallback haversine funcional; código pronto pra API real | `GOOGLE_MAPS_API_KEY` no `.env` — sem chave, nunca testamos contra a API de verdade |
+| **Mercado Pago** | Mock completo (PIX + cartão), nunca chama API real. Loga `[payments] modo MOCK ativo` no startup | `MERCADO_PAGO_ACCESS_TOKEN`/`MERCADO_PAGO_PUBLIC_KEY` de sandbox no `.env`; trocar `MercadoPagoAdapter` por integração real com o SDK |
+| **Google Maps** | Fallback haversine funcional; código pronto pra API real. Loga `[maps] modo MOCK/REAL ativo` no startup | `GOOGLE_MAPS_API_KEY` no `.env` — sem chave, nunca testamos contra a API de verdade |
 | **AWS Rekognition** | Não iniciado | Nada implementado ainda |
 | **Firebase Push** | Hooks placeholder (só logam) em `auctions-notifications.service.ts` | SDK real do FCM |
 
@@ -99,17 +101,32 @@ não há chaves configuradas nesta máquina.
   (`orders.service.ts`) nem ao cálculo de frete de `deliveries`** —
   ficou standalone, exposto via `GET /maps/distance`, para não alterar
   comportamento de código já testado sem revisão dedicada a isso.
+- **Previews HTML (`apps/preview/*.html`) permanecem mockups manuais**
+  (Opção A), atualizados só quando há mudança grande de fluxo ou um bug
+  concreto (ex.: link morto) — não geramos a partir do código Flutter
+  real. Trade-off aceito: os previews podem divergir do app real com o
+  tempo; a fonte de verdade sobre comportamento é sempre o código em
+  `apps/mobile-*`, nunca o preview.
 
 ## Bloqueios / débitos técnicos conhecidos
 
 - **CI falha no Linux** (`ci.yml`, job `api`, etapa "Unit tests"), mesmo
   com tudo passando localmente — reproduzido com o comando exato do CI
   (`pnpm run test -- --ci --coverage`) e com Node 20.18.1 (mesma versão
-  do runner), ambos passam limpo nesta máquina Windows. Resta diferença
-  de SO (`ubuntu-latest` no runner) que não há como reproduzir aqui.
-  Bloqueado até alguém com acesso ao repo colar o log de erro real da
-  Action (o endpoint de logs da API do GitHub exige token com direitos
-  de admin, indisponível nesta sessão).
+  do runner), ambos passam limpo nesta máquina Windows. As anotações do
+  GitHub Actions para o check-run só trazem um aviso genérico de infra
+  (deprecação de Node 20 nas próprias actions, ex. `actions/checkout`) e
+  "Process completed with exit code 1" — nenhum detalhe do jest.
+  Investigado tambem um aviso local ("worker process has failed to exit
+  gracefully"): corrigido teardown (`module.close()`) em todos os specs
+  como boa prática, mas `--detectOpenHandles --runInBand` mostrou que o
+  aviso é uma peculiaridade do pool de workers do Jest no Windows (some
+  com `--runInBand`, sem handles reais detectados) — não é a causa da
+  falha no CI. Resta diferença de SO (`ubuntu-latest` no runner) que não
+  há como reproduzir aqui. **Bloqueado até alguém com acesso ao repo
+  colar o texto do log da etapa "Unit tests"** (o endpoint de logs da
+  API do GitHub exige token com direitos de admin — 403 confirmado
+  duas vezes nesta sessão).
 - **Sem Postgres/Docker nesta máquina** — as duas migrations novas
   (`20260803000000_add_auctions_and_driver_profiles`,
   `20260804000000_add_loyalty_redemptions`) nunca foram aplicadas a um
@@ -119,10 +136,8 @@ não há chaves configuradas nesta máquina.
   `orders_repository.dart` no `mobile-client` espera um array puro —
   bug pré-existente, não corrigido (fora do escopo do que foi pedido,
   mas afeta a listagem de pedidos em produção).
-- **Naming divergente**: os módulos foram implementados com
-  `MERCADOPAGO_ACCESS_TOKEN`/`MERCADOPAGO_PUBLIC_KEY` (sem underscore
-  entre MERCADO e PAGO); uma especificação mais recente pediu
-  `MERCADO_PAGO_*` (com underscore). Ainda não reconciliado.
+- ~~Naming divergente `MERCADOPAGO_*` vs `MERCADO_PAGO_*`~~ — resolvido,
+  renomeado para `MERCADO_PAGO_ACCESS_TOKEN`/`MERCADO_PAGO_PUBLIC_KEY`.
 - **App Lavador**: fluxo completo de registro com escolha de perfil
   (Moto/Carro/Loja) ainda não existe no app real — só login. O preview
   HTML já modela esse fluxo (`#escolha-perfil` → `#cadastro-loja`); o
