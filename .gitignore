@@ -1,0 +1,19 @@
+# Dependencias e artefatos de build (cada pacote ja tem seu proprio
+# .gitignore mais especifico; este cobre a raiz do monorepo, que nao
+# tinha nenhum ate agora — necessario pois `pnpm install` na raiz gera
+# node_modules/ e pnpm-lock.yaml aqui, fora do alcance dos .gitignore
+# de services/api, apps/admin-web etc.)
+node_modules/
+dist/
+coverage/
+*.log
+.env
+.env.local
+
+# Artefato de erro de shell (redirecionamento `> $null` interpretado
+# como nome de arquivo literal fora do PowerShell)
+$null
+
+# O projeto usa pnpm (ver pnpm-workspace.yaml) — nenhum lockfile do npm
+# deve ser commitado em nenhum pacote
+package-lock.json
