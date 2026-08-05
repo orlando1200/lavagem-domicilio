@@ -132,6 +132,60 @@ a.tool-card, a.menu-item { text-decoration: none; display: block; color: inherit
   </div>
   </div>
 
+  <!-- Ativacao Loja de Carwash (destino de #cadastro-loja, escolhido em #escolha-perfil) -->
+  <div class="phone-wrap" id="cadastro-loja">
+    <div class="phone-label">Ativar Loja de Carwash</div>
+  <div class="phone">
+    <div class="screen">
+      <div class="status">
+        <a href="#escolha-perfil" style="color:#c77dff;text-decoration:none;">‹</a>
+        <span class="time">9:41</span>
+        <span style="font-size:14px;">Cadastro</span>
+      </div>
+      <div class="login-screen" style="justify-content:flex-start; padding-top:48px;">
+        <div style="font-size:40px; margin-bottom:12px;">🏪</div>
+        <h1 style="font-size:20px;">Torne-se uma Loja de Carwash</h1>
+        <div class="tagline" style="margin-bottom:24px;">
+          Receba e envie ofertas nos leilões de serviço pesado (polimento, cristalização,
+          funilaria, tapeçaria e mais) solicitados por clientes na sua região.
+        </div>
+        <div class="order-card" style="width:100%; text-align:left;">
+          <div class="detail" style="font-size:13px; line-height:1.6;">
+            ✓ Ganhe acesso à aba Leilão<br>
+            ✓ Defina preço, prazo e garantia em cada oferta<br>
+            ✓ Cliente escolhe por preço, prazo e sua reputação<br>
+            ⏳ Cadastro entra em análise antes de liberar
+          </div>
+        </div>
+        <a href="#leilao-pendente" class="login-btn" style="display:block; text-align:center; text-decoration:none; margin-top:16px;">Ativar modo Loja de Carwash</a>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <!-- Estado "aguardando aprovacao" apos ativar (status pending_documents no backend) -->
+  <div class="phone-wrap" id="leilao-pendente">
+    <div class="phone-label">Leilão · Aguardando Aprovação</div>
+  <div class="phone">
+    <div class="screen">
+      <div class="status">
+        <a href="#home" style="color:#c77dff;text-decoration:none;">‹</a>
+        <span class="time">9:41</span>
+        <span style="font-size:14px;">Leilão</span>
+      </div>
+      <div class="login-screen">
+        <div style="font-size:40px; margin-bottom:12px;">⏳</div>
+        <h1 style="font-size:18px;">Cadastro em análise</h1>
+        <div class="tagline">
+          Seu cadastro como Loja de Carwash está em análise. Assim que for aprovado, você
+          poderá enviar ofertas nos leilões de serviço pesado.
+        </div>
+        <a href="#leilao" class="login-btn" style="display:block; text-align:center; text-decoration:none; margin-top:8px;">Ver leilão (já aprovado)</a>
+      </div>
+    </div>
+  </div>
+  </div>
+
   <!-- Login do Lavador -->
   <div class="phone-wrap" id="login">
     <div class="phone-label">Login</div>
