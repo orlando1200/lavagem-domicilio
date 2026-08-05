@@ -1,4 +1,5 @@
 docker --version  # deve mostrar Docker version
+
 ```
 
 ## 📦 Instalação
