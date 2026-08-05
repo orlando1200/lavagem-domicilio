@@ -73,7 +73,7 @@ class _HomeTab extends ConsumerWidget {
                     title: 'Serviços Pesados',
                     subtitle: 'Leilão InDrive em Lojas de Carwash',
                     emoji: '🏪',
-                    onTap: () => context.push('/auction'),
+                    onTap: () => context.push('/auctions'),
                     backgroundColor: AppColors.surfaceAlt,
                   ),
                   const SizedBox(width: 12),

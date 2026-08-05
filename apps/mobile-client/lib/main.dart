@@ -9,6 +9,9 @@ import 'features/orders/presentation/orders_list_page.dart';
 import 'features/shop/presentation/pages/shop_page.dart';
 import 'features/shop/presentation/pages/product_detail_page.dart';
 import 'features/shop/presentation/pages/cart_page.dart';
+import 'features/auctions/presentation/pages/auctions_list_page.dart';
+import 'features/auctions/presentation/pages/create_auction_page.dart';
+import 'features/auctions/presentation/pages/auction_detail_page.dart';
 
 void main() {
   runApp(const ProviderScope(child: GiucarApp()));
@@ -66,6 +69,20 @@ final GoRouter _router = GoRouter(
     GoRoute(
       path: '/cart',
       builder: (context, state) => const CartPage(),
+    ),
+    GoRoute(
+      path: '/auctions',
+      builder: (context, state) => const AuctionsListPage(),
+    ),
+    GoRoute(
+      path: '/auctions/new',
+      builder: (context, state) => const CreateAuctionPage(),
+    ),
+    GoRoute(
+      path: '/auctions/:id',
+      builder: (context, state) => AuctionDetailPage(
+        auctionId: state.pathParameters['id']!,
+      ),
     ),
     GoRoute(
       path: '/moto-rental',
