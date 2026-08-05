@@ -14,6 +14,7 @@ function daysFromNow(days: number): Date {
 
 describe('LoyaltyService', () => {
   let service: LoyaltyService;
+  let module: TestingModule;
   let prisma: {
     order: { findUnique: jest.Mock };
     loyaltyPoint: {
@@ -41,11 +42,15 @@ describe('LoyaltyService', () => {
       $transaction: jest.fn((operations: Promise<unknown>[]) => Promise.all(operations)),
     };
 
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       providers: [LoyaltyService, { provide: PrismaService, useValue: prisma }],
     }).compile();
 
     service = module.get<LoyaltyService>(LoyaltyService);
+  });
+
+  afterEach(async () => {
+    await module.close();
   });
 
   describe('grantForPaidOrder', () => {

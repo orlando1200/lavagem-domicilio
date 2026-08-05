@@ -8,22 +8,24 @@ const DESTINATION = { lat: -22.9068, lng: -43.1729 };
 
 describe('MapsService', () => {
   let service: MapsService;
+  let module: TestingModule;
   let config: { get: jest.Mock };
   const originalFetch = global.fetch;
 
   beforeEach(async () => {
     config = { get: jest.fn().mockReturnValue(undefined) };
 
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       providers: [MapsService, { provide: ConfigService, useValue: config }],
     }).compile();
 
     service = module.get<MapsService>(MapsService);
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     global.fetch = originalFetch;
     jest.restoreAllMocks();
+    await module.close();
   });
 
   describe('getDistance (mock/haversine)', () => {

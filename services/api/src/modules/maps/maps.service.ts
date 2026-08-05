@@ -27,7 +27,10 @@ const DELIVERY_FEE_PER_KM = 1.5;
 export class MapsService {
   private readonly logger = new Logger(MapsService.name);
 
-  constructor(private readonly config: ConfigService) {}
+  constructor(private readonly config: ConfigService) {
+    const mode = this.config.get<string>('GOOGLE_MAPS_API_KEY') ? 'REAL' : 'MOCK';
+    this.logger.log(`[maps] modo ${mode} ativo (Google Distance Matrix)`);
+  }
 
   /**
    * Distancia/duracao entre dois pontos via Google Distance Matrix API

@@ -11,6 +11,7 @@ const CUSTOMER_ID = 'customer-1';
 
 describe('PaymentsService', () => {
   let service: PaymentsService;
+  let module: TestingModule;
   let prisma: {
     order: { findUnique: jest.Mock };
     payment: { findUnique: jest.Mock; findFirst: jest.Mock; create: jest.Mock; update: jest.Mock };
@@ -31,7 +32,7 @@ describe('PaymentsService', () => {
     loyaltyService = { grantForPaidOrder: jest.fn() };
     gateway = { createIntent: jest.fn() };
 
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       providers: [
         PaymentsService,
         { provide: PrismaService, useValue: prisma },
@@ -41,6 +42,10 @@ describe('PaymentsService', () => {
     }).compile();
 
     service = module.get<PaymentsService>(PaymentsService);
+  });
+
+  afterEach(async () => {
+    await module.close();
   });
 
   describe('createIntent', () => {

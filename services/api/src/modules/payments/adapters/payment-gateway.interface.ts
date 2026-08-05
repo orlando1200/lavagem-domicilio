@@ -22,7 +22,7 @@ export interface PaymentIntentResult {
 
 /**
  * Porta para o provedor de pagamento. `MercadoPagoAdapter` hoje e uma
- * implementacao mock (sem `MERCADOPAGO_ACCESS_TOKEN` configurado, nao ha
+ * implementacao mock (sem `MERCADO_PAGO_ACCESS_TOKEN` configurado, nao ha
  * como chamar a API real) — qualquer implementacao futura (real ou de
  * outro provedor) so precisa satisfazer esta interface, sem tocar em
  * `PaymentsService`.

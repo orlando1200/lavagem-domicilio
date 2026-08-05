@@ -10,10 +10,10 @@ import {
 
 /**
  * Implementacao mock/sandbox do Mercado Pago — nunca chama a API real,
- * mesmo que `MERCADOPAGO_ACCESS_TOKEN` esteja definido (so loga um aviso
- * nesse caso, pra deixar claro que o token ainda nao esta sendo usado).
- * Cobre PIX e cartao (credito/debito), como pedido; gera um QR/checkout
- * mock deterministico e determinado localmente, sem I/O de rede.
+ * mesmo que `MERCADO_PAGO_ACCESS_TOKEN` esteja definido (so loga um
+ * aviso nesse caso, pra deixar claro que o token ainda nao esta sendo
+ * usado). Cobre PIX e cartao (credito/debito), como pedido; gera um
+ * QR/checkout mock deterministico, sem I/O de rede.
  *
  * Quando o SDK real do Mercado Pago for integrado, so esta classe muda —
  * `PaymentsService` depende da interface `PaymentGatewayAdapter`, nao
@@ -24,11 +24,14 @@ export class MercadoPagoAdapter implements PaymentGatewayAdapter {
   private readonly logger = new Logger(MercadoPagoAdapter.name);
 
   constructor(private readonly config: ConfigService) {
-    if (this.config.get<string>('MERCADOPAGO_ACCESS_TOKEN')) {
+    if (this.config.get<string>('MERCADO_PAGO_ACCESS_TOKEN')) {
       this.logger.warn(
-        'MERCADOPAGO_ACCESS_TOKEN configurado, mas o adapter ainda esta em modo mock ' +
-          '(integracao real com o SDK do Mercado Pago ainda nao foi implementada)',
+        '[payments] modo MOCK ativo (Mercado Pago) — MERCADO_PAGO_ACCESS_TOKEN esta ' +
+          'configurado, mas a integracao real com o SDK ainda nao foi implementada; ' +
+          'nenhuma chamada de rede sera feita',
       );
+    } else {
+      this.logger.log('[payments] modo MOCK ativo (Mercado Pago) — sem token configurado');
     }
   }
 
