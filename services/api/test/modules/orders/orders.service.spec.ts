@@ -1,8 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import { NotFoundException } from '@nestjs/common';
 import { DriverStatus, DriverType, OrderStatus, ServiceType } from '@prisma/client';
 import { OrdersService } from '../../../src/modules/orders/orders.service';
 import { PrismaService } from '../../../src/database/prisma.service';
+import { MapsService } from '../../../src/modules/maps/maps.service';
 
 const CUSTOMER_ID = 'customer-1';
 const ORDER_ID = 'order-1';
@@ -45,7 +47,12 @@ describe('OrdersService', () => {
     };
 
     module = await Test.createTestingModule({
-      providers: [OrdersService, { provide: PrismaService, useValue: prisma }],
+      providers: [
+        OrdersService,
+        MapsService,
+        { provide: PrismaService, useValue: prisma },
+        { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue(undefined) } },
+      ],
     }).compile();
 
     service = module.get<OrdersService>(OrdersService);

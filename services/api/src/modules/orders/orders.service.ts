@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { DriverStatus, DriverType, Order, OrderStatus, Prisma, ServiceType } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
+import { MapsService } from '../maps/maps.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { AdminListOrdersDto, ListOrdersDto } from './dto/list-orders.dto';
 import { CancelOrderDto, UpdateOrderStatusDto } from './dto/update-order-status.dto';
@@ -28,12 +29,12 @@ const ALLOWED_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   cancelled: [],
 };
 
-/** Raio da Terra em km, usado no calculo de distancia haversine. */
-const EARTH_RADIUS_KM = 6371;
-
 @Injectable()
 export class OrdersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mapsService: MapsService,
+  ) {}
 
   // ────────────────────────────────────────────────────────────────────
   // CLIENTE
@@ -267,8 +268,8 @@ export class OrdersService {
    * 3. **Tipo + distancia**: para `DRY_WASH`/`EXPRESS_WASH`, MOTO_WASHER e
    *    priorizado sobre CAR_WASHER (PRD: "Moto ideal para Seco e
    *    Express") antes mesmo da distancia; sem `serviceType`, so
-   *    distancia (haversine), dentro do raio de atendimento de cada um
-   *    (`DriverProfile.serviceRadiusKm`).
+   *    distancia (via `MapsService`), dentro do raio de atendimento de
+   *    cada um (`DriverProfile.serviceRadiusKm`).
    *
    * Move o pedido para `searching_washer` mesmo quando nenhum lavador e
    * encontrado de imediato, permitindo que um lavador aceite manualmente
@@ -297,7 +298,7 @@ export class OrdersService {
       include: { user: { include: { addresses: true } } },
     });
 
-    const bestDriverUserId = this.pickClosestDriver(order.address, candidates, order.serviceType);
+    const bestDriverUserId = await this.pickClosestDriver(order.address, candidates, order.serviceType);
 
     return this.prisma.order.update({
       where: { id: orderId },
@@ -312,11 +313,13 @@ export class OrdersService {
   /**
    * Escolhe o lavador mais adequado dentre os candidatos: preferencia de
    * tipo (quando aplicavel) vence distancia, respeitando o raio de
-   * atendimento de cada um. Lavadores sem endereco cadastrado com
-   * coordenadas sao considerados por ordem de chegada (fallback), ja que
-   * nao ha como estimar distancia real para eles.
+   * atendimento de cada um. Distancia calculada via `MapsService`
+   * (Google Distance Matrix quando `GOOGLE_MAPS_API_KEY` esta
+   * configurada, haversine local como fallback). Lavadores sem endereco
+   * cadastrado com coordenadas sao considerados por ordem de chegada
+   * (fallback), ja que nao ha como estimar distancia real para eles.
    */
-  private pickClosestDriver(
+  private async pickClosestDriver(
     orderAddress: { latitude: Prisma.Decimal | null; longitude: Prisma.Decimal | null },
     candidates: Array<{
       userId: string;
@@ -325,30 +328,30 @@ export class OrdersService {
       user: { addresses: Array<{ latitude: Prisma.Decimal | null; longitude: Prisma.Decimal | null; isDefault: boolean }> };
     }>,
     serviceType: ServiceType | null,
-  ): string | null {
+  ): Promise<string | null> {
     if (candidates.length === 0) return null;
 
     const orderLat = orderAddress.latitude ? Number(orderAddress.latitude) : null;
     const orderLng = orderAddress.longitude ? Number(orderAddress.longitude) : null;
 
-    const ranked = candidates.map((driver) => {
-      const address =
-        driver.user.addresses.find((a) => a.isDefault) ?? driver.user.addresses[0];
-      const radiusKm = Number(driver.serviceRadiusKm);
+    const ranked = await Promise.all(
+      candidates.map(async (driver) => {
+        const address =
+          driver.user.addresses.find((a) => a.isDefault) ?? driver.user.addresses[0];
+        const radiusKm = Number(driver.serviceRadiusKm);
 
-      if (orderLat === null || orderLng === null || !address?.latitude || !address?.longitude) {
-        return { userId: driver.userId, driverType: driver.driverType, distanceKm: null, radiusKm };
-      }
+        if (orderLat === null || orderLng === null || !address?.latitude || !address?.longitude) {
+          return { userId: driver.userId, driverType: driver.driverType, distanceKm: null, radiusKm };
+        }
 
-      const distanceKm = this.haversineKm(
-        orderLat,
-        orderLng,
-        Number(address.latitude),
-        Number(address.longitude),
-      );
+        const { distanceKm } = await this.mapsService.getDistance(
+          { lat: orderLat, lng: orderLng },
+          { lat: Number(address.latitude), lng: Number(address.longitude) },
+        );
 
-      return { userId: driver.userId, driverType: driver.driverType, distanceKm, radiusKm };
-    });
+        return { userId: driver.userId, driverType: driver.driverType, distanceKm, radiusKm };
+      }),
+    );
 
     const withinRange = ranked
       .filter((entry) => entry.distanceKm === null || entry.distanceKm <= entry.radiusKm)
@@ -374,23 +377,6 @@ export class OrdersService {
     const preferMoto = serviceType === ServiceType.DRY_WASH || serviceType === ServiceType.EXPRESS_WASH;
     if (!preferMoto) return 0;
     return driverType === DriverType.MOTO_WASHER ? 0 : 1;
-  }
-
-  /** Formula haversine padrao — distancia em km entre duas coordenadas. */
-  private haversineKm(
-    lat1: number,
-    lon1: number,
-    lat2: number,
-    lon2: number,
-  ): number {
-    const toRad = (deg: number) => (deg * Math.PI) / 180;
-    const dLat = toRad(lat2 - lat1);
-    const dLon = toRad(lon2 - lon1);
-    const a =
-      Math.sin(dLat / 2) ** 2 +
-      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return EARTH_RADIUS_KM * c;
   }
 
   private async resolveZoneId(
