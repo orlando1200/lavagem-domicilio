@@ -7,8 +7,8 @@ class OrderModel {
     required this.totalAmount,
     this.scheduledAt,
     this.createdAt,
-    this.washerId,
     this.driverId,
+    this.serviceType,
   });
 
   final String id;
@@ -16,8 +16,8 @@ class OrderModel {
   final double totalAmount;
   final DateTime? scheduledAt;
   final DateTime? createdAt;
-  final String? washerId;
   final String? driverId;
+  final String? serviceType;
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
     return OrderModel(
@@ -30,8 +30,8 @@ class OrderModel {
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'] as String)
           : null,
-      washerId: json['washerId'] as String?,
       driverId: json['driverId'] as String?,
+      serviceType: json['serviceType'] as String?,
     );
   }
 
