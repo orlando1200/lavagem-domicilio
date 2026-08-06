@@ -126,10 +126,14 @@ não há chaves configuradas nesta máquina.
   que invoca o jest direto sem passar pelo forwarding de argumentos do
   `pnpm run`. O teardown (`module.close()`) adicionado nos specs durante
   a investigação foi mantido por ser boa prática, mas não era a causa.
-- **Sem Postgres/Docker nesta máquina** — as duas migrations novas
-  (`20260803000000_add_auctions_and_driver_profiles`,
-  `20260804000000_add_loyalty_redemptions`) nunca foram aplicadas a um
-  banco real, só validadas via `prisma generate`/`build`/`test`.
+- **Sem Postgres/Docker nesta máquina** — as três migrations novas desta
+  semana (`20260803000000_add_auctions_and_driver_profiles`,
+  `20260804000000_add_loyalty_redemptions`,
+  `20260806000000_unify_washer_into_driver_profile`) nunca foram
+  aplicadas a um banco real, só validadas via `prisma generate`/
+  `build`/`test`. A última em particular tem um `DROP TABLE` —
+  revisar/testar em staging antes de aplicar em produção se algum dia
+  houver dado real de `Washer` pra perder.
 - **Mismatch de shape entre `GET /orders` e o app cliente**: o backend
   retorna `{ items, nextCursor }` (paginação por cursor), mas
   `orders_repository.dart` no `mobile-client` espera um array puro —
@@ -148,33 +152,60 @@ não há chaves configuradas nesta máquina.
 - **Deploy AWS**: só existe o documento de arquitetura, sem
   infraestrutura real.
 
+## Fluxo completo de pedido (backend) — status real
+
+Pedido explícito: "criar → matching por perfil/distância/disponibilidade
+→ aceitar → executar → confirmar pagamento → emitir pontos". Boa parte
+já existia (aceitar/executar via máquina de estados de `Order`,
+confirmação de pagamento via webhook do `payments`, pontos via
+`LoyaltyService.grantForPaidOrder`); o que faltava de verdade era
+"matching por perfil" — resolvido nesta rodada:
+
+- ~~Matching por perfil~~ — **feito**. Unificado `Washer` em
+  `DriverProfile` (eram dois models pro mesmo conceito — só
+  `DriverProfile` tinha `driverType`, mas só era usado pelo `auctions`;
+  o matching normal usava `Washer`, sem noção de perfil). Adicionado
+  `Order.serviceType`; `orders.service.ts.matchDriver` agora prioriza
+  `MOTO_WASHER` pra `DRY_WASH`/`EXPRESS_WASH` mesmo se mais longe (PRD:
+  "Moto ideal para Seco e Express"), nunca inclui `CARWASH_SHOP`
+  (exclusivo do leilão). `/drivers/me` e `/admin/washers` removidos,
+  consolidados em `/driver-profiles/me`/`/admin/driver-profiles`.
+  Migration `20260806000000_unify_washer_into_driver_profile`
+  (irreversível — `DROP TABLE washers` — mas sem dado real pra perder
+  nesta máquina). CI real (#38) confirmou passando.
+- Distância (haversine) e disponibilidade (`DriverStatus.active`) já
+  existiam antes, sem mudança de lógica além de trocar `Washer` por
+  `DriverProfile`.
+- **Ainda não ligado**: `MapsService` (Google Maps/haversine com fallback)
+  segue standalone — o matching usa seu próprio haversine interno, não
+  reaproveita `MapsService.getDistance`. Ligar os dois é o item 1 abaixo.
+
 ## Próximos passos priorizados
 
 Ordem sugerida, por dependência e impacto (não por facilidade):
 
-1. **Fluxo de registro com escolha de perfil no App Lavador** (Moto/
-   Carro/Loja) — hoje só existe login, nenhuma tela de cadastro. É o
-   maior gap concreto: sem isso, um usuário novo não consegue nem virar
-   `LAVADOR` pelo app, só via chamada direta à API. O ativar-modo-Loja-
-   de-Carwash já existe (`AuctionsPage._ActivationPrompt`), mas depende
-   de já ter uma conta — o registro em si que falta.
-2. **Ligar `MapsService` ao matching de pedidos e ao frete de
-   `deliveries`** — hoje é standalone (`GET /maps/distance` isolado).
+1. **Ligar `MapsService` ao matching de pedidos e ao frete de
+   `deliveries`** — hoje `matchDriver` usa haversine próprio, não
+   `MapsService.getDistance` (que já suporta Google Maps real + fallback).
    Fechar esse loop é o que torna a integração do Google Maps
    realmente útil em produção, não só uma chamada de API solta.
-3. **Chaves de sandbox reais** (Mercado Pago + Google Maps) — depende
-   de você criar as contas de desenvolvedor; o código já está pronto
-   pros dois lados (mock automático sem chave, real com chave, log de
-   modo no startup). Sem isso não dá pra validar contra as APIs de
-   verdade.
-4. **Corrigir o mismatch `GET /orders` (`{items, nextCursor}` vs array
-   puro)** no `mobile-client` — bug pré-existente que provavelmente já
-   quebra a listagem de pedidos hoje; pequeno de corrigir, mas precisa
-   de um banco real rodando pra confirmar o fluxo ponta a ponta.
-5. **Aplicar as migrations pendentes num Postgres real** (não há
-   Postgres/Docker nesta máquina) — pré-requisito prático para os itens
-   3 e 4, e para qualquer teste de integração de verdade daqui pra
-   frente.
+2. **Fluxo de registro com escolha de perfil no App Lavador** (Moto/
+   Carro/Loja) — hoje só existe login, nenhuma tela de cadastro. Sem
+   isso, um usuário novo não vira `LAVADOR`/`DriverProfile` pelo app, só
+   via chamada direta à API. O ativar-modo-Loja-de-Carwash já existe
+   (`AuctionsPage._ActivationPrompt`), mas depende de já ter conta — o
+   registro em si que falta.
+3. **Apps Flutter → backend real**: trocar mocks pelas chamadas reais,
+   incluindo corrigir o mismatch `GET /orders` (`{items, nextCursor}` vs
+   array puro que `mobile-client` espera hoje) — bug pré-existente que
+   provavelmente já quebra a listagem de pedidos.
+4. **Aplicar as migrations pendentes num Postgres real** (não há
+   Postgres/Docker nesta máquina — já são 4 migrations nunca aplicadas a
+   um banco de verdade) — pré-requisito prático pros itens 3, 5 e 6.
+5. **Chaves de sandbox reais** (Mercado Pago + Google Maps) — depende de
+   você criar as contas de desenvolvedor; o código já está pronto pros
+   dois lados (mock automático sem chave, real com chave, log de modo no
+   startup).
 6. **Admin panel com dados reais** — maior esforço da lista;
    `admin-web` está quase vazio (só landing page), as 14 páginas do
    painel seguem em quarentena aguardando reconstrução.
