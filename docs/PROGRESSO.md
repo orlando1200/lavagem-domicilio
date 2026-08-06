@@ -221,10 +221,26 @@ Ordem sugerida, por dependência e impacto (não por facilidade):
    `AuctionsPage._ActivationPrompt`). `flutter analyze` limpo. Perfil
    nasce `pending_documents`, precisa aprovação do admin antes de
    participar do matching normal ou de leilões.
-3. **Apps Flutter → backend real**: trocar mocks pelas chamadas reais,
-   incluindo corrigir o mismatch `GET /orders` (`{items, nextCursor}` vs
-   array puro que `mobile-client` espera hoje) — bug pré-existente que
-   provavelmente já quebra a listagem de pedidos.
+3. **Apps Flutter → backend real** — parcial, **feito o essencial**
+   (commit `9448925`): corrigido o mismatch `GET /orders`
+   (`{items, nextCursor}` vs array puro que `mobile-client` esperava —
+   bug real, confirmado quebrando a listagem). `OrderModel` também
+   atualizado (`washerId` removido, nunca lido em nenhuma tela;
+   `serviceType` adicionado). Resto do item **adiado por decisão
+   explícita** (não é wiring simples, cada um tem escopo próprio):
+   - Fidelidade (`engagement_provider`): só `loyaltyPoints` mapeia pro
+     `GET /loyalty/balance` real; `nextRewardAt`/`streakDays`/
+     `savedAmount` não têm equivalente no backend (sistema de
+     streak/metas nunca foi desenhado).
+   - Loja/carrinho (`shop`): catálogo 100% mockado
+     (`ProductCatalog.products`), e **o backend não tem endpoint de
+     catálogo pro cliente** — só módulos admin/parceiro (`store`,
+     `marketplace`, `starter-kit`). Precisa endpoint novo antes de
+     poder ligar.
+   - Veículo/endereço: não existe nem tela no app cliente — não é
+     mock pra trocar, é feature nova do zero.
+   - Auth e leilões (`mobile-client`) já eram 100% reais antes desta
+     rodada.
 4. **Aplicar as migrations pendentes num Postgres real** (não há
    Postgres/Docker nesta máquina — já são 4 migrations nunca aplicadas a
    um banco de verdade) — pré-requisito prático pros itens 3, 5 e 6.
