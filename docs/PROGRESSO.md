@@ -118,6 +118,22 @@ não há chaves configuradas nesta máquina.
 
 ## Bloqueios / débitos técnicos conhecidos
 
+- **Incidente do GitHub Actions (2026-08-06)**: os commits `9aa8a88`,
+  `5f9f091`, `0fd58c1` e `844ac1e` foram pushados pro `main` e
+  confirmados como HEAD via API, mas nenhum workflow run foi criado —
+  confirmado incidente ativo em [githubstatus.com](https://githubstatus.com)
+  ("Incident with Actions": capacidade de runners reduzida, webhook
+  deliveries atrasadas). Diagnóstico completo feito via API pública
+  (workflow `state: active`, arquivo `ci.yml` presente no HEAD, zero
+  causa local) antes de concluir que era só o incidente. Tentativa de
+  re-disparo com commit vazio (`0fd58c1`) não funcionou enquanto o
+  incidente seguia ativo — comportamento esperado, não confiável até o
+  GitHub normalizar. Adicionado `workflow_dispatch` ao `ci.yml`
+  (commit `844ac1e`) pra permitir disparo manual pela UI/API do GitHub
+  da próxima vez que isso acontecer, sem depender de push. **Ação
+  pendente**: conferir manualmente se os commits acima passaram no CI
+  assim que o incidente for resolvido (ou disparar via "Run workflow"
+  na aba Actions).
 - ~~CI falha no Linux~~ — **resolvido** (run #34, commit `8900ed4`,
   `Status: Success` nos 3 jobs). Causa real, só descoberta depois de
   conseguir o texto do log (o endpoint de logs da API do GitHub exige
@@ -194,15 +210,17 @@ confirmação de pagamento via webhook do `payments`, pontos via
 
 Ordem sugerida, por dependência e impacto (não por facilidade):
 
-1. ~~Ligar `MapsService` ao matching de pedidos~~ — **feito** (run CI a
-   confirmar). Frete de `deliveries` ficou de fora (ver decisão técnica
-   acima).
-2. **Fluxo de registro com escolha de perfil no App Lavador** (Moto/
-   Carro/Loja) — hoje só existe login, nenhuma tela de cadastro. Sem
-   isso, um usuário novo não vira `LAVADOR`/`DriverProfile` pelo app, só
-   via chamada direta à API. O ativar-modo-Loja-de-Carwash já existe
-   (`AuctionsPage._ActivationPrompt`), mas depende de já ter conta — o
-   registro em si que falta.
+1. ~~Ligar `MapsService` ao matching de pedidos~~ — **feito** (commits
+   `9aa8a88`/`5f9f091`). Frete de `deliveries` ficou de fora (ver decisão
+   técnica acima). CI real ainda não confirmou — GitHub Actions em
+   incidente ativo (ver "Bloqueios" abaixo).
+2. ~~Fluxo de registro com escolha de perfil no App Lavador~~ — **feito**
+   (commit `0611b4e`). Tela em 2 passos: dados da conta (`POST
+   /auth/register`, role `LAVADOR` fixo) + escolha Moto/Carro/Loja de
+   Carwash (`POST /driver-profiles/me`, mesmo padrão de
+   `AuctionsPage._ActivationPrompt`). `flutter analyze` limpo. Perfil
+   nasce `pending_documents`, precisa aprovação do admin antes de
+   participar do matching normal ou de leilões.
 3. **Apps Flutter → backend real**: trocar mocks pelas chamadas reais,
    incluindo corrigir o mismatch `GET /orders` (`{items, nextCursor}` vs
    array puro que `mobile-client` espera hoje) — bug pré-existente que
