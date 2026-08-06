@@ -1,7 +1,7 @@
 # Progresso do Projeto — GIUCAR
 
 ## Última atualização
-2026-08-05
+2026-08-06
 
 > Nota: a versão anterior deste arquivo (17/jul) descrevia uma rodada
 > anterior à recuperação do backend (Fase 9 — ver
@@ -97,10 +97,18 @@ não há chaves configuradas nesta máquina.
   `LoyaltyService.grantForPaidOrder`** (best-effort, não derruba o
   webhook se falhar) — fecha o loop que `loyalty` deixava em aberto (a
   concessão só tinha disparo manual/admin antes de `payments` existir).
-- **`MapsService` não foi conectado ao matching de pedidos
-  (`orders.service.ts`) nem ao cálculo de frete de `deliveries`** —
-  ficou standalone, exposto via `GET /maps/distance`, para não alterar
-  comportamento de código já testado sem revisão dedicada a isso.
+- **`MapsService` agora é a fonte de distância do matching de pedidos**
+  (`orders.service.ts.pickClosestDriver`) — antes tinha um `haversineKm`
+  local duplicado, removido. Continua exposto standalone via `GET
+  /maps/distance`.
+- **Frete de `deliveries` não foi ligado ao `MapsService`, de propósito.**
+  `Store.address` é `Json?` sem lat/lng estruturado e `ProductOrder` não
+  tem endereço nenhum; o único ponto que usa um valor de frete
+  (`deliveries.service.ts.createDeliveryAsAdmin`) já é documentado como
+  endpoint de teste/simulação (`dto.shippingAmount ?? 0`), não um
+  checkout real. Ligar isso exigiria inventar schema novo pra um fluxo
+  que ainda não existe de verdade — fica pendente até o checkout real do
+  marketplace ser desenhado.
 - **Previews HTML (`apps/preview/*.html`) permanecem mockups manuais**
   (Opção A), atualizados só quando há mudança grande de fluxo ou um bug
   concreto (ex.: link morto) — não geramos a partir do código Flutter
@@ -173,22 +181,22 @@ confirmação de pagamento via webhook do `payments`, pontos via
   Migration `20260806000000_unify_washer_into_driver_profile`
   (irreversível — `DROP TABLE washers` — mas sem dado real pra perder
   nesta máquina). CI real (#38) confirmou passando.
-- Distância (haversine) e disponibilidade (`DriverStatus.active`) já
-  existiam antes, sem mudança de lógica além de trocar `Washer` por
-  `DriverProfile`.
-- **Ainda não ligado**: `MapsService` (Google Maps/haversine com fallback)
-  segue standalone — o matching usa seu próprio haversine interno, não
-  reaproveita `MapsService.getDistance`. Ligar os dois é o item 1 abaixo.
+- Disponibilidade (`DriverStatus.active`) já existia antes, sem mudança
+  de lógica além de trocar `Washer` por `DriverProfile`.
+- ~~Ligar `MapsService` ao matching~~ — **feito**. `pickClosestDriver`
+  agora chama `MapsService.getDistance` (Google Distance Matrix real
+  quando há `GOOGLE_MAPS_API_KEY`, haversine local como fallback) em vez
+  de um `haversineKm` duplicado dentro de `orders.service.ts`. Frete de
+  `deliveries` **não** foi ligado — ver "Decisões técnicas importantes"
+  pra o motivo (falta endereço estruturado em `Store`/`ProductOrder`).
 
 ## Próximos passos priorizados
 
 Ordem sugerida, por dependência e impacto (não por facilidade):
 
-1. **Ligar `MapsService` ao matching de pedidos e ao frete de
-   `deliveries`** — hoje `matchDriver` usa haversine próprio, não
-   `MapsService.getDistance` (que já suporta Google Maps real + fallback).
-   Fechar esse loop é o que torna a integração do Google Maps
-   realmente útil em produção, não só uma chamada de API solta.
+1. ~~Ligar `MapsService` ao matching de pedidos~~ — **feito** (run CI a
+   confirmar). Frete de `deliveries` ficou de fora (ver decisão técnica
+   acima).
 2. **Fluxo de registro com escolha de perfil no App Lavador** (Moto/
    Carro/Loja) — hoje só existe login, nenhuma tela de cadastro. Sem
    isso, um usuário novo não vira `LAVADOR`/`DriverProfile` pelo app, só
