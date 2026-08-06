@@ -147,3 +147,34 @@ não há chaves configuradas nesta máquina.
 - **Testes e2e**: nenhum configurado em nenhum pacote.
 - **Deploy AWS**: só existe o documento de arquitetura, sem
   infraestrutura real.
+
+## Próximos passos priorizados
+
+Ordem sugerida, por dependência e impacto (não por facilidade):
+
+1. **Fluxo de registro com escolha de perfil no App Lavador** (Moto/
+   Carro/Loja) — hoje só existe login, nenhuma tela de cadastro. É o
+   maior gap concreto: sem isso, um usuário novo não consegue nem virar
+   `LAVADOR` pelo app, só via chamada direta à API. O ativar-modo-Loja-
+   de-Carwash já existe (`AuctionsPage._ActivationPrompt`), mas depende
+   de já ter uma conta — o registro em si que falta.
+2. **Ligar `MapsService` ao matching de pedidos e ao frete de
+   `deliveries`** — hoje é standalone (`GET /maps/distance` isolado).
+   Fechar esse loop é o que torna a integração do Google Maps
+   realmente útil em produção, não só uma chamada de API solta.
+3. **Chaves de sandbox reais** (Mercado Pago + Google Maps) — depende
+   de você criar as contas de desenvolvedor; o código já está pronto
+   pros dois lados (mock automático sem chave, real com chave, log de
+   modo no startup). Sem isso não dá pra validar contra as APIs de
+   verdade.
+4. **Corrigir o mismatch `GET /orders` (`{items, nextCursor}` vs array
+   puro)** no `mobile-client` — bug pré-existente que provavelmente já
+   quebra a listagem de pedidos hoje; pequeno de corrigir, mas precisa
+   de um banco real rodando pra confirmar o fluxo ponta a ponta.
+5. **Aplicar as migrations pendentes num Postgres real** (não há
+   Postgres/Docker nesta máquina) — pré-requisito prático para os itens
+   3 e 4, e para qualquer teste de integração de verdade daqui pra
+   frente.
+6. **Admin panel com dados reais** — maior esforço da lista;
+   `admin-web` está quase vazio (só landing page), as 14 páginas do
+   painel seguem em quarentena aguardando reconstrução.
