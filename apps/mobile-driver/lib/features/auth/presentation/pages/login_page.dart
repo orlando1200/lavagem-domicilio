@@ -182,7 +182,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             style: TextStyle(color: AppColors.textSecondary),
                           ),
                           TextButton(
-                            onPressed: () {},
+                            onPressed: () => context.push('/register'),
                             child: const Text('Cadastre-se'),
                           ),
                         ],

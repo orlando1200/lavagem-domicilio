@@ -39,6 +39,26 @@ class DriverAuthNotifier extends StateNotifier<DriverAuthState> {
     }
   }
 
+  Future<void> register({
+    required String name,
+    required String email,
+    required String password,
+    String? phone,
+  }) async {
+    state = const DriverAuthState.loading();
+    try {
+      final user = await _repository.register(
+        name: name,
+        email: email,
+        password: password,
+        phone: phone,
+      );
+      state = DriverAuthState.authenticated(user);
+    } catch (e) {
+      state = DriverAuthState.error(e.toString());
+    }
+  }
+
   Future<void> logout() async {
     await _repository.logout();
     state = const DriverAuthState.unauthenticated();

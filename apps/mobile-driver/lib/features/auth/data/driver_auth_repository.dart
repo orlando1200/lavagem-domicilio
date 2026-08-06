@@ -32,6 +32,34 @@ class DriverAuthRepository {
     }
   }
 
+  /// Cadastro publico (POST /auth/register) com `role` fixo em `LAVADOR` —
+  /// esta tela e exclusiva do app do lavador parceiro.
+  Future<DriverUser> register({
+    required String name,
+    required String email,
+    required String password,
+    String? phone,
+  }) async {
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/auth/register',
+        data: {
+          'name': name,
+          'email': email,
+          'password': password,
+          if (phone != null && phone.isNotEmpty) 'phone': phone,
+          'role': 'LAVADOR',
+        },
+      );
+      final data = response.data!;
+      final token = data['accessToken'] as String;
+      await _tokenStorage.saveToken(token);
+      return DriverUser.fromJson(data['user'] as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
   Future<DriverUser?> fetchCurrentUser() async {
     try {
       final response = await _dio.get<Map<String, dynamic>>('/users/me');

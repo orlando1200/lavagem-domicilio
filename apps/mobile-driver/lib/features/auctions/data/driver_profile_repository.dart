@@ -27,6 +27,26 @@ class DriverProfileRepository {
     }
   }
 
+  /// Cria o perfil de motorista/loja do usuario recem-cadastrado, com o
+  /// `driverType` escolhido no fluxo de registro (moto/carro/loja).
+  Future<DriverProfileModel> createProfile({
+    required String driverType,
+    List<String>? allowedServices,
+  }) async {
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/driver-profiles/me',
+        data: {
+          'driverType': driverType,
+          if (allowedServices != null) 'allowedServices': allowedServices,
+        },
+      );
+      return DriverProfileModel.fromJson(response.data!);
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
   /// Ativa o modo "Loja de Carwash" (elegivel a leiloes de servico
   /// pesado): cria o perfil se ainda nao existir, ou atualiza um perfil
   /// existente (ex.: motorista de moto/carro que quer tambem virar loja).
