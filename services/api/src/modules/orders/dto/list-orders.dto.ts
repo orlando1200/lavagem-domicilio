@@ -25,7 +25,7 @@ export class AdminListOrdersDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsUUID()
-  washerId?: string;
+  driverId?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -46,8 +46,8 @@ export class AdminListOrdersDto {
   limit?: string;
 }
 
-export class AdminAssignWasherDto {
+export class AdminAssignDriverDto {
   @ApiPropertyOptional()
   @IsUUID()
-  washerId: string;
+  driverId: string;
 }

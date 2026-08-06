@@ -39,10 +39,10 @@ export class PayoutsService {
    * taxa e informada na requisicao (default 0%).
    */
   async generateWasherPayout(dto: GenerateWasherPayoutDto) {
-    const washer = await this.prisma.washer.findUnique({
+    const driver = await this.prisma.driverProfile.findUnique({
       where: { userId: dto.washerId },
     });
-    if (!washer) {
+    if (!driver) {
       throw new NotFoundException('Lavador nao encontrado');
     }
 
@@ -52,7 +52,7 @@ export class PayoutsService {
 
     const orders = await this.prisma.order.findMany({
       where: {
-        washerId: dto.washerId,
+        driverId: dto.washerId,
         status: OrderStatus.completed,
         completedAt: { gte: periodStart, lte: periodEnd },
       },

@@ -52,7 +52,6 @@ model User {
 
   addresses                 Address[]
   vehicles                  Vehicle[]
-  washer                    Washer?
   ordersAsCustomer          Order[]                @relation("OrderCustomer")
   payments                  Payment[]
   store                     Store?
@@ -171,44 +170,19 @@ model DriverProfile {
   createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz
   updatedAt       DateTime      @updatedAt @map("updated_at") @db.Timestamptz
 
-  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  zone    Zone?        @relation(fields: [currentZoneId], references: [id])
-  orders  Order[]
-  rentals Rental[]
-  bids    AuctionBid[]
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  zone          Zone?              @relation(fields: [currentZoneId], references: [id])
+  orders        Order[]
+  rentals       Rental[]
+  bids          AuctionBid[]
+  starterKit    StarterKit?
+  productOrders ProductOrder[]     @relation("ProductOrderWasher")
+  deliveries    ProductOrder[]     @relation("ProductOrderDeliveryDriver")
+  payouts       Payout[]
 
   @@map("driver_profiles")
 }
 
-enum WasherStatus {
-  draft
-  pending_documents
-  active
-  inactive
-  rejected
-  blocked
-}
-
-model Washer {
-  userId          String       @id @map("user_id") @db.Uuid
-  status          WasherStatus @default(draft)
-  serviceRadiusKm Decimal      @default(5) @map("service_radius_km") @db.Decimal(6, 2)
-  currentZoneId   String?      @map("current_zone_id") @db.Uuid
-  averageRating   Decimal?     @map("average_rating") @db.Decimal(3, 2)
-  totalOrders     Int          @default(0) @map("total_orders")
-  createdAt       DateTime     @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt       DateTime     @updatedAt @map("updated_at") @db.Timestamptz
-
-  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  zone          Zone?          @relation(fields: [currentZoneId], references: [id])
-  orders        Order[]
-  starterKit    StarterKit?
-  productOrders ProductOrder[] @relation("ProductOrderWasher")
-  deliveries    ProductOrder[] @relation("ProductOrderDeliveryDriver")
-  payouts       Payout[]
-
-  @@map("washers")
-}
 
 // ────────────────────────────────────────────────────────────────────────────
 // ORDERS (SERVICO DE LAVAGEM)
@@ -227,12 +201,12 @@ enum OrderStatus {
 model Order {
   id          String      @id @default(uuid()) @db.Uuid
   customerId  String      @map("customer_id") @db.Uuid
-  washerId    String?     @map("washer_id") @db.Uuid
   driverId    String?     @map("driver_id") @db.Uuid
   vehicleId   String      @map("vehicle_id") @db.Uuid
   addressId   String      @map("address_id") @db.Uuid
   zoneId      String?     @map("zone_id") @db.Uuid
   status      OrderStatus @default(pending)
+  serviceType ServiceType? @map("service_type")
   scheduledAt DateTime?   @map("scheduled_at") @db.Timestamptz
   startedAt   DateTime?   @map("started_at") @db.Timestamptz
   completedAt DateTime?   @map("completed_at") @db.Timestamptz
@@ -242,7 +216,6 @@ model Order {
   updatedAt   DateTime    @updatedAt @map("updated_at") @db.Timestamptz
 
   customer     User           @relation("OrderCustomer", fields: [customerId], references: [id])
-  washer       Washer?        @relation(fields: [washerId], references: [userId])
   driver       DriverProfile? @relation(fields: [driverId], references: [userId])
   vehicle      Vehicle        @relation(fields: [vehicleId], references: [id])
   address      Address        @relation(fields: [addressId], references: [id])
@@ -439,9 +412,9 @@ model ProductOrder {
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   buyer          User               @relation(fields: [buyerUserId], references: [id])
-  buyerWasher    Washer?            @relation("ProductOrderWasher", fields: [buyerWasherId], references: [userId])
+  buyerWasher    DriverProfile?     @relation("ProductOrderWasher", fields: [buyerWasherId], references: [userId])
   store          Store              @relation(fields: [storeId], references: [id])
-  deliveryDriver Washer?            @relation("ProductOrderDeliveryDriver", fields: [deliveryDriverId], references: [userId])
+  deliveryDriver DriverProfile?     @relation("ProductOrderDeliveryDriver", fields: [deliveryDriverId], references: [userId])
   items          ProductOrderItem[]
 
   @@index([deliveryStatus])
@@ -526,8 +499,8 @@ model Payout {
   createdAt         DateTime            @default(now()) @map("created_at") @db.Timestamptz
   updatedAt         DateTime            @updatedAt @map("updated_at") @db.Timestamptz
 
-  recipientWasher Washer? @relation(fields: [recipientWasherId], references: [userId])
-  recipientStore  Store?  @relation(fields: [recipientStoreId], references: [id])
+  recipientWasher DriverProfile? @relation(fields: [recipientWasherId], references: [userId])
+  recipientStore  Store?         @relation(fields: [recipientStoreId], references: [id])
 
   @@index([recipientWasherId])
   @@index([recipientStoreId])
@@ -751,7 +724,6 @@ model Zone {
   updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   drivers DriverProfile[]
-  washers Washer[]
   orders  Order[]
 
   @@map("zones")
@@ -817,7 +789,7 @@ model StarterKit {
   createdAt    DateTime         @default(now()) @map("created_at") @db.Timestamptz
   updatedAt    DateTime         @updatedAt @map("updated_at") @db.Timestamptz
 
-  washer Washer @relation(fields: [washerId], references: [userId], onDelete: Cascade)
+  washer DriverProfile @relation(fields: [washerId], references: [userId], onDelete: Cascade)
 
   @@map("starter_kits")
 }

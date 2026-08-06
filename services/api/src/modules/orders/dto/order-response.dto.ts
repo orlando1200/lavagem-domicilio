@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { OrderStatus } from '@prisma/client';
+import { OrderStatus, ServiceType } from '@prisma/client';
 
 /**
  * Formato de resposta serializado para pedidos, usado tanto pelos
@@ -29,9 +29,6 @@ export class OrderResponseDto {
   customerId: string;
 
   @ApiProperty({ required: false, nullable: true })
-  washerId?: string | null;
-
-  @ApiProperty({ required: false, nullable: true })
   driverId?: string | null;
 
   @ApiProperty()
@@ -45,6 +42,9 @@ export class OrderResponseDto {
 
   @ApiProperty({ enum: OrderStatus })
   status: OrderStatus;
+
+  @ApiProperty({ enum: ServiceType, required: false, nullable: true })
+  serviceType?: ServiceType | null;
 
   @ApiProperty({ required: false, nullable: true })
   scheduledAt?: Date | null;

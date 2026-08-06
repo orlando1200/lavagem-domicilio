@@ -14,7 +14,7 @@ import {
 import { PayoutStatus } from '@prisma/client';
 
 export class GenerateWasherPayoutDto {
-  @ApiProperty({ description: 'Id do lavador (Washer.userId)' })
+  @ApiProperty({ description: 'Id do lavador (DriverProfile.userId)' })
   @IsUUID()
   washerId: string;
 
@@ -76,7 +76,7 @@ export class ListPayoutsQueryDto {
   @IsEnum(PayoutStatus)
   status?: PayoutStatus;
 
-  @ApiPropertyOptional({ description: 'Filtra por lavador (Washer.userId)' })
+  @ApiPropertyOptional({ description: 'Filtra por lavador (DriverProfile.userId)' })
   @IsOptional()
   @IsUUID()
   washerId?: string;

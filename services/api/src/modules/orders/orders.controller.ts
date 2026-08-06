@@ -95,6 +95,6 @@ export class OrdersController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateOrderStatusDto,
   ) {
-    return this.ordersService.updateOrderStatusAsWasher(user.id, id, dto);
+    return this.ordersService.updateOrderStatusAsDriver(user.id, id, dto);
   }
 }

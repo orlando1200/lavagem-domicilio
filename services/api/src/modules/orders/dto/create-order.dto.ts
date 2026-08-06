@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsDateString,
+  IsEnum,
   IsNumber,
   IsOptional,
   IsString,
@@ -10,6 +11,7 @@ import {
   MaxLength,
   ValidateNested,
 } from 'class-validator';
+import { ServiceType } from '@prisma/client';
 
 export class CreateOrderItemDto {
   @ApiProperty({ maxLength: 180 })
@@ -42,6 +44,16 @@ export class CreateOrderDto {
   @IsOptional()
   @IsUUID()
   zoneId?: string;
+
+  @ApiPropertyOptional({
+    enum: ServiceType,
+    description:
+      'Categoria do servico, usada no matching por perfil (driverType). HEAVY_SERVICE ' +
+      'nao passa pelo matching normal — vai direto para o modulo de leiloes (auctions).',
+  })
+  @IsOptional()
+  @IsEnum(ServiceType)
+  serviceType?: ServiceType;
 
   @ApiPropertyOptional({ description: 'Data/hora agendada do servico' })
   @IsOptional()

@@ -14,7 +14,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { OrdersService } from './orders.service';
-import { AdminAssignWasherDto, AdminListOrdersDto } from './dto/list-orders.dto';
+import { AdminAssignDriverDto, AdminListOrdersDto } from './dto/list-orders.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 
 @ApiTags('admin/orders')
@@ -37,13 +37,13 @@ export class AdminOrdersController {
     return this.ordersService.getOrderByIdAsAdmin(id);
   }
 
-  @Patch(':id/assign-washer')
+  @Patch(':id/assign-driver')
   @ApiOperation({ summary: 'Atribui manualmente um lavador ao pedido' })
-  assignWasher(
+  assignDriver(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: AdminAssignWasherDto,
+    @Body() dto: AdminAssignDriverDto,
   ) {
-    return this.ordersService.assignWasherAsAdmin(id, dto.washerId);
+    return this.ordersService.assignDriverAsAdmin(id, dto.driverId);
   }
 
   @Patch(':id/status')

@@ -63,7 +63,6 @@ export class UsersService {
         addresses: true,
         vehicles: true,
         driverProfile: true,
-        washer: true,
         cashbackBalance: true,
       },
     });
@@ -149,7 +148,6 @@ export class UsersService {
         addresses: true,
         vehicles: true,
         driverProfile: true,
-        washer: true,
       },
     });
 

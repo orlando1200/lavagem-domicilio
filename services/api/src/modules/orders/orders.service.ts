@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Order, OrderStatus, Prisma, WasherStatus } from '@prisma/client';
+import { DriverStatus, DriverType, Order, OrderStatus, Prisma, ServiceType } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { AdminListOrdersDto, ListOrdersDto } from './dto/list-orders.dto';
@@ -74,6 +74,7 @@ export class OrdersService {
         vehicleId: dto.vehicleId,
         addressId: dto.addressId,
         zoneId,
+        serviceType: dto.serviceType,
         scheduledAt: dto.scheduledAt ? new Date(dto.scheduledAt) : undefined,
         notes: dto.notes,
         totalAmount,
@@ -89,7 +90,14 @@ export class OrdersService {
       include: ORDER_INCLUDE,
     });
 
-    return this.matchWasher(order.id);
+    // Servico pesado (HEAVY_SERVICE) e exclusivo do modulo `auctions` — o
+    // pedido fica `pending` ate o cliente abrir um leilao (POST /auctions),
+    // nunca passa pelo matching normal.
+    if (order.serviceType === ServiceType.HEAVY_SERVICE) {
+      return order;
+    }
+
+    return this.matchDriver(order.id);
   }
 
   async listMyOrders(customerId: string, query: ListOrdersDto) {
@@ -140,7 +148,7 @@ export class OrdersService {
   // ────────────────────────────────────────────────────────────────────
 
   /** Lavador aceita um pedido que estava em busca de lavador (`searching_washer`). */
-  async acceptOrder(washerUserId: string, orderId: string) {
+  async acceptOrder(driverUserId: string, orderId: string) {
     const order = await this.findOrderOrThrow(orderId);
 
     if (order.status !== OrderStatus.searching_washer) {
@@ -151,21 +159,21 @@ export class OrdersService {
 
     const updated = await this.prisma.order.update({
       where: { id: orderId },
-      data: { washerId: washerUserId, status: OrderStatus.accepted },
+      data: { driverId: driverUserId, status: OrderStatus.accepted },
       include: ORDER_INCLUDE,
     });
 
     return updated;
   }
 
-  async updateOrderStatusAsWasher(
-    washerUserId: string,
+  async updateOrderStatusAsDriver(
+    driverUserId: string,
     orderId: string,
     dto: UpdateOrderStatusDto,
   ) {
     const order = await this.findOrderOrThrow(orderId);
 
-    if (order.washerId !== washerUserId) {
+    if (order.driverId !== driverUserId) {
       throw new ForbiddenException('Este pedido nao esta atribuido a este lavador');
     }
 
@@ -182,7 +190,7 @@ export class OrdersService {
 
     const where: Prisma.OrderWhereInput = {
       ...(query.status ? { status: query.status } : {}),
-      ...(query.washerId ? { washerId: query.washerId } : {}),
+      ...(query.driverId ? { driverId: query.driverId } : {}),
       ...(query.search
         ? {
             OR: [
@@ -219,19 +227,19 @@ export class OrdersService {
     return this.findOrderOrThrow(orderId);
   }
 
-  async assignWasherAsAdmin(orderId: string, washerUserId: string) {
+  async assignDriverAsAdmin(orderId: string, driverUserId: string) {
     const order = await this.findOrderOrThrow(orderId);
 
-    const washer = await this.prisma.washer.findUnique({
-      where: { userId: washerUserId },
+    const driver = await this.prisma.driverProfile.findUnique({
+      where: { userId: driverUserId },
     });
-    if (!washer) {
+    if (!driver) {
       throw new NotFoundException('Lavador nao encontrado');
     }
 
     return this.prisma.order.update({
       where: { id: order.id },
-      data: { washerId: washerUserId, status: OrderStatus.accepted },
+      data: { driverId: driverUserId, status: OrderStatus.accepted },
       include: ORDER_INCLUDE,
     });
   }
@@ -246,24 +254,27 @@ export class OrdersService {
   // ────────────────────────────────────────────────────────────────────
 
   /**
-   * Busca o lavador disponivel para o pedido em duas etapas:
+   * Busca o lavador disponivel para o pedido em tres etapas:
    *
-   * 1. **Zona** (`Washer.currentZoneId`): se o pedido tem uma zona
+   * 1. **Perfil** (`DriverProfile.driverType`): so considera MOTO_WASHER e
+   *    CAR_WASHER — CARWASH_SHOP e exclusivo do leilao de servico pesado
+   *    (modulo `auctions`), nunca participa do matching normal.
+   * 2. **Zona** (`DriverProfile.currentZoneId`): se o pedido tem uma zona
    *    resolvida (`order.zoneId`), restringe a busca a lavadores ativos
    *    atualmente naquela zona — e a fonte de verdade mais confiavel no
    *    schema atual, pois nao ha rastreamento de geolocalizacao em tempo
    *    real do lavador.
-   * 2. **Distancia (haversine)**: entre os candidatos da zona (ou, na
-   *    ausencia de zona, entre todos os lavadores ativos com endereco
-   *    cadastrado), calcula a distancia entre o endereco do pedido e o
-   *    endereco mais recente de cada lavador, e escolhe o mais proximo
-   *    dentro do raio de atendimento (`Washer.serviceRadiusKm`).
+   * 3. **Tipo + distancia**: para `DRY_WASH`/`EXPRESS_WASH`, MOTO_WASHER e
+   *    priorizado sobre CAR_WASHER (PRD: "Moto ideal para Seco e
+   *    Express") antes mesmo da distancia; sem `serviceType`, so
+   *    distancia (haversine), dentro do raio de atendimento de cada um
+   *    (`DriverProfile.serviceRadiusKm`).
    *
    * Move o pedido para `searching_washer` mesmo quando nenhum lavador e
    * encontrado de imediato, permitindo que um lavador aceite manualmente
    * mais tarde (endpoint `POST /orders/:id/accept`).
    */
-  async matchWasher(orderId: string) {
+  async matchDriver(orderId: string) {
     const order = await this.prisma.order.findUnique({
       where: { id: orderId },
       include: { address: true },
@@ -273,79 +284,96 @@ export class OrdersService {
       throw new NotFoundException('Pedido nao encontrado');
     }
 
-    const candidates = await this.prisma.washer.findMany({
+    if (order.serviceType === ServiceType.HEAVY_SERVICE) {
+      return order;
+    }
+
+    const candidates = await this.prisma.driverProfile.findMany({
       where: {
-        status: WasherStatus.active,
+        status: DriverStatus.active,
+        driverType: { in: [DriverType.MOTO_WASHER, DriverType.CAR_WASHER] },
         ...(order.zoneId ? { currentZoneId: order.zoneId } : {}),
       },
       include: { user: { include: { addresses: true } } },
     });
 
-    const bestWasherId = this.pickClosestWasher(order.address, candidates);
+    const bestDriverUserId = this.pickClosestDriver(order.address, candidates, order.serviceType);
 
     return this.prisma.order.update({
       where: { id: orderId },
       data: {
         status: OrderStatus.searching_washer,
-        ...(bestWasherId ? { washerId: bestWasherId } : {}),
+        ...(bestDriverUserId ? { driverId: bestDriverUserId } : {}),
       },
       include: ORDER_INCLUDE,
     });
   }
 
   /**
-   * Escolhe o lavador mais proximo (haversine) dentre os candidatos,
-   * respeitando o raio de atendimento de cada um. Lavadores sem endereco
-   * cadastrado com coordenadas sao considerados por ordem de chegada
-   * (fallback), ja que nao ha como estimar distancia real para eles.
+   * Escolhe o lavador mais adequado dentre os candidatos: preferencia de
+   * tipo (quando aplicavel) vence distancia, respeitando o raio de
+   * atendimento de cada um. Lavadores sem endereco cadastrado com
+   * coordenadas sao considerados por ordem de chegada (fallback), ja que
+   * nao ha como estimar distancia real para eles.
    */
-  private pickClosestWasher(
+  private pickClosestDriver(
     orderAddress: { latitude: Prisma.Decimal | null; longitude: Prisma.Decimal | null },
     candidates: Array<{
       userId: string;
+      driverType: DriverType;
       serviceRadiusKm: Prisma.Decimal;
       user: { addresses: Array<{ latitude: Prisma.Decimal | null; longitude: Prisma.Decimal | null; isDefault: boolean }> };
     }>,
+    serviceType: ServiceType | null,
   ): string | null {
     if (candidates.length === 0) return null;
 
     const orderLat = orderAddress.latitude ? Number(orderAddress.latitude) : null;
     const orderLng = orderAddress.longitude ? Number(orderAddress.longitude) : null;
 
-    if (orderLat === null || orderLng === null) {
-      return candidates[0].userId;
-    }
+    const ranked = candidates.map((driver) => {
+      const address =
+        driver.user.addresses.find((a) => a.isDefault) ?? driver.user.addresses[0];
+      const radiusKm = Number(driver.serviceRadiusKm);
 
-    const ranked: Array<{ userId: string; distanceKm: number | null; radiusKm: number }> = candidates.map(
-      (washer) => {
-        const address =
-          washer.user.addresses.find((a) => a.isDefault) ?? washer.user.addresses[0];
-        const radiusKm = Number(washer.serviceRadiusKm);
+      if (orderLat === null || orderLng === null || !address?.latitude || !address?.longitude) {
+        return { userId: driver.userId, driverType: driver.driverType, distanceKm: null, radiusKm };
+      }
 
-        if (!address?.latitude || !address?.longitude) {
-          return { userId: washer.userId, distanceKm: null, radiusKm };
-        }
+      const distanceKm = this.haversineKm(
+        orderLat,
+        orderLng,
+        Number(address.latitude),
+        Number(address.longitude),
+      );
 
-        const distanceKm = this.haversineKm(
-          orderLat,
-          orderLng,
-          Number(address.latitude),
-          Number(address.longitude),
-        );
-
-        return { userId: washer.userId, distanceKm, radiusKm };
-      },
-    );
+      return { userId: driver.userId, driverType: driver.driverType, distanceKm, radiusKm };
+    });
 
     const withinRange = ranked
       .filter((entry) => entry.distanceKm === null || entry.distanceKm <= entry.radiusKm)
       .sort((a, b) => {
+        const typeDelta = this.typePriority(a.driverType, serviceType) - this.typePriority(b.driverType, serviceType);
+        if (typeDelta !== 0) return typeDelta;
         if (a.distanceKm === null) return 1;
         if (b.distanceKm === null) return -1;
         return a.distanceKm - b.distanceKm;
       });
 
     return withinRange[0]?.userId ?? candidates[0].userId;
+  }
+
+  /**
+   * Para DRY_WASH/EXPRESS_WASH, MOTO_WASHER e priorizado sobre CAR_WASHER
+   * ("Moto ideal para Seco e Express", conforme docs/PRD.md) — a
+   * preferencia de tipo vence a distancia. Sem servico especificado,
+   * nenhuma preferencia (paridade com o comportamento anterior, so por
+   * distancia).
+   */
+  private typePriority(driverType: DriverType, serviceType: ServiceType | null): number {
+    const preferMoto = serviceType === ServiceType.DRY_WASH || serviceType === ServiceType.EXPRESS_WASH;
+    if (!preferMoto) return 0;
+    return driverType === DriverType.MOTO_WASHER ? 0 : 1;
   }
 
   /** Formula haversine padrao — distancia em km entre duas coordenadas. */
