@@ -5,7 +5,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/neon_surface.dart';
 import '../providers/cart_provider.dart';
 
-/// Tela de carrinho / checkout simplificado (mock de pagamento).
+/// Tela de carrinho — resumo dos itens, segue para `/checkout` (endereco
+/// + pagamento real) ao finalizar.
 class CartPage extends ConsumerWidget {
   const CartPage({super.key});
 
@@ -36,7 +37,7 @@ class CartPage extends ConsumerWidget {
                       _SummaryRow(label: 'Subtotal', value: cart.subtotal),
                       const SizedBox(height: 6),
                       _SummaryRow(
-                        label: 'Frete',
+                        label: 'Frete (estimado)',
                         value: cart.shipping,
                         highlight: cart.shipping == 0,
                         highlightLabel: 'Grátis',
@@ -45,7 +46,7 @@ class CartPage extends ConsumerWidget {
                         padding: EdgeInsets.symmetric(vertical: 10),
                         child: Divider(),
                       ),
-                      _SummaryRow(label: 'Total', value: cart.total, bold: true),
+                      _SummaryRow(label: 'Total (estimado)', value: cart.total, bold: true),
                       const SizedBox(height: 16),
                       SizedBox(
                         width: double.infinity,
@@ -53,7 +54,7 @@ class CartPage extends ConsumerWidget {
                           style: FilledButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
                           ),
-                          onPressed: () => _showMockCheckout(context, ref),
+                          onPressed: () => context.push('/checkout'),
                           child: const Text('Finalizar Compra'),
                         ),
                       ),
@@ -62,134 +63,6 @@ class CartPage extends ConsumerWidget {
                 ),
               ),
             ),
-    );
-  }
-
-  void _showMockCheckout(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (sheetContext) => _MockCheckoutSheet(
-        onConfirm: () {
-          ref.read(cartProvider.notifier).clear();
-          Navigator.of(sheetContext).pop();
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Pedido realizado com sucesso!')),
-          );
-          context.go('/home');
-        },
-      ),
-    );
-  }
-}
-
-class _MockCheckoutSheet extends StatefulWidget {
-  const _MockCheckoutSheet({required this.onConfirm});
-
-  final VoidCallback onConfirm;
-
-  @override
-  State<_MockCheckoutSheet> createState() => _MockCheckoutSheetState();
-}
-
-class _MockCheckoutSheetState extends State<_MockCheckoutSheet> {
-  int _selectedMethod = 0;
-  bool _processing = false;
-
-  static const _methods = [
-    (icon: Icons.credit_card_rounded, label: 'Cartão de Crédito'),
-    (icon: Icons.qr_code_rounded, label: 'Pix'),
-    (icon: Icons.account_balance_wallet_rounded, label: 'Carteira GIUCAR'),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Forma de pagamento',
-            style: TextStyle(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
-              fontSize: 18,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Pagamento simulado (mock) para fins de demonstração.',
-            style: TextStyle(color: AppColors.textMuted, fontSize: 12),
-          ),
-          const SizedBox(height: 16),
-          for (var i = 0; i < _methods.length; i++)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: InkWell(
-                onTap: () => setState(() => _selectedMethod = i),
-                borderRadius: BorderRadius.circular(14),
-                child: Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceAlt,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: _selectedMethod == i ? AppColors.primary : AppColors.border,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(_methods[i].icon, color: AppColors.primary),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          _methods[i].label,
-                          style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                      Icon(
-                        _selectedMethod == i ? Icons.radio_button_checked : Icons.radio_button_off,
-                        color: _selectedMethod == i ? AppColors.primary : AppColors.textMuted,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(
-              style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
-              onPressed: _processing
-                  ? null
-                  : () async {
-                      setState(() => _processing = true);
-                      await Future.delayed(const Duration(milliseconds: 900));
-                      if (!mounted) return;
-                      widget.onConfirm();
-                    },
-              child: _processing
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryDark),
-                    )
-                  : const Text('Confirmar Pagamento'),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -242,6 +115,8 @@ class _CartItemCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final color = item.product.id.hashCode.isEven ? AppColors.primary : AppColors.accent;
+
     return NeonSurface(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
@@ -253,12 +128,15 @@ class _CartItemCard extends ConsumerWidget {
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: AppColors.primaryContainer,
+                color: color.withValues(alpha: 0.16),
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: AppColors.border),
               ),
               child: Center(
-                child: Text(item.product.emoji, style: const TextStyle(fontSize: 24)),
+                child: Text(
+                  item.product.initial,
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: color),
+                ),
               ),
             ),
             const SizedBox(width: 12),

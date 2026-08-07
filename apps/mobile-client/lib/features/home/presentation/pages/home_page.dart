@@ -7,6 +7,7 @@ import '../../../../core/widgets/neon_surface.dart';
 import '../../../../core/widgets/loading_skeleton.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/providers/auth_state.dart';
+import '../../../engagement/data/models/loyalty_balance_model.dart';
 import '../../../engagement/presentation/providers/engagement_provider.dart';
 import '../../../shop/presentation/pages/shop_page.dart';
 
@@ -45,7 +46,7 @@ class _HomeTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
-    final engagement = ref.watch(engagementProvider);
+    final engagementAsync = ref.watch(engagementProvider);
 
     final userName = authState.maybeWhen(
       authenticated: (user) => user.name.split(' ').first,
@@ -63,7 +64,7 @@ class _HomeTab extends ConsumerWidget {
             delegate: SliverChildListDelegate([
               const _QuickActionsCard(),
               const SizedBox(height: 16),
-              _EngagementHighlightCard(engagement: engagement),
+              _EngagementHighlightCard(engagementAsync: engagementAsync),
               const SizedBox(height: 16),
               const _ServicesSection(),
               const SizedBox(height: 16),
@@ -267,14 +268,62 @@ class _NeonFusionSpot extends StatelessWidget {
   }
 }
 
-class _EngagementHighlightCard extends StatelessWidget {
-  const _EngagementHighlightCard({required this.engagement});
+class _EngagementHighlightCard extends ConsumerWidget {
+  const _EngagementHighlightCard({required this.engagementAsync});
 
-  final EngagementState engagement;
+  final AsyncValue<LoyaltyBalanceModel> engagementAsync;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return engagementAsync.when(
+      loading: () => const NeonSurface(
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: Center(
+            child: SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+            ),
+          ),
+        ),
+      ),
+      error: (error, stackTrace) => NeonSurface(
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Não foi possível carregar sua fidelidade.',
+                  style: TextStyle(color: AppColors.textSecondary),
+                ),
+              ),
+              TextButton(
+                onPressed: () => ref.invalidate(engagementProvider),
+                child: const Text('Tentar novamente'),
+              ),
+            ],
+          ),
+        ),
+      ),
+      data: (engagement) => _EngagementHighlightBody(engagement: engagement),
+    );
+  }
+}
+
+class _EngagementHighlightBody extends StatelessWidget {
+  const _EngagementHighlightBody({required this.engagement});
+
+  final LoyaltyBalanceModel engagement;
 
   @override
   Widget build(BuildContext context) {
-    final remaining = engagement.nextRewardAt - engagement.loyaltyPoints;
+    final subtitle = engagement.nextExpirationAmount != null && engagement.nextExpirationAt != null
+        ? '${engagement.nextExpirationAmount} pontos expiram em '
+            '${engagement.nextExpirationAt!.day}/${engagement.nextExpirationAt!.month}'
+        : 'Nenhum ponto expirando no momento';
+
     return NeonSurface(
       child: InkWell(
         onTap: () => context.push('/engagement'),
@@ -300,7 +349,8 @@ class _EngagementHighlightCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Seu progresso de fidelidade',
+                          '${engagement.balance} pontos · '
+                          'R\$ ${engagement.balanceValue.toStringAsFixed(2)}',
                           style: Theme.of(context).textTheme.titleSmall?.copyWith(
                                 fontWeight: FontWeight.w800,
                                 color: AppColors.textPrimary,
@@ -308,7 +358,7 @@ class _EngagementHighlightCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '${engagement.loyaltyPoints} pontos · faltam $remaining para o próximo cupom',
+                          subtitle,
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                 color: AppColors.textSecondary,
                               ),
@@ -318,16 +368,6 @@ class _EngagementHighlightCard extends StatelessWidget {
                   ),
                   Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
                 ],
-              ),
-              const SizedBox(height: 14),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(999),
-                child: LinearProgressIndicator(
-                  value: (engagement.loyaltyPoints / engagement.nextRewardAt).clamp(0, 1),
-                  minHeight: 10,
-                  backgroundColor: AppColors.border,
-                  valueColor: const AlwaysStoppedAnimation(AppColors.primary),
-                ),
               ),
               const SizedBox(height: 14),
               Row(
@@ -342,7 +382,7 @@ class _EngagementHighlightCard extends StatelessWidget {
                   Expanded(
                     child: _EngagementMiniMetric(
                       label: 'Economia',
-                      value: 'R\$ ${engagement.savedAmount.toStringAsFixed(2)}',
+                      value: 'R\$ ${engagement.totalSaved.toStringAsFixed(2)}',
                     ),
                   ),
                 ],
