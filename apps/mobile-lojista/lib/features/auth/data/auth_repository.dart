@@ -64,7 +64,9 @@ class AuthRepository {
   }
 
   /// Cria o usuario (POST /auth/register) e, em seguida, a loja vinculada
-  /// (POST /stores) usando o id do usuario recem-criado como ownerUserId.
+  /// (POST /stores) — o dono da loja e sempre o usuario autenticado
+  /// (token do registro), o backend nao aceita mais um ownerUserId
+  /// arbitrario no corpo.
   Future<StoreUser> register({
     required String storeName,
     required String email,
@@ -92,7 +94,6 @@ class AuthRepository {
       final storeResponse = await _dio.post<Map<String, dynamic>>(
         '/stores',
         data: {
-          'ownerUserId': ownerUserId,
           'name': storeName,
           'document': document,
           'email': email,

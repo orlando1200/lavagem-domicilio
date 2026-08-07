@@ -5,6 +5,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_scaffold.dart';
 import '../../../../core/widgets/neon_surface.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../orders/data/models/store_order_model.dart';
+import '../../../orders/orders_provider.dart';
 
 /// Home do Portal do Lojista: saldo a receber, metricas da loja e
 /// pedidos recentes.
@@ -364,11 +366,13 @@ class _MetricTile extends StatelessWidget {
   }
 }
 
-class _RecentOrdersSection extends StatelessWidget {
+class _RecentOrdersSection extends ConsumerWidget {
   const _RecentOrdersSection();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ordersAsync = ref.watch(storeOrdersProvider);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -380,19 +384,53 @@ class _RecentOrdersSection extends StatelessWidget {
               ),
         ),
         const SizedBox(height: 12),
-        const _OrderCard(
-          title: 'Shampoo Automotivo 5L',
-          price: 'R\$ 89,90',
-          subtitle: 'Carlos Silva · Lavador',
-          status: 'Aguardando envio',
-          showActions: true,
-        ),
-        const _OrderCard(
-          title: 'Cera Líquida Premium 1L',
-          price: 'R\$ 129,90',
-          subtitle: 'João Souza · Lavador',
-          status: 'Entregue',
-          showActions: false,
+        ordersAsync.when(
+          loading: () => const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Center(
+              child: SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+              ),
+            ),
+          ),
+          error: (error, stackTrace) => NeonSurface(
+            margin: const EdgeInsets.only(bottom: 12),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Não foi possível carregar os pedidos.',
+                      style: TextStyle(color: AppColors.textSecondary),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => ref.invalidate(storeOrdersProvider),
+                    child: const Text('Tentar novamente'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          data: (orders) => orders.isEmpty
+              ? NeonSurface(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(
+                      'Nenhum pedido recebido ainda.',
+                      style: TextStyle(color: AppColors.textSecondary),
+                    ),
+                  ),
+                )
+              : Column(
+                  children: [
+                    for (final order in orders.take(5)) _OrderCard(order: order),
+                  ],
+                ),
         ),
       ],
     );
@@ -400,19 +438,9 @@ class _RecentOrdersSection extends StatelessWidget {
 }
 
 class _OrderCard extends StatelessWidget {
-  const _OrderCard({
-    required this.title,
-    required this.price,
-    required this.subtitle,
-    required this.status,
-    required this.showActions,
-  });
+  const _OrderCard({required this.order});
 
-  final String title;
-  final String price;
-  final String subtitle;
-  final String status;
-  final bool showActions;
+  final StoreOrderModel order;
 
   @override
   Widget build(BuildContext context) {
@@ -428,7 +456,9 @@ class _OrderCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    title,
+                    order.itemsSummary,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w800,
                           color: AppColors.textPrimary,
@@ -436,7 +466,7 @@ class _OrderCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  price,
+                  'R\$ ${order.totalAmount.toStringAsFixed(2)}',
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w800,
                         color: AppColors.primary,
@@ -446,38 +476,18 @@ class _OrderCard extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              subtitle,
+              order.buyerName ?? 'Pedido ${order.orderNumber}',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppColors.textSecondary,
                   ),
             ),
             const SizedBox(height: 4),
             Text(
-              'Status: $status',
+              'Status: ${order.statusLabel}',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppColors.accentAlt,
                   ),
             ),
-            if (showActions) ...[
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () {},
-                      child: const Text('Detalhes'),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: () {},
-                      child: const Text('Preparar'),
-                    ),
-                  ),
-                ],
-              ),
-            ],
           ],
         ),
       ),

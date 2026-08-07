@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -7,15 +8,20 @@ import { PrismaService } from '../../database/prisma.service';
 import { CreateStoreDto } from './dto/create-store.dto';
 import { CreateStoreProductDto } from './dto/create-store-product.dto';
 import { getCommissionRate } from './store.constants';
-import { LogisticsPlan, Prisma, ProductStatus } from '@prisma/client';
+import { LogisticsPlan, Prisma, ProductStatus, UserRole } from '@prisma/client';
+
+const PRODUCT_ORDER_INCLUDE = {
+  items: { include: { product: true } },
+  buyer: { select: { id: true, name: true } },
+} satisfies Prisma.ProductOrderInclude;
 
 @Injectable()
 export class StoreService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async createStore(dto: CreateStoreDto) {
+  async createStore(ownerUserId: string, dto: CreateStoreDto) {
     const existing = await this.prisma.store.findUnique({
-      where: { ownerUserId: dto.ownerUserId },
+      where: { ownerUserId },
     });
 
     if (existing) {
@@ -27,7 +33,7 @@ export class StoreService {
 
     return this.prisma.store.create({
       data: {
-        ownerUserId: dto.ownerUserId,
+        ownerUserId,
         name: dto.name,
         document: dto.document,
         contactName: dto.contactName,
@@ -50,6 +56,22 @@ export class StoreService {
     });
   }
 
+  /**
+   * Le a loja e confere que quem pediu e o dono (ou admin) — as rotas
+   * de `:id` deste modulo (produtos, pedidos, dados da loja incluindo
+   * `bankInfo`/`commissionPlan`) sao todas de gestao do proprio
+   * lojista, nunca de vitrine publica (isso e o modulo `marketplace`).
+   */
+  async findStoreForOwner(id: string, requester: { id: string; role: UserRole }) {
+    const store = await this.findStoreById(id);
+
+    if (store.ownerUserId !== requester.id && requester.role !== UserRole.ADMIN) {
+      throw new ForbiddenException('Voce nao tem acesso a esta loja');
+    }
+
+    return store;
+  }
+
   async findStoreById(id: string) {
     const store = await this.prisma.store.findUnique({
       where: { id },
@@ -70,8 +92,12 @@ export class StoreService {
     });
   }
 
-  async createProduct(storeId: string, dto: CreateStoreProductDto) {
-    await this.findStoreById(storeId);
+  async createProduct(
+    storeId: string,
+    requester: { id: string; role: UserRole },
+    dto: CreateStoreProductDto,
+  ) {
+    await this.findStoreForOwner(storeId, requester);
 
     const slug = this.buildSlug(dto.name);
 
@@ -92,11 +118,22 @@ export class StoreService {
     });
   }
 
-  async listProductsByStore(storeId: string) {
-    await this.findStoreById(storeId);
+  async listProductsByStore(storeId: string, requester: { id: string; role: UserRole }) {
+    await this.findStoreForOwner(storeId, requester);
 
     return this.prisma.product.findMany({
       where: { storeId },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  /** Pedidos de produto recebidos pela loja (POST /marketplace/client/checkout). */
+  async listOrdersByStore(storeId: string, requester: { id: string; role: UserRole }) {
+    await this.findStoreForOwner(storeId, requester);
+
+    return this.prisma.productOrder.findMany({
+      where: { storeId },
+      include: PRODUCT_ORDER_INCLUDE,
       orderBy: { createdAt: 'desc' },
     });
   }

@@ -12,11 +12,6 @@ import {
 import { LogisticsPlan, StoreType } from '@prisma/client';
 
 export class CreateStoreDto {
-  @ApiProperty({ description: 'Id do usuario dono da loja (lojista)' })
-  @IsString()
-  @IsNotEmpty()
-  ownerUserId!: string;
-
   @ApiProperty({ maxLength: 180 })
   @IsString()
   @IsNotEmpty()
