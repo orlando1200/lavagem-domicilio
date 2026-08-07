@@ -21,8 +21,9 @@ Para que os workflows de CI/CD funcionem corretamente, configure os seguintes se
 - `DATABASE_URL` — URL de conexão com Postgres em produção.
 - `JWT_SECRET` — secret para assinatura de tokens.
 - `REFRESH_TOKEN_SECRET` — secret para refresh tokens.
-- `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` — se usar Stripe.
-- `FIREBASE_PRIVATE_KEY` / `FIREBASE_CLIENT_EMAIL` — para notificações push.
+- `MERCADO_PAGO_ACCESS_TOKEN` / `MERCADO_PAGO_PUBLIC_KEY` — gateway de pagamento real (sem eles, `payments` roda em modo mock).
+- `GOOGLE_MAPS_API_KEY` — Distance Matrix real (sem ela, `maps` cai pro cálculo por haversine local).
+- `FIREBASE_PRIVATE_KEY` / `FIREBASE_CLIENT_EMAIL` — para notificações push (hooks já existem em `auctions-notifications.service.ts`, mas ainda são placeholder — SDK real do FCM não está integrado).
 - `S3_BUCKET_NAME`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` — para upload de fotos.
 
 ## Como configurar
