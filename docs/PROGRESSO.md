@@ -122,6 +122,15 @@ não há chaves configuradas nesta máquina.
   por `nextExpiration` (pontos a vencer, já existia no backend) +
   `streakDays`/`totalSaved` novos, ambos derivados de dado real
   (`Order.completedAt`, `LoyaltyRedemption`), sem tabela nova.
+- **`store.controller.ts` não tinha nenhum guard de autenticação**
+  (achado ao integrar o app lojista) — `POST /stores` aceitava
+  `ownerUserId` arbitrário no corpo (qualquer um podia criar loja em
+  nome de outro usuário) e `GET/POST /stores/:id[/products]` eram
+  públicos, expondo `bankInfo`/`commissionPlan` de qualquer loja sem
+  login. Corrigido (commit `0204bbb`, **breaking change**): guard
+  `JwtAuthGuard`/`RolesGuard` (`LAVADOR`/`ADMIN`) em todo o controller,
+  `createStore` deriva o dono do usuário autenticado (não mais do
+  body), demais rotas conferem ownership via `findStoreForOwner`.
 - **Previews HTML (`apps/preview/*.html`) permanecem mockups manuais**
   (Opção A), atualizados só quando há mudança grande de fluxo ou um bug
   concreto (ex.: link morto) — não geramos a partir do código Flutter
@@ -253,13 +262,26 @@ Ordem sugerida, por dependência e impacto (não por facilidade):
      cliente, não é wiring, é feature nova do zero (endereço do
      checkout da loja usa snapshot JSON, não esse fluxo).
    - Auth e leilões já eram 100% reais antes desta rodada.
-4. **Aplicar as migrations pendentes num Postgres real** (não há
-   Postgres/Docker nesta máquina — já são 5 migrations nunca aplicadas a
-   um banco de verdade) — pré-requisito prático pros itens 3, 5 e 6.
-5. **Chaves de sandbox reais** (Mercado Pago + Google Maps) — depende de
+   - **`mobile-lojista`** (commit `0204bbb`): auth, cadastro de loja
+     (`POST /stores`) e gestão de produtos já eram reais de rodada
+     anterior. Faltava a tela "Pedidos recentes" (100% estática) — sem
+     endpoint nenhum pra loja ver seus pedidos. Criado `GET
+     /stores/:id/orders` + ligado no app. Nesse processo, achado e
+     corrigido um problema de segurança real: `store.controller.ts`
+     não tinha guard de autenticação nenhum (ver "Decisões técnicas").
+4. ~~Docker Compose local (Postgres + backend)~~ — **feito** (commit
+   `dcbe25d`). `docker-compose.yml`/`Dockerfile` já existiam mas
+   estavam desatualizados (Stripe em vez de Mercado Pago, `Redis` sem
+   nenhum consumidor no código, secrets do Firebase/admin nunca lidos).
+   Corrigido pro stack real; validado só via `docker compose config`
+   no CI (sem Docker nesta máquina pra rodar de fato).
+5. **Aplicar as migrations pendentes num Postgres real** (não há
+   Postgres/Docker nesta máquina — já são 6 migrations nunca aplicadas a
+   um banco de verdade) — pré-requisito prático pro item 6.
+6. **Chaves de sandbox reais** (Mercado Pago + Google Maps) — depende de
    você criar as contas de desenvolvedor; o código já está pronto pros
    dois lados (mock automático sem chave, real com chave, log de modo no
    startup).
-6. **Admin panel com dados reais** — maior esforço da lista;
+7. **Admin panel com dados reais** — maior esforço da lista;
    `admin-web` está quase vazio (só landing page), as 14 páginas do
    painel seguem em quarentena aguardando reconstrução.
