@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { Prisma } from '@prisma/client';
+import { OrderStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 import { ListLoyaltyHistoryDto, RedeemLoyaltyPointsDto } from './dto/loyalty.dto';
 
@@ -77,10 +77,17 @@ export class LoyaltyService {
 
   /**
    * Saldo disponivel: soma de `amount - redeemedAmount` entre as
-   * concessoes ainda nao vencidas do usuario.
+   * concessoes ainda nao vencidas do usuario. Inclui tambem
+   * `streakDays` e `totalSaved` — engajamento real (sem inventar um
+   * sistema de metas/tiers: `nextExpiration` ja e o unico "proximo
+   * marco" que existe de verdade no modelo de fidelidade).
    */
   async getBalance(userId: string) {
-    const grants = await this.activeGrants(userId);
+    const [grants, streakDays, totalSaved] = await Promise.all([
+      this.activeGrants(userId),
+      this.getStreakDays(userId),
+      this.getTotalSaved(userId),
+    ]);
 
     const balance = grants.reduce(
       (sum, grant) => sum + Math.max(0, grant.amount - grant.redeemedAmount),
@@ -100,7 +107,46 @@ export class LoyaltyService {
             expiresAt: nextExpiring.expiresAt,
           }
         : null,
+      streakDays,
+      totalSaved,
     };
+  }
+
+  /**
+   * Dias consecutivos (a partir de hoje, andando para tras) em que o
+   * usuario tem pelo menos um pedido `completed`. Sem tabela nova —
+   * deriva direto de `Order.completedAt`.
+   */
+  private async getStreakDays(userId: string): Promise<number> {
+    const orders = await this.prisma.order.findMany({
+      where: { customerId: userId, status: OrderStatus.completed, completedAt: { not: null } },
+      select: { completedAt: true },
+    });
+
+    const activeDays = new Set(orders.map((order) => this.toDateKey(order.completedAt!)));
+
+    let streak = 0;
+    const cursor = new Date();
+    while (activeDays.has(this.toDateKey(cursor))) {
+      streak += 1;
+      cursor.setDate(cursor.getDate() - 1);
+    }
+
+    return streak;
+  }
+
+  private toDateKey(date: Date): string {
+    return date.toISOString().slice(0, 10);
+  }
+
+  /** Total ja economizado via resgate de pontos, em reais. */
+  private async getTotalSaved(userId: string): Promise<number> {
+    const result = await this.prisma.loyaltyRedemption.aggregate({
+      where: { userId },
+      _sum: { amount: true },
+    });
+
+    return this.toReais(result._sum.amount ?? 0);
   }
 
   async getHistory(userId: string, query: ListLoyaltyHistoryDto) {

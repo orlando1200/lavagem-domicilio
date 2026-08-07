@@ -40,6 +40,18 @@ export class PaymentsController {
     return this.paymentsService.getMyPayment(user.id, orderId);
   }
 
+  @Get('product-orders/:productOrderId')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.CLIENTE)
+  @ApiOperation({ summary: 'Consulta o pagamento do proprio pedido de produto (loja)' })
+  getMyProductOrderPayment(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('productOrderId', ParseUUIDPipe) productOrderId: string,
+  ) {
+    return this.paymentsService.getMyPaymentForProductOrder(user.id, productOrderId);
+  }
+
   @Post('webhook')
   @ApiOperation({ summary: 'Callback do gateway de pagamento (Mercado Pago mock) — sem autenticacao' })
   handleWebhook(@Body() dto: PaymentWebhookDto) {

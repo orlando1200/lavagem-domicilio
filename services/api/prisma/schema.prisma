@@ -259,22 +259,29 @@ enum PaymentStatus {
   refunded
 }
 
+// `orderId`/`productOrderId`: um pagamento referencia OU um `Order`
+// (servico de lavagem) OU um `ProductOrder` (compra na loja do
+// cliente), nunca os dois nem nenhum — reforcado por CHECK constraint
+// na migration (ambos opcionais aqui pois cada um so se aplica a um
+// dos dois fluxos).
 model Payment {
-  id           String        @id @default(uuid()) @db.Uuid
-  orderId      String        @unique @map("order_id") @db.Uuid
-  userId       String        @map("user_id") @db.Uuid
-  method       PaymentMethod
-  status       PaymentStatus @default(pending)
-  amount       Decimal       @db.Decimal(12, 2)
-  couponId     String?       @map("coupon_id") @db.Uuid
-  cashbackUsed Decimal       @default(0) @map("cashback_used") @db.Decimal(12, 2)
-  externalRef  String?       @map("external_ref") @db.VarChar(120)
-  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt    DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+  id             String        @id @default(uuid()) @db.Uuid
+  orderId        String?       @unique @map("order_id") @db.Uuid
+  productOrderId String?       @unique @map("product_order_id") @db.Uuid
+  userId         String        @map("user_id") @db.Uuid
+  method         PaymentMethod
+  status         PaymentStatus @default(pending)
+  amount         Decimal       @db.Decimal(12, 2)
+  couponId       String?       @map("coupon_id") @db.Uuid
+  cashbackUsed   Decimal       @default(0) @map("cashback_used") @db.Decimal(12, 2)
+  externalRef    String?       @map("external_ref") @db.VarChar(120)
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime      @updatedAt @map("updated_at") @db.Timestamptz
 
-  order  Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  user   User    @relation(fields: [userId], references: [id])
-  coupon Coupon? @relation(fields: [couponId], references: [id])
+  order        Order?        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productOrder ProductOrder? @relation(fields: [productOrderId], references: [id], onDelete: Cascade)
+  user         User          @relation(fields: [userId], references: [id])
+  coupon       Coupon?       @relation(fields: [couponId], references: [id])
 
   @@map("payments")
 }
@@ -399,6 +406,10 @@ model ProductOrder {
   commissionAmount Decimal            @default(0) @map("commission_amount") @db.Decimal(12, 2)
   totalAmount      Decimal            @map("total_amount") @db.Decimal(12, 2)
   paymentStatus    PaymentStatus      @default(pending) @map("payment_status")
+  // Snapshot JSON do endereco de entrega informado no checkout (mesma
+  // estrategia de `Store.address` — sem tabela relacional nova, ver
+  // decisao de escopo no plano de implementacao).
+  shippingAddress  Json?              @map("shipping_address")
 
   // ── Entrega (Entregas Loja do Lavador) ──────────────────────────────
   // Reaproveita ProductOrder em vez de criar um model separado: uma
@@ -416,6 +427,7 @@ model ProductOrder {
   store          Store              @relation(fields: [storeId], references: [id])
   deliveryDriver DriverProfile?     @relation("ProductOrderDeliveryDriver", fields: [deliveryDriverId], references: [userId])
   items          ProductOrderItem[]
+  payment        Payment?
 
   @@index([deliveryStatus])
   @@index([deliveryDriverId])

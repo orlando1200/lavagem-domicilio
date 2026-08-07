@@ -1,12 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConflictException, NotFoundException } from '@nestjs/common';
-import { PaymentMethod, PaymentStatus } from '@prisma/client';
+import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
+import { PaymentMethod, PaymentStatus, ProductOrderStatus } from '@prisma/client';
 import { PaymentsService } from '../../../src/modules/payments/payments.service';
 import { PrismaService } from '../../../src/database/prisma.service';
 import { LoyaltyService } from '../../../src/modules/loyalty/loyalty.service';
 import { PAYMENT_GATEWAY_ADAPTER } from '../../../src/modules/payments/adapters/payment-gateway.interface';
 
 const ORDER_ID = 'order-1';
+const PRODUCT_ORDER_ID = 'product-order-1';
 const CUSTOMER_ID = 'customer-1';
 
 describe('PaymentsService', () => {
@@ -14,6 +15,7 @@ describe('PaymentsService', () => {
   let module: TestingModule;
   let prisma: {
     order: { findUnique: jest.Mock };
+    productOrder: { findUnique: jest.Mock; update: jest.Mock };
     payment: { findUnique: jest.Mock; findFirst: jest.Mock; create: jest.Mock; update: jest.Mock };
   };
   let loyaltyService: { grantForPaidOrder: jest.Mock };
@@ -22,6 +24,7 @@ describe('PaymentsService', () => {
   beforeEach(async () => {
     prisma = {
       order: { findUnique: jest.fn() },
+      productOrder: { findUnique: jest.fn(), update: jest.fn() },
       payment: {
         findUnique: jest.fn(),
         findFirst: jest.fn(),
@@ -89,6 +92,62 @@ describe('PaymentsService', () => {
       });
       expect(result.payment.status).toBe(PaymentStatus.pending);
       expect(result.gateway.qrCode).toBe('mock-qr');
+    });
+
+    it('throws BadRequestException when neither orderId nor productOrderId is given', async () => {
+      await expect(
+        service.createIntent(CUSTOMER_ID, { method: PaymentMethod.pix }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    it('throws BadRequestException when both orderId and productOrderId are given', async () => {
+      await expect(
+        service.createIntent(CUSTOMER_ID, {
+          orderId: ORDER_ID,
+          productOrderId: PRODUCT_ORDER_ID,
+          method: PaymentMethod.pix,
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    it('creates an intent for a productOrder when productOrderId is given', async () => {
+      prisma.productOrder.findUnique.mockResolvedValue({
+        id: PRODUCT_ORDER_ID,
+        buyerUserId: CUSTOMER_ID,
+        totalAmount: 80,
+      });
+      prisma.payment.findUnique.mockResolvedValue(null);
+      gateway.createIntent.mockResolvedValue({
+        externalRef: 'product_order_product-order-1',
+        status: 'pending',
+        method: PaymentMethod.pix,
+        qrCode: 'mock-qr',
+      });
+      prisma.payment.create.mockImplementation(({ data }) => Promise.resolve({ id: 'payment-2', ...data }));
+
+      const result = await service.createIntent(CUSTOMER_ID, {
+        productOrderId: PRODUCT_ORDER_ID,
+        method: PaymentMethod.pix,
+      });
+
+      expect(gateway.createIntent).toHaveBeenCalledWith({
+        amount: 80,
+        method: PaymentMethod.pix,
+        externalRef: 'product_order_product-order-1',
+      });
+      expect(result.payment.productOrderId).toBe(PRODUCT_ORDER_ID);
+    });
+
+    it('throws NotFoundException when the productOrder does not belong to the user', async () => {
+      prisma.productOrder.findUnique.mockResolvedValue({
+        id: PRODUCT_ORDER_ID,
+        buyerUserId: 'someone-else',
+        totalAmount: 80,
+      });
+
+      await expect(
+        service.createIntent(CUSTOMER_ID, { productOrderId: PRODUCT_ORDER_ID, method: PaymentMethod.pix }),
+      ).rejects.toBeInstanceOf(NotFoundException);
     });
   });
 
@@ -160,6 +219,40 @@ describe('PaymentsService', () => {
         data: { status: PaymentStatus.failed },
       });
       expect(loyaltyService.grantForPaidOrder).not.toHaveBeenCalled();
+    });
+
+    it('confirms the productOrder payment status on first approval, without granting loyalty points', async () => {
+      prisma.payment.findFirst.mockResolvedValue({
+        id: 'payment-2',
+        orderId: null,
+        productOrderId: PRODUCT_ORDER_ID,
+        status: PaymentStatus.pending,
+      });
+      prisma.payment.update.mockResolvedValue({ id: 'payment-2', status: PaymentStatus.paid });
+      prisma.productOrder.update.mockResolvedValue({ id: PRODUCT_ORDER_ID });
+
+      await service.handleWebhook({ externalRef: 'product_order_product-order-1', status: 'approved' });
+
+      expect(prisma.productOrder.update).toHaveBeenCalledWith({
+        where: { id: PRODUCT_ORDER_ID },
+        data: { paymentStatus: PaymentStatus.paid, status: ProductOrderStatus.confirmed },
+      });
+      expect(loyaltyService.grantForPaidOrder).not.toHaveBeenCalled();
+    });
+
+    it('does not throw when confirming the productOrder fails (best-effort)', async () => {
+      prisma.payment.findFirst.mockResolvedValue({
+        id: 'payment-2',
+        orderId: null,
+        productOrderId: PRODUCT_ORDER_ID,
+        status: PaymentStatus.pending,
+      });
+      prisma.payment.update.mockResolvedValue({ id: 'payment-2', status: PaymentStatus.paid });
+      prisma.productOrder.update.mockRejectedValue(new Error('db down'));
+
+      await expect(
+        service.handleWebhook({ externalRef: 'product_order_product-order-1', status: 'approved' }),
+      ).resolves.toEqual({ id: 'payment-2', status: PaymentStatus.paid });
     });
   });
 });

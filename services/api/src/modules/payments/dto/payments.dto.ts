@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsIn, IsString, IsUUID } from 'class-validator';
+import { ApiPropertyOptional, ApiProperty } from '@nestjs/swagger';
+import { IsEnum, IsIn, IsOptional, IsString, IsUUID } from 'class-validator';
 import { PaymentMethod } from '@prisma/client';
 
 /** Metodos suportados por enquanto (item 7 do roadmap: "apenas PIX e cartao"). */
@@ -9,10 +9,22 @@ const SUPPORTED_METHODS = [
   PaymentMethod.debit_card,
 ];
 
+/**
+ * Exatamente um entre `orderId` (servico de lavagem) e `productOrderId`
+ * (compra na loja do cliente) deve ser informado — validado no
+ * `PaymentsService.createIntent`, ja que `class-validator` sozinho nao
+ * expressa "XOR" de forma direta entre dois campos opcionais.
+ */
 export class CreatePaymentIntentDto {
-  @ApiProperty({ description: 'Pedido a ser pago' })
+  @ApiPropertyOptional({ description: 'Pedido de lavagem a ser pago' })
+  @IsOptional()
   @IsUUID()
-  orderId: string;
+  orderId?: string;
+
+  @ApiPropertyOptional({ description: 'Pedido de produto (loja) a ser pago' })
+  @IsOptional()
+  @IsUUID()
+  productOrderId?: string;
 
   @ApiProperty({
     enum: SUPPORTED_METHODS,

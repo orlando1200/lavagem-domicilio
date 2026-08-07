@@ -16,7 +16,7 @@ describe('LoyaltyService', () => {
   let service: LoyaltyService;
   let module: TestingModule;
   let prisma: {
-    order: { findUnique: jest.Mock };
+    order: { findUnique: jest.Mock; findMany: jest.Mock };
     loyaltyPoint: {
       findFirst: jest.Mock;
       findMany: jest.Mock;
@@ -24,13 +24,13 @@ describe('LoyaltyService', () => {
       update: jest.Mock;
       updateMany: jest.Mock;
     };
-    loyaltyRedemption: { findUnique: jest.Mock; create: jest.Mock };
+    loyaltyRedemption: { findUnique: jest.Mock; create: jest.Mock; aggregate: jest.Mock };
     $transaction: jest.Mock;
   };
 
   beforeEach(async () => {
     prisma = {
-      order: { findUnique: jest.fn() },
+      order: { findUnique: jest.fn(), findMany: jest.fn().mockResolvedValue([]) },
       loyaltyPoint: {
         findFirst: jest.fn(),
         findMany: jest.fn(),
@@ -38,7 +38,11 @@ describe('LoyaltyService', () => {
         update: jest.fn(),
         updateMany: jest.fn(),
       },
-      loyaltyRedemption: { findUnique: jest.fn(), create: jest.fn() },
+      loyaltyRedemption: {
+        findUnique: jest.fn(),
+        create: jest.fn(),
+        aggregate: jest.fn().mockResolvedValue({ _sum: { amount: null } }),
+      },
       $transaction: jest.fn((operations: Promise<unknown>[]) => Promise.all(operations)),
     };
 
@@ -114,6 +118,52 @@ describe('LoyaltyService', () => {
 
       expect(result.balance).toBe(0);
       expect(result.nextExpiration).toBeNull();
+    });
+
+    it('counts consecutive completed-order days ending today as the streak', async () => {
+      prisma.loyaltyPoint.findMany.mockResolvedValue([]);
+      const today = new Date();
+      const yesterday = daysFromNow(-1);
+      const twoDaysAgo = daysFromNow(-2);
+      prisma.order.findMany.mockResolvedValue([
+        { completedAt: today },
+        { completedAt: yesterday },
+        { completedAt: twoDaysAgo },
+      ]);
+
+      const result = await service.getBalance(CUSTOMER_ID);
+
+      expect(result.streakDays).toBe(3);
+    });
+
+    it('breaks the streak on a gap day', async () => {
+      prisma.loyaltyPoint.findMany.mockResolvedValue([]);
+      prisma.order.findMany.mockResolvedValue([
+        { completedAt: new Date() },
+        { completedAt: daysFromNow(-2) },
+      ]);
+
+      const result = await service.getBalance(CUSTOMER_ID);
+
+      expect(result.streakDays).toBe(1);
+    });
+
+    it('returns zero streak when there is no completed order today', async () => {
+      prisma.loyaltyPoint.findMany.mockResolvedValue([]);
+      prisma.order.findMany.mockResolvedValue([{ completedAt: daysFromNow(-1) }]);
+
+      const result = await service.getBalance(CUSTOMER_ID);
+
+      expect(result.streakDays).toBe(0);
+    });
+
+    it('converts the sum of redeemed points into totalSaved (reais)', async () => {
+      prisma.loyaltyPoint.findMany.mockResolvedValue([]);
+      prisma.loyaltyRedemption.aggregate.mockResolvedValue({ _sum: { amount: 250 } });
+
+      const result = await service.getBalance(CUSTOMER_ID);
+
+      expect(result.totalSaved).toBeCloseTo(2.5, 2);
     });
   });
 
