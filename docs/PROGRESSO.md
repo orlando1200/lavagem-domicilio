@@ -1,7 +1,7 @@
 # Progresso do Projeto — GIUCAR
 
 ## Última atualização
-2026-08-06
+2026-08-07
 
 > Nota: a versão anterior deste arquivo (17/jul) descrevia uma rodada
 > anterior à recuperação do backend (Fase 9 — ver
@@ -78,6 +78,7 @@
 | **Google Maps** | Fallback haversine funcional; código pronto pra API real. Loga `[maps] modo MOCK/REAL ativo` no startup | `GOOGLE_MAPS_API_KEY` no `.env` — sem chave, nunca testamos contra a API de verdade |
 | **AWS Rekognition** | Não iniciado | Nada implementado ainda |
 | **Firebase Push** | Hooks placeholder (só logam) em `auctions-notifications.service.ts` | SDK real do FCM |
+| **Confirmação de pagamento (checkout da loja)** | `mobile-client` chama `POST /payments/webhook` ele mesmo logo após criar a intent, simulando a aprovação do gateway — o endpoint é propositalmente sem autenticação (é o que um gateway real chamaria) | Chave de sandbox do Mercado Pago; quando existir, o app para de chamar o webhook e passa a esperar o callback real |
 
 Nenhuma integração foi validada contra credenciais reais de sandbox —
 não há chaves configuradas nesta máquina.
@@ -102,13 +103,25 @@ não há chaves configuradas nesta máquina.
   local duplicado, removido. Continua exposto standalone via `GET
   /maps/distance`.
 - **Frete de `deliveries` não foi ligado ao `MapsService`, de propósito.**
-  `Store.address` é `Json?` sem lat/lng estruturado e `ProductOrder` não
-  tem endereço nenhum; o único ponto que usa um valor de frete
-  (`deliveries.service.ts.createDeliveryAsAdmin`) já é documentado como
-  endpoint de teste/simulação (`dto.shippingAmount ?? 0`), não um
-  checkout real. Ligar isso exigiria inventar schema novo pra um fluxo
-  que ainda não existe de verdade — fica pendente até o checkout real do
-  marketplace ser desenhado.
+  `Store.address` é `Json?` sem lat/lng estruturado; o único ponto que
+  usa um valor de frete (`deliveries.service.ts.createDeliveryAsAdmin`)
+  segue documentado como endpoint de teste/simulação (`dto.shippingAmount
+  ?? 0`), não o checkout real. O checkout real (abaixo) tem sua própria
+  regra de frete simbólica, independente do `MapsService`.
+- **Checkout real da loja B2C construído** (`POST
+  /marketplace/client/checkout` + `Payment` aceitando `ProductOrder`) —
+  ver seção "Loja B2C (checkout)" abaixo. `ProductOrder.shippingAddress`
+  é um snapshot JSON (mesmo padrão de `Store.address`), **não** um
+  módulo de endereços — decisão explícita de escopo, endereço não é
+  reutilizável entre pedidos nem compartilhado com o pedido de lavagem
+  (que também não tem tela de endereço no app cliente).
+- **Fidelidade sem sistema de metas/tiers inventado.** O card de
+  fidelidade do app cliente mostrava `nextRewardAt` fixo (320/500
+  pontos, hardcoded) — não existe conceito de "próxima recompensa" no
+  modelo real (resgate é sempre parcial, a qualquer momento). Trocado
+  por `nextExpiration` (pontos a vencer, já existia no backend) +
+  `streakDays`/`totalSaved` novos, ambos derivados de dado real
+  (`Order.completedAt`, `LoyaltyRedemption`), sem tabela nova.
 - **Previews HTML (`apps/preview/*.html`) permanecem mockups manuais**
   (Opção A), atualizados só quando há mudança grande de fluxo ou um bug
   concreto (ex.: link morto) — não geramos a partir do código Flutter
@@ -221,28 +234,27 @@ Ordem sugerida, por dependência e impacto (não por facilidade):
    `AuctionsPage._ActivationPrompt`). `flutter analyze` limpo. Perfil
    nasce `pending_documents`, precisa aprovação do admin antes de
    participar do matching normal ou de leilões.
-3. **Apps Flutter → backend real** — parcial, **feito o essencial**
-   (commit `9448925`): corrigido o mismatch `GET /orders`
-   (`{items, nextCursor}` vs array puro que `mobile-client` esperava —
-   bug real, confirmado quebrando a listagem). `OrderModel` também
-   atualizado (`washerId` removido, nunca lido em nenhuma tela;
-   `serviceType` adicionado). Resto do item **adiado por decisão
-   explícita** (não é wiring simples, cada um tem escopo próprio):
-   - Fidelidade (`engagement_provider`): só `loyaltyPoints` mapeia pro
-     `GET /loyalty/balance` real; `nextRewardAt`/`streakDays`/
-     `savedAmount` não têm equivalente no backend (sistema de
-     streak/metas nunca foi desenhado).
-   - Loja/carrinho (`shop`): catálogo 100% mockado
-     (`ProductCatalog.products`), e **o backend não tem endpoint de
-     catálogo pro cliente** — só módulos admin/parceiro (`store`,
-     `marketplace`, `starter-kit`). Precisa endpoint novo antes de
-     poder ligar.
-   - Veículo/endereço: não existe nem tela no app cliente — não é
-     mock pra trocar, é feature nova do zero.
-   - Auth e leilões (`mobile-client`) já eram 100% reais antes desta
-     rodada.
+3. **Apps Flutter → backend real** — **fechado** (`mobile-client`):
+   - ~~Bug `GET /orders`~~ — **feito** (commit `9448925`): corrigido o
+     mismatch `{items, nextCursor}` vs array puro. `OrderModel`
+     atualizado (`washerId` removido, `serviceType` adicionado).
+   - ~~Loja/carrinho~~ — **feito** (commits `600af74`/`e732ba7`):
+     catálogo real (`GET /marketplace/client/catalog`, já existia —
+     só faltava ligar), checkout real novo (`POST
+     /marketplace/client/checkout`, cria `ProductOrder` por loja,
+     calcula comissão via `CommissionPlan`, valida/decrementa
+     estoque), pagamento real (`Payment` agora aceita `ProductOrder`)
+     — confirmado em modo mock pelo próprio app (sem chave de sandbox,
+     ver tabela "Modo mock" acima).
+   - ~~Fidelidade~~ — **feito** (mesmos commits): `GET /loyalty/balance`
+     real, com `streakDays`/`totalSaved` novos no backend (dado real,
+     sem inventar sistema de metas — ver "Decisões técnicas").
+   - **Veículo/endereço**: continua fora — não existe nem tela no app
+     cliente, não é wiring, é feature nova do zero (endereço do
+     checkout da loja usa snapshot JSON, não esse fluxo).
+   - Auth e leilões já eram 100% reais antes desta rodada.
 4. **Aplicar as migrations pendentes num Postgres real** (não há
-   Postgres/Docker nesta máquina — já são 4 migrations nunca aplicadas a
+   Postgres/Docker nesta máquina — já são 5 migrations nunca aplicadas a
    um banco de verdade) — pré-requisito prático pros itens 3, 5 e 6.
 5. **Chaves de sandbox reais** (Mercado Pago + Google Maps) — depende de
    você criar as contas de desenvolvedor; o código já está pronto pros
