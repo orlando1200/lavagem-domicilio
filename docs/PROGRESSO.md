@@ -1,7 +1,7 @@
 # Progresso do Projeto — GIUCAR
 
 ## Última atualização
-2026-08-07
+2026-08-10
 
 > Nota: a versão anterior deste arquivo (17/jul) descrevia uma rodada
 > anterior à recuperação do backend (Fase 9 — ver
@@ -289,9 +289,37 @@ Ordem sugerida, por dependência e impacto (não por facilidade):
    nenhum consumidor no código, secrets do Firebase/admin nunca lidos).
    Corrigido pro stack real; validado só via `docker compose config`
    no CI (sem Docker nesta máquina pra rodar de fato).
-5. **Aplicar as migrations pendentes num Postgres real** (não há
-   Postgres/Docker nesta máquina — já são 6 migrations nunca aplicadas a
-   um banco de verdade) — pré-requisito prático pro item 6.
+5. ~~Aplicar as migrations pendentes num Postgres real~~ — **feito**.
+   Docker Desktop precisou de WSL2 (não instalado nesta máquina —
+   resolvido pelo usuário via `wsl --install` + habilitação manual das
+   features `Microsoft-Windows-Subsystem-Linux`/`VirtualMachinePlatform`
+   via DISM + restart completo). Com `docker compose up -d postgres` de
+   pé, `prisma migrate deploy` rodou pela primeira vez contra um
+   Postgres de verdade — todas as 7 migrations reais aplicaram, mas
+   quebrou em seguida em `P3015` ao alcançar `_legacy_20250101000000_init`
+   (só tem `.md`, sem `migration.sql`). Causa: a suposição registrada em
+   `_legacy-migrations-reference/_legacy_20250101000000_init/NOTA_RECUPERACAO.md`
+   de que o prefixo `_legacy_` bastava pro Prisma ignorar a pasta estava
+   **errada** — `migrate deploy` escaneia qualquer subdiretório dentro
+   de `prisma/migrations/`, independente do nome bater o padrão
+   `<timestamp>_<nome>`. Corrigido movendo as duas pastas `_legacy_*`
+   pra fora de `prisma/migrations/` (novo dir
+   `services/api/prisma/_legacy-migrations-reference/`, fora do alcance
+   do Prisma) — nota corrigida no lugar.
+
+   Com o schema aplicado, subiu o backend pela primeira vez de ponta a
+   ponta (`node dist/main.js`) e exercitou `POST /auth/register` →
+   `POST /auth/login` → `GET /users/me` de verdade. Isso expôs um bug
+   real de drift, invisível até este exato momento: a migration
+   `20260806000000_unify_washer_into_driver_profile` dropou a tabela
+   `washers` (que tinha `service_radius_km`) sem nunca adicionar essa
+   coluna em `driver_profiles`, apesar de `schema.prisma` continuar
+   esperando `DriverProfile.serviceRadiusKm`. Qualquer query tocando
+   `DriverProfile` quebrava com "column driver_profiles.service_radius_km
+   does not exist". Corrigido com nova migration
+   `20260808000000_add_driver_profile_service_radius`; revalidado
+   registro de `LAVADOR` + `POST /driver-profiles/me` + `GET
+   /driver-profiles/me` com sucesso.
 6. **Chaves de sandbox reais** (Mercado Pago + Google Maps) — depende de
    você criar as contas de desenvolvedor; o código já está pronto pros
    dois lados (mock automático sem chave, real com chave, log de modo no
