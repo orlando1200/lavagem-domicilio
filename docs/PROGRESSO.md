@@ -269,6 +269,20 @@ Ordem sugerida, por dependência e impacto (não por facilidade):
      /stores/:id/orders` + ligado no app. Nesse processo, achado e
      corrigido um problema de segurança real: `store.controller.ts`
      não tinha guard de autenticação nenhum (ver "Decisões técnicas").
+   - **`mobile-driver` — fluxo de pedidos** (commits `259c29b`/
+     `528a303`): faltava o essencial — `GET /orders` era restrito a
+     `CLIENTE`, então o lavador nunca tinha como ver pedidos
+     disponíveis pra aceitar; a fila era 100% mockada
+     (`_mockAvailableOrders`) mesmo com aceitar/avançar status/cancelar
+     já chamando o backend real (silenciosamente, contra pedidos que
+     não existiam). Criados `GET /orders/available` (fila
+     `searching_washer` por zona) e `GET /orders/mine/active`; achado e
+     corrigido outro bug real no caminho — `PATCH /orders/:id/cancel`
+     só aceitava `CLIENTE`, o lavador não tinha nenhum jeito de cancelar
+     um pedido que aceitou. Online/offline agora reflete
+     `DriverProfile.status` de verdade. `DriverDailyStats` (ganhos/
+     lavagens do dia) segue mockado — precisa de endpoint de agregação
+     que não existe, fora do escopo desta rodada.
 4. ~~Docker Compose local (Postgres + backend)~~ — **feito** (commit
    `dcbe25d`). `docker-compose.yml`/`Dockerfile` já existiam mas
    estavam desatualizados (Stripe em vez de Mercado Pago, `Redis` sem
