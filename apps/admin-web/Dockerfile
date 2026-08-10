@@ -37,7 +37,14 @@ COPY packages ./packages
 WORKDIR /app/apps/admin-web
 
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV API_URL=http://localhost:3001/api/v1
+
+# docker-compose.yml passa --build-arg API_URL (porta 3000, a que o
+# serviço api de fato expõe) — sem declarar o ARG aqui, esse valor era
+# descartado silenciosamente e o build sempre embutia o default
+# hardcoded (porta 3001, que não existe), quebrando toda chamada do
+# browser em runtime (ERR_CONNECTION_REFUSED).
+ARG API_URL=http://localhost:3000/api/v1
+ENV API_URL=$API_URL
 
 RUN pnpm build
 
@@ -52,12 +59,16 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3003
 
-# Copy standalone output from Next.js
+# Output "standalone" do Next.js preserva a estrutura de diretórios do
+# monorepo (é um workspace pnpm) — server.js fica em
+# apps/admin-web/server.js, não em ./server.js na raiz. static/ e
+# public/ (não incluídos no standalone) precisam ir pro mesmo caminho
+# aninhado, senão o Next não os encontra em runtime.
 COPY --from=builder /app/apps/admin-web/.next/standalone ./
-COPY --from=builder /app/apps/admin-web/.next/static ./.next/static
-COPY --from=builder /app/apps/admin-web/public ./public
+COPY --from=builder /app/apps/admin-web/.next/static ./apps/admin-web/.next/static
+COPY --from=builder /app/apps/admin-web/public ./apps/admin-web/public
 
 EXPOSE 3003
 
-CMD ["node", "server.js"]
+CMD ["node", "apps/admin-web/server.js"]
 

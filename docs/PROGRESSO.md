@@ -352,6 +352,58 @@ Ordem sugerida, por dependência e impacto (não por facilidade):
    started`), e `POST /auth/register` → `GET /users/me` funcionam via
    `localhost:3000` — primeira vez que a imagem Docker de produção
    (não só o código-fonte) é validada de ponta a ponta.
+
+   `apps/admin-web/Dockerfile` também nunca tinha sido construído de
+   verdade e tinha mais três bugs reais, achados nessa mesma sessão de
+   validação:
+   - **`apps/admin-web/public/` não existia** no repo (nenhum asset
+     estático foi criado ao montar o painel do zero) — `COPY
+     .../public ./public` quebrava o build inteiro
+     (`"/app/apps/admin-web/public": not found`). Corrigido criando o
+     diretório com um `.gitkeep` (Next.js/Docker exigem que exista,
+     mesmo vazio).
+   - **`server.js` do output `standalone` do Next.js não fica na raiz**:
+     como o build roda dentro de um workspace pnpm, o standalone
+     preserva a estrutura do monorepo (`apps/admin-web/server.js`, não
+     `./server.js`) — `CMD ["node", "server.js"]` a partir de `/app`
+     quebrava com `Cannot find module '/app/server.js'`. `.next/static`
+     e `public/` também precisam ir pro mesmo caminho aninhado
+     (`./apps/admin-web/...`), não pra raiz. Corrigido ajustando os
+     destinos dos `COPY` e o `CMD` pra `node apps/admin-web/server.js`.
+   - **`API_URL` do build sempre apontava pra porta errada**: o stage
+     `builder` tinha `ENV API_URL=http://localhost:3001/api/v1`
+     hardcoded, sem nunca declarar `ARG API_URL` — o
+     `--build-arg API_URL=http://localhost:3000/api/v1` que
+     `docker-compose.yml` já passava (porta 3000, a que o serviço `api`
+     de fato expõe) era descartado silenciosamente. Como
+     `next.config.js` embute `API_URL` no bundle do client em build
+     time (`env` do Next, não `NEXT_PUBLIC_*`), toda chamada do browser
+     ia pra `localhost:3001` (porta que não existe) e falhava com
+     `ERR_CONNECTION_REFUSED` — só visível testando o login de verdade
+     no browser contra a imagem construída, nunca antes disso. Corrigido
+     declarando `ARG API_URL` antes do `ENV`.
+
+   **Bug de segurança real, achado no mesmo processo**: pra logar no
+   admin-web precisava de um usuário `ADMIN`, e não havia nenhum. Ao
+   tentar criar um, descoberto que `POST /auth/register` — endpoint
+   **100% público, sem guard nenhum** — aceitava qualquer valor de
+   `role` no DTO, incluindo `ADMIN`: qualquer pessoa não-autenticada
+   podia se auto-registrar como administrador e ganhar acesso total a
+   todo `/admin/*` (aprovação de lavadores, repasses, etc.). Corrigido
+   restringindo `RegisterDto.role` a `CLIENTE`/`LAVADOR` via `@IsIn`
+   (`services/api/src/modules/auth/dto/register.dto.ts`) — promoção pra
+   `ADMIN` só é possível por um admin já existente via `PATCH
+   /admin/users/:id/role`, endpoint que já existia e já era protegido.
+   O primeiro admin real (`admin@giucar.com.br`) foi criado pelo
+   endpoint antigo (ainda aberto nesse momento) segundos antes do fix
+   subir — reveja a senha antes de qualquer uso além de teste local.
+
+   Com os quatro bugs corrigidos, `docker compose up -d` sobe os três
+   serviços (`postgres`, `api`, `admin-web`) de verdade, e o login
+   admin funciona de ponta a ponta pelo browser: `POST /auth/login` →
+   cookie → `GET /users/me` → `GET /admin/orders` — todos `200`,
+   `localhost:3003` → `localhost:3000`, confirmado via rede do browser,
+   não só `curl`.
 6. **Chaves de sandbox reais** (Mercado Pago + Google Maps) — depende de
    você criar as contas de desenvolvedor; o código já está pronto pros
    dois lados (mock automático sem chave, real com chave, log de modo no
