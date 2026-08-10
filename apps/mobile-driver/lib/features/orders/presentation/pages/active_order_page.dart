@@ -101,7 +101,7 @@ class ActiveOrderPage extends ConsumerWidget {
                   _DetailRow(
                     icon: Icons.location_on_outlined,
                     label: order.address,
-                    value: '${order.distanceKm} km',
+                    value: order.distanceKm != null ? '${order.distanceKm} km' : '',
                   ),
                 ],
               ),
@@ -111,8 +111,8 @@ class ActiveOrderPage extends ConsumerWidget {
           _StatusTimeline(currentStatus: order.status),
           const SizedBox(height: 24),
           FilledButton(
-            onPressed: () {
-              ref.read(driverOrdersProvider.notifier).advanceActiveOrderStatus();
+            onPressed: () async {
+              await ref.read(driverOrdersProvider.notifier).advanceActiveOrderStatus();
               final updated = ref.read(driverOrdersProvider).activeOrder;
               if (updated == null && context.mounted) {
                 context.pop();
@@ -122,9 +122,9 @@ class ActiveOrderPage extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
           OutlinedButton(
-            onPressed: () {
-              ref.read(driverOrdersProvider.notifier).cancelActiveOrder();
-              context.pop();
+            onPressed: () async {
+              await ref.read(driverOrdersProvider.notifier).cancelActiveOrder();
+              if (context.mounted) context.pop();
             },
             child: const Text('Cancelar pedido'),
           ),

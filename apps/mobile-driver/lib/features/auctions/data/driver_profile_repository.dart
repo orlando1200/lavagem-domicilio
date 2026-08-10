@@ -72,4 +72,19 @@ class DriverProfileRepository {
       throw ApiException.fromDioException(e);
     }
   }
+
+  /// Define disponibilidade pra receber pedidos/leiloes (toggle online/
+  /// offline da home). So aceita `active`/`inactive` — demais status
+  /// exigem aprovacao do admin (PATCH /driver-profiles/me/availability).
+  Future<DriverProfileModel> updateAvailability({required bool online}) async {
+    try {
+      final response = await _dio.patch<Map<String, dynamic>>(
+        '/driver-profiles/me/availability',
+        data: {'status': online ? 'active' : 'inactive'},
+      );
+      return DriverProfileModel.fromJson(response.data!);
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
 }

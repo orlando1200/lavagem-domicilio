@@ -31,6 +31,15 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<DriverOrdersState>(driverOrdersProvider, (previous, next) {
+      if (next.errorMessage != null && next.errorMessage != previous?.errorMessage) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(next.errorMessage!)),
+        );
+        ref.read(driverOrdersProvider.notifier).clearError();
+      }
+    });
+
     return AppScaffold(
       body: _pages[_currentIndex],
       currentIndex: _currentIndex,
@@ -41,6 +50,15 @@ class _HomePageState extends ConsumerState<HomePage> {
 }
 
 // ── Home ────────────────────────────────────────────────────────────────────
+
+/// Endereco do pedido com distancia opcional: o backend nao calcula
+/// distancia por pedido, entao esse dado so aparece quando disponivel,
+/// em vez de exibir um numero inventado.
+String _addressLine(DriverOrder order) {
+  if (order.distanceKm == null) return order.address;
+  final eta = order.etaMinutes != null ? ' · ${order.etaMinutes} min' : '';
+  return '${order.address} · ${order.distanceKm} km$eta';
+}
 
 class _HomeTab extends ConsumerWidget {
   const _HomeTab();
@@ -86,7 +104,7 @@ class _HomeTab extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 if (ordersState.availableOrders.isEmpty)
-                  const _EmptyOrdersState()
+                  _EmptyOrdersState(isLoading: ordersState.isLoadingAvailable)
                 else
                   ...ordersState.availableOrders.map(
                     (order) => Padding(
@@ -420,7 +438,7 @@ class _ActiveOrderCard extends ConsumerWidget {
               const SizedBox(height: 10),
               _OrderDetailLine(icon: Icons.directions_car_rounded, text: '${order.serviceName} · ${order.vehicle}'),
               const SizedBox(height: 4),
-              _OrderDetailLine(icon: Icons.location_on_outlined, text: '${order.address} · ${order.distanceKm} km'),
+              _OrderDetailLine(icon: Icons.location_on_outlined, text: _addressLine(order)),
               const SizedBox(height: 14),
               Row(
                 children: [
@@ -482,10 +500,7 @@ class _AvailableOrderCard extends ConsumerWidget {
             const SizedBox(height: 10),
             _OrderDetailLine(icon: Icons.directions_car_rounded, text: '${order.serviceName} · ${order.vehicle}'),
             const SizedBox(height: 4),
-            _OrderDetailLine(
-              icon: Icons.location_on_outlined,
-              text: '${order.address} · ${order.distanceKm} km · ${order.etaMinutes} min',
-            ),
+            _OrderDetailLine(icon: Icons.location_on_outlined, text: _addressLine(order)),
             const SizedBox(height: 14),
             Row(
               children: [
@@ -541,7 +556,9 @@ class _OrderDetailLine extends StatelessWidget {
 }
 
 class _EmptyOrdersState extends StatelessWidget {
-  const _EmptyOrdersState();
+  const _EmptyOrdersState({this.isLoading = false});
+
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -550,10 +567,17 @@ class _EmptyOrdersState extends StatelessWidget {
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            Icon(Icons.search_rounded, color: AppColors.textMuted, size: 32),
+            if (isLoading)
+              const SizedBox(
+                width: 28,
+                height: 28,
+                child: CircularProgressIndicator(strokeWidth: 2.5, color: AppColors.primary),
+              )
+            else
+              Icon(Icons.search_rounded, color: AppColors.textMuted, size: 32),
             const SizedBox(height: 8),
             Text(
-              'Procurando pedidos próximos...',
+              isLoading ? 'Carregando pedidos...' : 'Procurando pedidos próximos...',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppColors.textSecondary,
                   ),
@@ -771,7 +795,7 @@ class _OrdersTab extends ConsumerWidget {
           if (!ordersState.isOnline)
             const _OfflineHint()
           else if (ordersState.availableOrders.isEmpty)
-            const _EmptyOrdersState()
+            _EmptyOrdersState(isLoading: ordersState.isLoadingAvailable)
           else
             ...ordersState.availableOrders.map(
               (order) => Padding(
