@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import { NotFoundException } from '@nestjs/common';
-import { DriverStatus, DriverType, OrderStatus, ServiceType } from '@prisma/client';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { DriverStatus, DriverType, OrderStatus, ServiceType, UserRole } from '@prisma/client';
 import { OrdersService } from '../../../src/modules/orders/orders.service';
 import { PrismaService } from '../../../src/database/prisma.service';
 import { MapsService } from '../../../src/modules/maps/maps.service';
@@ -33,7 +33,13 @@ describe('OrdersService', () => {
     vehicle: { findUnique: jest.Mock };
     address: { findUnique: jest.Mock };
     zone: { findFirst: jest.Mock };
-    order: { create: jest.Mock; findUnique: jest.Mock; update: jest.Mock };
+    order: {
+      create: jest.Mock;
+      findUnique: jest.Mock;
+      update: jest.Mock;
+      findMany: jest.Mock;
+      findFirst: jest.Mock;
+    };
     driverProfile: { findMany: jest.Mock; findUnique: jest.Mock };
   };
 
@@ -42,7 +48,13 @@ describe('OrdersService', () => {
       vehicle: { findUnique: jest.fn() },
       address: { findUnique: jest.fn() },
       zone: { findFirst: jest.fn() },
-      order: { create: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
+      order: {
+        create: jest.fn(),
+        findUnique: jest.fn(),
+        update: jest.fn(),
+        findMany: jest.fn(),
+        findFirst: jest.fn(),
+      },
       driverProfile: { findMany: jest.fn(), findUnique: jest.fn() },
     };
 
@@ -235,6 +247,150 @@ describe('OrdersService', () => {
 
       expect(result.driverId).toBe('driver-1');
       expect(result.status).toBe(OrderStatus.accepted);
+    });
+  });
+
+  describe('listAvailableOrdersForDriver', () => {
+    it('returns an empty list when the driver has no profile', async () => {
+      prisma.driverProfile.findUnique.mockResolvedValue(null);
+
+      const result = await service.listAvailableOrdersForDriver('driver-1');
+
+      expect(result).toEqual([]);
+      expect(prisma.order.findMany).not.toHaveBeenCalled();
+    });
+
+    it('returns an empty list for a CARWASH_SHOP profile (auctions-only)', async () => {
+      prisma.driverProfile.findUnique.mockResolvedValue(
+        driverProfile({ driverType: DriverType.CARWASH_SHOP, status: DriverStatus.active }),
+      );
+
+      const result = await service.listAvailableOrdersForDriver('driver-1');
+
+      expect(result).toEqual([]);
+      expect(prisma.order.findMany).not.toHaveBeenCalled();
+    });
+
+    it('returns an empty list when the driver is not active (offline)', async () => {
+      prisma.driverProfile.findUnique.mockResolvedValue(
+        driverProfile({ status: DriverStatus.inactive }),
+      );
+
+      const result = await service.listAvailableOrdersForDriver('driver-1');
+
+      expect(result).toEqual([]);
+      expect(prisma.order.findMany).not.toHaveBeenCalled();
+    });
+
+    it('lists searching_washer orders scoped to the driver zone when resolved', async () => {
+      prisma.driverProfile.findUnique.mockResolvedValue(
+        driverProfile({ status: DriverStatus.active, currentZoneId: 'zone-1' }),
+      );
+      prisma.order.findMany.mockResolvedValue([{ id: ORDER_ID }]);
+
+      const result = await service.listAvailableOrdersForDriver('driver-1');
+
+      expect(prisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { status: OrderStatus.searching_washer, zoneId: 'zone-1' },
+        }),
+      );
+      expect(result).toEqual([{ id: ORDER_ID }]);
+    });
+
+    it('does not filter by zone when the driver has none resolved', async () => {
+      prisma.driverProfile.findUnique.mockResolvedValue(
+        driverProfile({ status: DriverStatus.active, currentZoneId: null }),
+      );
+      prisma.order.findMany.mockResolvedValue([]);
+
+      await service.listAvailableOrdersForDriver('driver-1');
+
+      expect(prisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { status: OrderStatus.searching_washer } }),
+      );
+    });
+  });
+
+  describe('getMyActiveOrder', () => {
+    it('queries for orders assigned to the driver in an active status', async () => {
+      prisma.order.findFirst.mockResolvedValue({ id: ORDER_ID, status: OrderStatus.en_route });
+
+      const result = await service.getMyActiveOrder('driver-1');
+
+      expect(prisma.order.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            driverId: 'driver-1',
+            status: { in: [OrderStatus.accepted, OrderStatus.en_route, OrderStatus.in_progress] },
+          },
+        }),
+      );
+      expect(result?.id).toBe(ORDER_ID);
+    });
+  });
+
+  describe('cancelOrder', () => {
+    it('allows the customer who owns the order to cancel it', async () => {
+      prisma.order.findUnique.mockResolvedValue({
+        id: ORDER_ID,
+        customerId: CUSTOMER_ID,
+        driverId: null,
+        status: OrderStatus.pending,
+      });
+      prisma.order.update.mockImplementation(({ data }) => Promise.resolve({ id: ORDER_ID, ...data }));
+
+      const result = await service.cancelOrder(
+        { id: CUSTOMER_ID, role: UserRole.CLIENTE },
+        ORDER_ID,
+        {},
+      );
+
+      expect(result.status).toBe(OrderStatus.cancelled);
+    });
+
+    it('allows the assigned driver to cancel the order', async () => {
+      prisma.order.findUnique.mockResolvedValue({
+        id: ORDER_ID,
+        customerId: CUSTOMER_ID,
+        driverId: 'driver-1',
+        status: OrderStatus.accepted,
+      });
+      prisma.order.update.mockImplementation(({ data }) => Promise.resolve({ id: ORDER_ID, ...data }));
+
+      const result = await service.cancelOrder(
+        { id: 'driver-1', role: UserRole.LAVADOR },
+        ORDER_ID,
+        {},
+      );
+
+      expect(result.status).toBe(OrderStatus.cancelled);
+    });
+
+    it('throws ForbiddenException for a driver who is not assigned to the order', async () => {
+      prisma.order.findUnique.mockResolvedValue({
+        id: ORDER_ID,
+        customerId: CUSTOMER_ID,
+        driverId: 'driver-1',
+        status: OrderStatus.accepted,
+      });
+
+      await expect(
+        service.cancelOrder({ id: 'driver-2', role: UserRole.LAVADOR }, ORDER_ID, {}),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+    });
+
+    it('throws ForbiddenException for a customer who does not own the order', async () => {
+      prisma.order.findUnique.mockResolvedValue({
+        id: ORDER_ID,
+        customerId: CUSTOMER_ID,
+        driverId: null,
+        status: OrderStatus.pending,
+      });
+
+      await expect(
+        service.cancelOrder({ id: 'someone-else', role: UserRole.CLIENTE }, ORDER_ID, {}),
+      ).rejects.toBeInstanceOf(ForbiddenException);
     });
   });
 });

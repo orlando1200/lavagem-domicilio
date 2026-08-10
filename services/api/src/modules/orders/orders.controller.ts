@@ -52,6 +52,22 @@ export class OrdersController {
     return this.ordersService.listMyOrders(user.id, query);
   }
 
+  @Get('available')
+  @Roles(UserRole.LAVADOR)
+  @UseGuards(RolesGuard)
+  @ApiOperation({ summary: 'Lavador lista pedidos disponiveis para aceitar (searching_washer, na sua zona)' })
+  listAvailableOrders(@CurrentUser() user: AuthenticatedUser) {
+    return this.ordersService.listAvailableOrdersForDriver(user.id);
+  }
+
+  @Get('mine/active')
+  @Roles(UserRole.LAVADOR)
+  @UseGuards(RolesGuard)
+  @ApiOperation({ summary: 'Lavador consulta seu pedido ativo (aceito, a caminho ou em andamento)' })
+  getMyActiveOrder(@CurrentUser() user: AuthenticatedUser) {
+    return this.ordersService.getMyActiveOrder(user.id);
+  }
+
   @Get(':id')
   @Roles(UserRole.CLIENTE)
   @UseGuards(RolesGuard)
@@ -64,15 +80,15 @@ export class OrdersController {
   }
 
   @Patch(':id/cancel')
-  @Roles(UserRole.CLIENTE)
+  @Roles(UserRole.CLIENTE, UserRole.LAVADOR)
   @UseGuards(RolesGuard)
-  @ApiOperation({ summary: 'Cliente cancela um pedido' })
+  @ApiOperation({ summary: 'Cliente ou lavador atribuido cancela um pedido' })
   cancelOrder(
     @CurrentUser() user: AuthenticatedUser,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: CancelOrderDto,
   ) {
-    return this.ordersService.cancelOrder(user.id, id, dto);
+    return this.ordersService.cancelOrder(user, id, dto);
   }
 
   @Patch(':id/accept')

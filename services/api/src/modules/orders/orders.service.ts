@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { DriverStatus, DriverType, Order, OrderStatus, Prisma, ServiceType } from '@prisma/client';
+import { DriverStatus, DriverType, Order, OrderStatus, Prisma, ServiceType, UserRole } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 import { MapsService } from '../maps/maps.service';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -16,6 +16,7 @@ const ORDER_INCLUDE = {
   vehicle: true,
   address: true,
   zone: true,
+  customer: { select: { id: true, name: true } },
 } satisfies Prisma.OrderInclude;
 
 /** Transicoes de status permitidas (maquina de estados do pedido). */
@@ -134,10 +135,23 @@ export class OrdersService {
     return order;
   }
 
-  async cancelOrder(customerId: string, orderId: string, dto: CancelOrderDto) {
+  /**
+   * Cancela um pedido — cliente dono ou lavador atribuido podem cancelar
+   * (antes so o cliente podia; o lavador nao tinha nenhum jeito de
+   * cancelar um pedido que aceitou, mesmo em casos legitimos como
+   * cliente ausente/endereco errado).
+   */
+  async cancelOrder(
+    requester: { id: string; role: UserRole },
+    orderId: string,
+    dto: CancelOrderDto,
+  ) {
     const order = await this.findOrderOrThrow(orderId);
 
-    if (order.customerId !== customerId) {
+    const isOwner = requester.role === UserRole.CLIENTE && order.customerId === requester.id;
+    const isAssignedDriver = requester.role === UserRole.LAVADOR && order.driverId === requester.id;
+
+    if (!isOwner && !isAssignedDriver) {
       throw new ForbiddenException('Este pedido nao pertence ao usuario autenticado');
     }
 
@@ -147,6 +161,46 @@ export class OrdersService {
   // ────────────────────────────────────────────────────────────────────
   // LAVADOR
   // ────────────────────────────────────────────────────────────────────
+
+  /**
+   * Pedidos disponiveis pra aceitar: `searching_washer`, na mesma zona
+   * do lavador (quando resolvida). "Primeiro a aceitar leva" —
+   * `acceptOrder` nao exige que `order.driverId` ja aponte pra quem
+   * aceita, entao esta lista e so a fila de candidatos, nao uma
+   * atribuicao. Lojas de carwash (`CARWASH_SHOP`) e lavadores fora do
+   * status `active` (offline) nao veem nada — leilao de servico pesado
+   * e um fluxo separado (modulo `auctions`).
+   */
+  async listAvailableOrdersForDriver(driverUserId: string) {
+    const driver = await this.prisma.driverProfile.findUnique({
+      where: { userId: driverUserId },
+    });
+
+    if (!driver || driver.driverType === DriverType.CARWASH_SHOP || driver.status !== DriverStatus.active) {
+      return [];
+    }
+
+    return this.prisma.order.findMany({
+      where: {
+        status: OrderStatus.searching_washer,
+        ...(driver.currentZoneId ? { zoneId: driver.currentZoneId } : {}),
+      },
+      include: ORDER_INCLUDE,
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  /** Pedido ativo do lavador (aceito, a caminho ou em andamento), se houver. */
+  async getMyActiveOrder(driverUserId: string) {
+    return this.prisma.order.findFirst({
+      where: {
+        driverId: driverUserId,
+        status: { in: [OrderStatus.accepted, OrderStatus.en_route, OrderStatus.in_progress] },
+      },
+      include: ORDER_INCLUDE,
+      orderBy: { updatedAt: 'desc' },
+    });
+  }
 
   /** Lavador aceita um pedido que estava em busca de lavador (`searching_washer`). */
   async acceptOrder(driverUserId: string, orderId: string) {
