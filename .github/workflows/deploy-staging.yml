@@ -1,0 +1,47 @@
+name: Deploy Staging (Fly.io)
+
+# So dispara em push a main, e so faz algo se o secret FLY_API_TOKEN
+# existir no repo (Settings > Secrets and variables > Actions) — sem
+# ele, os jobs de deploy falham cedo e nada e publicado. Nao ligado
+# por padrao: precisa desse secret ser criado manualmente por quem tem
+# acesso a conta Fly.io (ver docs/DEPLOY.md).
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+jobs:
+  deploy-api:
+    name: Deploy api
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy api
+        run: flyctl deploy --config fly.api.toml --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+  deploy-admin-web:
+    name: Deploy admin-web
+    runs-on: ubuntu-latest
+    needs: deploy-api
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy admin-web
+        run: flyctl deploy --config fly.admin-web.toml --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
