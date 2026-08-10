@@ -42,6 +42,31 @@ export class UpdateProductStatusDto {
   rejectionReason?: string;
 }
 
+export class AdminListProductsDto {
+  @ApiPropertyOptional({ enum: ProductStatus })
+  @IsOptional()
+  @IsEnum(ProductStatus)
+  status?: ProductStatus;
+
+  @ApiPropertyOptional({ description: 'Filtra por loja' })
+  @IsOptional()
+  @IsUUID()
+  storeId?: string;
+
+  @ApiPropertyOptional({ description: 'Busca por nome do produto' })
+  @IsOptional()
+  @IsString()
+  search?: string;
+
+  @ApiPropertyOptional({ default: 1 })
+  @IsOptional()
+  page?: string;
+
+  @ApiPropertyOptional({ default: 20 })
+  @IsOptional()
+  limit?: string;
+}
+
 /**
  * Snapshot do endereco de entrega informado no checkout — guardado
  * como JSON solto em `ProductOrder.shippingAddress` (mesma estrategia

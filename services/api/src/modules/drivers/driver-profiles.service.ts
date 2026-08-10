@@ -14,8 +14,22 @@ import {
   UpdateDriverProfileDto,
 } from './dto/driver-profiles.dto';
 
+// `select` em vez de `user: true`: evita vazar `passwordHash` (hash
+// bcrypt) nas respostas de GET/PATCH deste modulo — nao ha
+// ClassSerializerInterceptor nem select automatico no projeto, entao
+// `include: {user: true}` traria a linha inteira de `User`.
 const DRIVER_PROFILE_INCLUDE = {
-  user: true,
+  user: {
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      phone: true,
+      status: true,
+      avatarUrl: true,
+      createdAt: true,
+    },
+  },
   zone: true,
 } satisfies Prisma.DriverProfileInclude;
 

@@ -18,8 +18,13 @@ import {
   UpdatePayoutStatusDto,
 } from './dto/payouts.dto';
 
+// `select` em vez de `include: {user: true}`: evita vazar
+// `passwordHash` na resposta (mesmo motivo de DRIVER_PROFILE_INCLUDE
+// em driver-profiles.service.ts).
 const PAYOUT_INCLUDE = {
-  recipientWasher: { include: { user: true } },
+  recipientWasher: {
+    include: { user: { select: { id: true, name: true, email: true } } },
+  },
   recipientStore: true,
 } satisfies Prisma.PayoutInclude;
 

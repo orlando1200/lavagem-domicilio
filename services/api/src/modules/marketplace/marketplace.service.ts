@@ -6,7 +6,12 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { CatalogTarget, Prisma, ProductStatus, StoreStatus } from '@prisma/client';
-import { CatalogQueryDto, CheckoutDto, UpdateProductStatusDto } from './dto/marketplace.dto';
+import {
+  AdminListProductsDto,
+  CatalogQueryDto,
+  CheckoutDto,
+  UpdateProductStatusDto,
+} from './dto/marketplace.dto';
 
 const CHECKOUT_ORDER_INCLUDE = {
   items: { include: { product: true } },
@@ -229,6 +234,34 @@ export class MarketplaceService {
 
   private buildOrderNumber(index: number): string {
     return `PED-${Date.now().toString(36).toUpperCase()}-${index}`;
+  }
+
+  /** Lista produtos de todas as lojas pro admin, com filtro de status
+   * (usado principalmente pra fila de aprovacao: status=pending_approval). */
+  async listProductsForAdmin(query: AdminListProductsDto) {
+    const page = Math.max(Number(query.page) || 1, 1);
+    const limit = Math.min(Math.max(Number(query.limit) || 20, 1), 100);
+
+    const where: Prisma.ProductWhereInput = {
+      ...(query.status ? { status: query.status } : {}),
+      ...(query.storeId ? { storeId: query.storeId } : {}),
+      ...(query.search
+        ? { name: { contains: query.search, mode: 'insensitive' } }
+        : {}),
+    };
+
+    const [items, total] = await Promise.all([
+      this.prisma.product.findMany({
+        where,
+        include: { store: { select: { id: true, name: true } } },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.product.count({ where }),
+    ]);
+
+    return { data: items, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
   async listStoresForAdmin() {
