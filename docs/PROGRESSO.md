@@ -296,6 +296,21 @@ Ordem sugerida, por dependência e impacto (não por facilidade):
    você criar as contas de desenvolvedor; o código já está pronto pros
    dois lados (mock automático sem chave, real com chave, log de modo no
    startup).
-7. **Admin panel com dados reais** — maior esforço da lista;
-   `admin-web` está quase vazio (só landing page), as 14 páginas do
-   painel seguem em quarentena aguardando reconstrução.
+7. **Admin panel com dados reais** — **Fase 1 feita** (commit `23a4f32`):
+   Pedidos, Aprovação de Lavadores, Marketplace (lojas + aprovação de
+   produtos), Repasses. `admin-web` era só uma landing page estática, as
+   14 páginas em quarentena estavam **literalmente corrompidas**
+   (imports faltando, sintaxe quebrada, componentes de UI inexistentes,
+   schema desatualizado) — não reaproveitáveis, reconstrução do zero.
+   Stack nova: Tailwind + shadcn/ui + TanStack Query. Dois problemas
+   reais achados e corrigidos no processo: CORS nunca tinha sido
+   habilitado no backend (`main.ts`) e `marketplace.admin.controller.ts`
+   não tinha guard nenhum (mesmo padrão de falha do `store.controller.ts`,
+   já corrigido antes) — mais um vazamento de `passwordHash` em
+   `DRIVER_PROFILE_INCLUDE`/`PAYOUT_INCLUDE` (`user: true` sem `select`).
+   **Dashboard adiado de propósito** — módulo `analytics` está
+   fantasiado (método duplicado 4x referenciando IA de surge pricing,
+   bot de WhatsApp, assinaturas recorrentes, nada disso existe de
+   verdade). **Fases 2-4 seguem pendentes**: categorias/serviços/
+   zonas/cupons, relatórios/suporte/fidelidade, aluguel de moto/kit
+   inicial — nenhuma dessas 10 páginas foi tocada ainda.
