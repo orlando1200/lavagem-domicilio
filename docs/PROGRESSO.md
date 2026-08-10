@@ -320,6 +320,38 @@ Ordem sugerida, por dependência e impacto (não por facilidade):
    `20260808000000_add_driver_profile_service_radius`; revalidado
    registro de `LAVADOR` + `POST /driver-profiles/me` + `GET
    /driver-profiles/me` com sucesso.
+
+   Rodar via `node dist/main.js` direto no host prova o código, mas não
+   prova a imagem Docker de produção — `services/api/Dockerfile` nunca
+   tinha sido de fato construído/executado (só validado via `docker
+   compose config`, que não builda nada). Ao rodar `docker compose up
+   api` pela primeira vez, dois bugs reais e completamente distintos do
+   Dockerfile apareceram, um atrás do outro:
+   - **Symlinks do pnpm quebrados pelo achatamento de diretório**: o
+     stage `runner` copiava `services/api/node_modules` pra um
+     `./node_modules_local` órfão (nunca lido por nada) — sintoma
+     inicial `sh: prisma: not found`. Corrigir só o destino do COPY pra
+     `./node_modules` também não bastou: o binário `.bin/prisma` do
+     pnpm é um **symlink relativo** (`../../../node_modules/.pnpm/...`)
+     calculado pra profundidade original
+     (`services/api/node_modules/.bin/`) — achatar tudo em `/app/`
+     muda a profundidade e o symlink passa a apontar pra fora da
+     imagem. Corrigido preservando a mesma árvore de diretórios do
+     monorepo no `runner` (`/app/node_modules` + `/app/services/api/`
+     inteiro, `WORKDIR /app/services/api`) em vez de achatar.
+   - **OpenSSL ausente na imagem `node:20-alpine`**: com o binário
+     `prisma` resolvendo certo, `prisma migrate deploy` ainda quebrava
+     com "Could not parse schema engine response" — o engine do Prisma
+     linka contra `libssl` em runtime e o Alpine base não vem com
+     OpenSSL instalado. Corrigido com `apk add --no-cache openssl` nos
+     stages `builder` e `runner`.
+
+   Com os dois corrigidos, `docker compose up -d api` sobe de verdade:
+   `prisma migrate deploy` roda dentro do container contra o Postgres
+   do compose, Nest inicializa (`Nest application successfully
+   started`), e `POST /auth/register` → `GET /users/me` funcionam via
+   `localhost:3000` — primeira vez que a imagem Docker de produção
+   (não só o código-fonte) é validada de ponta a ponta.
 6. **Chaves de sandbox reais** (Mercado Pago + Google Maps) — depende de
    você criar as contas de desenvolvedor; o código já está pronto pros
    dois lados (mock automático sem chave, real com chave, log de modo no

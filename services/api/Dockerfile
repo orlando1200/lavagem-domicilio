@@ -24,6 +24,10 @@ RUN pnpm install --frozen-lockfile=false --filter api
 # -----------------------------------------------------------------------------
 FROM node:20-alpine AS builder
 
+# Engines do Prisma (schema-engine/query-engine) linkam contra libssl em
+# runtime — node:20-alpine não vem com OpenSSL instalado.
+RUN apk add --no-cache openssl
+
 RUN corepack enable && corepack prepare pnpm@8.15.0 --activate
 
 WORKDIR /app
@@ -49,6 +53,12 @@ RUN pnpm build
 # -----------------------------------------------------------------------------
 FROM node:20-alpine AS runner
 
+# Engines do Prisma (schema-engine/query-engine) linkam contra libssl em
+# runtime — node:20-alpine não vem com OpenSSL instalado. Sem isso,
+# `prisma migrate deploy` falha com "Could not parse schema engine
+# response" (o engine crasha ao subir por falta de libssl.so).
+RUN apk add --no-cache openssl
+
 RUN corepack enable && corepack prepare pnpm@8.15.0 --activate
 
 WORKDIR /app
@@ -56,12 +66,15 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3001
 
-# Copia apenas o necessário para rodar em produção
-COPY --from=builder /app/services/api/dist ./dist
-COPY --from=builder /app/services/api/package.json ./
-COPY --from=builder /app/services/api/prisma ./prisma
+# Mantém a mesma profundidade de diretório do monorepo (services/api/).
+# node_modules/.bin/prisma do pnpm é um symlink relativo (ex.:
+# ../../../node_modules/.pnpm/prisma@.../...) calculado pra essa
+# profundidade — achatar tudo em /app quebra a resolução do binário
+# ("Cannot find module '.../prisma/build/index.js'").
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/services/api/node_modules ./node_modules_local
+COPY --from=builder /app/services/api ./services/api
+
+WORKDIR /app/services/api
 
 # Expõe a porta da aplicação
 EXPOSE 3001
