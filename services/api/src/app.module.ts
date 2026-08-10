@@ -6,6 +6,8 @@ import { HealthModule } from './modules/health/health.module';
 import { MarketplaceModule } from './modules/marketplace/marketplace.module';
 import { StoreModule } from './modules/store/store.module';
 import { UsersModule } from './modules/users/users.module';
+import { VehiclesModule } from './modules/vehicles/vehicles.module';
+import { AddressesModule } from './modules/addresses/addresses.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { DriversModule } from './modules/drivers/drivers.module';
 import { CouponsModule } from './modules/coupons/coupons.module';
@@ -27,6 +29,8 @@ import { MapsModule } from './modules/maps/maps.module';
     MarketplaceModule,
     StoreModule,
     UsersModule,
+    VehiclesModule,
+    AddressesModule,
     OrdersModule,
     DriversModule,
     CouponsModule,

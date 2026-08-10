@@ -426,3 +426,43 @@ Ordem sugerida, por dependência e impacto (não por facilidade):
    verdade). **Fases 2-4 seguem pendentes**: categorias/serviços/
    zonas/cupons, relatórios/suporte/fidelidade, aluguel de moto/kit
    inicial — nenhuma dessas 10 páginas foi tocada ainda.
+8. **Seed de desenvolvimento + validação end-to-end do fluxo completo de
+   pedido** — com os 3 containers Docker de pé, `pnpm --filter api
+   seed:dev` popula o banco (1 admin, 3 clientes com veículo+endereço, 3
+   lavadores ativos moto/carro/loja na mesma zona, 1 lojista com 3
+   produtos, 7 pedidos de exemplo — um por status). Documentado em
+   `services/api/prisma/seed.ts`; idempotente (upsert por email/slug).
+
+   Testado o fluxo real de ponta a ponta pela primeira vez: registro →
+   login → criação de pedido → matching automático → aceite pelo
+   lavador → `en_route` → `in_progress` → `completed` → intent de
+   pagamento PIX (mock) → webhook de aprovação → concessão automática
+   de pontos GIUCAR → resgate de pontos. **Tudo funcionou exatamente
+   como documentado**, incluindo o matching priorizando `MOTO_WASHER`
+   sobre `CAR_WASHER` para `DRY_WASH` (conforme PRD).
+
+   **Um bug real e sério bloqueava o fluxo inteiro antes de eu poder
+   testar isso**: não existia (em lugar nenhum do `src`) nenhum endpoint
+   pra criar `Vehicle` ou `Address` — confirmado por busca no código
+   inteiro (zero controllers, zero `prisma.vehicle.create`/
+   `prisma.address.create` fora do seed). Como `POST /orders` exige um
+   `vehicleId`/`addressId` já existentes do cliente, **nenhum cliente
+   novo conseguia jamais criar um pedido** pelo app de verdade — só
+   usuários inseridos manualmente no banco (como os do seed) tinham
+   como testar o fluxo. Corrigido com dois módulos novos, seguindo
+   exatamente o padrão dos demais (`JwtAuthGuard`+`RolesGuard`+
+   `@Roles(CLIENTE)`): `POST /vehicles` + `GET /vehicles/me`
+   (`src/modules/vehicles/`) e `POST /addresses` + `GET /addresses/me`
+   (`src/modules/addresses/`, primeiro endereço cadastrado vira
+   `isDefault` automaticamente).
+
+   **Gap de escopo encontrado, não um bug**: o passo "cliente usa
+   pontos GIUCAR na loja B2C" **não corresponde a nenhum fluxo
+   implementado**. `POST /loyalty/redeem` só resgata pontos como
+   desconto num `Order` (pedido de lavagem) — exige `orderId`, dono do
+   pedido — e não tem nenhuma ligação com `POST
+   /marketplace/client/checkout` (compra na loja/`ProductOrder`), cujo
+   DTO nem tem campo de pontos. Pontos GIUCAR e a lojinha B2C são dois
+   sistemas desconectados hoje; usar pontos como desconto no checkout
+   da loja exigiria trabalho novo (não wiring), fora do escopo desta
+   rodada.
