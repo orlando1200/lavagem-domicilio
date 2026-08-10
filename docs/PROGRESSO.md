@@ -466,3 +466,31 @@ Ordem sugerida, por dependência e impacto (não por facilidade):
    sistemas desconectados hoje; usar pontos como desconto no checkout
    da loja exigiria trabalho novo (não wiring), fora do escopo desta
    rodada.
+9. **Documentação da API**: `docs/API.md` (referência prática, todos
+   os exemplos rodados de verdade) + Swagger UI ligado de verdade em
+   `GET /api/docs` — todo controller já usava
+   `@ApiTags`/`@ApiOperation`/`@ApiBearerAuth`, mas ninguém nunca
+   chamava `SwaggerModule.setup()` em `main.ts`; a documentação
+   inteira era gerada em lugar nenhum. Confirmado ao vivo: a UI lista
+   exatamente os endpoints reais (inclusive `vehicles`/`addresses`
+   novos), sem nenhum dos módulos em quarentena abaixo.
+
+   **Achado no processo, não é bug novo**: `services/api/tsconfig.json`
+   tem uma lista explícita de `exclude` com **10 módulos inteiros**
+   (`analytics`, `compliance`, `dispatch`, `document-verification`,
+   `face-check`, `rental`, `services-catalog`, `starter-kit`,
+   `support`, `tracking`, `zones` admin) — código de controllers real,
+   com bastante superfície (compliance de documentos, tracking de
+   localização do lavador em tempo real + ETA, catálogo de
+   serviços/preços por porte de veículo, aluguel de moto, kit inicial,
+   tickets de suporte, zonas com regras de preço) que **nunca foi
+   importado em `app.module.ts`** e não compila contra o schema atual
+   (usa `UserRole.admin`/`client`/`driver` em minúsculo — o enum real é
+   `ADMIN`/`CLIENTE`/`LAVADOR`). Mesmo padrão já documentado pra
+   `analytics` sozinho (item 7) — só que a quarentena é bem maior do
+   que uma pessoa checando só o dashboard perceberia. Não mexido nesta
+   rodada (fora de escopo — resgatar qualquer um desses exigiria
+   auditoria completa antes, não é só tirar do `exclude`), mas vale
+   saber que esse código existe pra quem for planejar as próximas
+   fases: pode ser trabalho parcialmente feito reaproveitável (ou não —
+   não auditado).
