@@ -24,12 +24,5 @@
     ]
   },
   "include": ["next-env.d.ts", "src/**/*.ts", "src/**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": [
-    "node_modules",
-    // Paginas, hooks, lib e types com codigo-fonte corrompido/truncado
-    // herdado de uma restauracao anterior do repositorio; movidos para
-    // _corrupted-quarantine/ (fora da arvore compilada pelo Next.js).
-    // Ver docs/FASE9_CORRUPTED_MODULES.md
-    "_corrupted-quarantine"
-  ]
+  "exclude": ["node_modules"]
 }

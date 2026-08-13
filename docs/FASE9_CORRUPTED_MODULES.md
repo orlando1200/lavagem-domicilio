@@ -648,6 +648,23 @@ componentes de UI (`components/ui/*`) que nunca foram versionados.
 5. Mover a pagina de volta de `_corrupted-quarantine/` para `src/app/` e
    remover a exclusao em `.eslintrc.js`/`tsconfig.json`.
 
+**Atualizacao (2026-08-13):** `_corrupted-quarantine/` foi **removida**
+do repositorio (ainda recuperavel via historico do git se necessario).
+Nao foi "restaurada" seguindo o plano acima — as 14 paginas eram
+codigo-fonte truncado real (nao so desatualizado), sem valor de reuso
+alem do nome dos campos, confirmado na pratica ao reescrever os
+modulos de backend equivalentes na mesma sessao (ver `docs/PROGRESSO.md`,
+item "Admin panel — Fases 2-4"). Das 14: `cupons`, `fidelidade`,
+`kit-inicial`, `marketplace`, `repasses` e `suporte` ja foram
+reconstruidas do zero contra o schema/backend reais e estao em
+producao. `dashboard` segue adiado de proposito (modulo `analytics`
+do backend continua fantasiado). `categorias`/`servicos` seguem
+adiados (sem model no schema, sem especificacao de produto).
+`compliance` (+ `[id]`), `aluguel-motos` (nome antigo; a versao real
+reconstruida chama-se `aluguel-moto`, singular) e
+`inteligencia-operacional`/`relatorios` nunca chegaram a ter
+backend real e permanecem fora do escopo ate haver decisao de produto.
+
 ---
 
 ## 3. `apps/mobile-client` (Flutter)
