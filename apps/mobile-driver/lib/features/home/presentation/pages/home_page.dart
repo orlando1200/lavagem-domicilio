@@ -915,7 +915,7 @@ class _ProfileView extends StatelessWidget {
           _ProfileMenuItem(
             icon: Icons.badge_outlined,
             title: 'Perfil de atuação',
-            onTap: () {},
+            onTap: () => context.push('/documents'),
           ),
           _ProfileMenuItem(
             icon: Icons.account_balance_wallet_outlined,

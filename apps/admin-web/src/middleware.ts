@@ -18,7 +18,7 @@ export function middleware(request: NextRequest) {
   }
 
   if (token && isLoginPage) {
-    return NextResponse.redirect(new URL('/pedidos', request.url));
+    return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
   return NextResponse.next();

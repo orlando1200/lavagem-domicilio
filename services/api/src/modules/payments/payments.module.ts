@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { PaymentsController } from './payments.controller';
+import { AdminPaymentsController } from './payments.admin.controller';
 import { PaymentsService } from './payments.service';
 import { MercadoPagoAdapter } from './adapters/mercado-pago.adapter';
 import { PAYMENT_GATEWAY_ADAPTER } from './adapters/payment-gateway.interface';
@@ -7,7 +8,7 @@ import { LoyaltyModule } from '../loyalty/loyalty.module';
 
 @Module({
   imports: [LoyaltyModule],
-  controllers: [PaymentsController],
+  controllers: [PaymentsController, AdminPaymentsController],
   providers: [
     PaymentsService,
     MercadoPagoAdapter,

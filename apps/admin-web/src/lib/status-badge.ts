@@ -1,8 +1,11 @@
 import type { BadgeProps } from '@/components/ui/badge';
 import type {
   CouponDiscountType,
+  DocumentVerificationStatus,
   DriverStatus,
   OrderStatus,
+  PaymentMethod,
+  PaymentStatus,
   PayoutStatus,
   ProductStatus,
   RentalStatus,
@@ -259,4 +262,80 @@ export const RENTAL_STATUS_OPTIONS: RentalStatus[] = [
   'completed',
   'cancelled',
   'overdue',
+];
+
+const PAYMENT_STATUS_LABEL: Record<PaymentStatus, string> = {
+  pending: 'Pendente',
+  authorized: 'Autorizado',
+  paid: 'Pago',
+  failed: 'Falhou',
+  refunded: 'Reembolsado',
+};
+
+const PAYMENT_STATUS_VARIANT: Record<PaymentStatus, Variant> = {
+  pending: 'warning',
+  authorized: 'default',
+  paid: 'success',
+  failed: 'destructive',
+  refunded: 'secondary',
+};
+
+export function paymentStatusLabel(status: PaymentStatus): string {
+  return PAYMENT_STATUS_LABEL[status] ?? status;
+}
+export function paymentStatusVariant(status: PaymentStatus): Variant {
+  return PAYMENT_STATUS_VARIANT[status] ?? 'secondary';
+}
+
+export const PAYMENT_STATUS_OPTIONS: PaymentStatus[] = [
+  'pending',
+  'authorized',
+  'paid',
+  'failed',
+  'refunded',
+];
+
+const PAYMENT_METHOD_LABEL: Record<PaymentMethod, string> = {
+  credit_card: 'Cartão de crédito',
+  debit_card: 'Cartão de débito',
+  pix: 'PIX',
+  cash: 'Dinheiro',
+  wallet: 'Carteira',
+};
+
+export function paymentMethodLabel(method: PaymentMethod): string {
+  return PAYMENT_METHOD_LABEL[method] ?? method;
+}
+
+export const PAYMENT_METHOD_OPTIONS: PaymentMethod[] = [
+  'credit_card',
+  'debit_card',
+  'pix',
+  'cash',
+  'wallet',
+];
+
+const DOCUMENT_VERIFICATION_STATUS_LABEL: Record<DocumentVerificationStatus, string> = {
+  pending: 'Pendente',
+  approved: 'Aprovado',
+  rejected: 'Rejeitado',
+};
+
+const DOCUMENT_VERIFICATION_STATUS_VARIANT: Record<DocumentVerificationStatus, Variant> = {
+  pending: 'warning',
+  approved: 'success',
+  rejected: 'destructive',
+};
+
+export function documentVerificationStatusLabel(status: DocumentVerificationStatus): string {
+  return DOCUMENT_VERIFICATION_STATUS_LABEL[status] ?? status;
+}
+export function documentVerificationStatusVariant(status: DocumentVerificationStatus): Variant {
+  return DOCUMENT_VERIFICATION_STATUS_VARIANT[status] ?? 'secondary';
+}
+
+export const DOCUMENT_VERIFICATION_STATUS_OPTIONS: DocumentVerificationStatus[] = [
+  'pending',
+  'approved',
+  'rejected',
 ];

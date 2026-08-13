@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
+  LayoutDashboard,
   Package,
   UserCheck,
   Store,
@@ -13,15 +14,20 @@ import {
   LifeBuoy,
   Bike,
   Gift,
+  Receipt,
+  FileCheck,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/pedidos', label: 'Pedidos', icon: Package },
   { href: '/lavadores', label: 'Aprovação de Lavadores', icon: UserCheck },
+  { href: '/documentos', label: 'Documentos', icon: FileCheck },
   { href: '/marketplace', label: 'Marketplace', icon: Store },
   { href: '/repasses', label: 'Repasses', icon: Wallet },
+  { href: '/relatorios-financeiros', label: 'Relatórios Financeiros', icon: Receipt },
   { href: '/cupons', label: 'Cupons', icon: Ticket },
   { href: '/zonas', label: 'Zonas', icon: MapPin },
   { href: '/kit-inicial', label: 'Kit Inicial', icon: PackageCheck },

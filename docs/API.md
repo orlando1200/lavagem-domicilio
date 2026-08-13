@@ -32,17 +32,20 @@ Cobre só os módulos de fato registrados em
 `services/api/src/app.module.ts` e confirmados no ar (rota mapeada nos
 logs do Nest + testada com curl/browser). **Existe código de
 controllers adicional em `src/modules/`** (`analytics`, `compliance`,
-`dispatch`, `document-verification`, `face-check`, `rental`,
-`services-catalog`, `starter-kit`, `support`, `tracking`, `zones`
-admin) que **não está documentado aqui de propósito**: são módulos em
-quarentena, explicitamente excluídos em `tsconfig.json` (`exclude`) e
-nunca importados em `app.module.ts` — sobras da recuperação de um
-schema anterior corrompido (mesmo padrão já registrado pra `analytics`
-em `docs/PROGRESSO.md`). Não compilam contra o schema atual (usam
+`dispatch`, `face-check`, `services-catalog`, `tracking`) que **não
+está documentado aqui de propósito**: são módulos em quarentena,
+explicitamente excluídos em `tsconfig.json` (`exclude`) e nunca
+importados em `app.module.ts` — sobras da recuperação de um schema
+anterior corrompido (mesmo padrão já registrado pra `analytics` em
+`docs/PROGRESSO.md`). Não compilam contra o schema atual (usam
 `UserRole.admin`/`client`/`driver` en minúsculo, que não existem no
 enum real `CLIENTE`/`LAVADOR`/`ADMIN`) e não respondem a nenhuma
 requisição. Se um dia forem resgatados, precisam de auditoria completa
 antes — não é so tirar do `exclude`.
+
+`document-verification`, `rental`, `starter-kit`, `support` e `zones`
+(admin) **já saíram da quarentena** — foram reescritos do zero contra
+o schema real e estão documentados abaixo normalmente.
 
 ---
 
@@ -248,6 +251,23 @@ carwash.
 - `PATCH /driver-profiles/me`
 - `PATCH /driver-profiles/me/availability` — `{ status: "active"|"inactive" }`, único par que o próprio lavador altera (demais status exigem admin)
 
+## Document Verification (`/document-verification/me`) — LAVADOR
+
+Envio de documentos (CNH, CRLV, foto do veículo, etc) para aprovação
+do perfil. Sem infraestrutura de upload binário — `fileUrl` é um link
+para onde o arquivo já está hospedado.
+
+- `POST /document-verification/me` — `{ docType, fileUrl }`
+- `GET /document-verification/me` — lista os próprios documentos enviados
+
+**Importante**: aprovar documentos não ativa o lavador automaticamente
+— isso é uma ação manual e separada do admin (`PATCH
+/admin/driver-profiles/:userId/status {status:"active"}`). Um perfil
+recém-criado (`pending_documents`) também não consegue se auto-ativar
+via `PATCH /driver-profiles/me/availability` (esse endpoint só alterna
+`active`/`inactive`, exige que o perfil já esteja num desses dois
+estados). Ver `docs/E2E_CHECKLIST.md` (Passo 7a).
+
 ## Payouts (`/payouts/me`) — repasses — LAVADOR
 
 - `GET /payouts/me/washer` — repasses do lavador autenticado
@@ -284,13 +304,20 @@ Todos protegidos por `JwtAuthGuard` + `RolesGuard` +
 
 | Recurso | Endpoints |
 |---|---|
+| Dashboard | `GET /admin/dashboard/summary` — pedidos por status, receita paga (total/hoje), lavadores/lojas ativos, novos clientes hoje, aprovações de documentos pendentes |
 | Usuários | `GET /admin/users`, `GET /admin/users/:id`, `PATCH /admin/users/:id/status`, `PATCH /admin/users/:id/role`, `DELETE /admin/users/:id` |
 | Pedidos | `GET /admin/orders`, `GET /admin/orders/:id`, `PATCH /admin/orders/:id/assign-driver`, `PATCH /admin/orders/:id/status` |
 | Lavadores | `GET /admin/driver-profiles`, `GET /admin/driver-profiles/:userId`, `PATCH /admin/driver-profiles/:userId/status` |
+| Documentos | `GET /admin/document-verification`, `GET /admin/document-verification/:id`, `PATCH /admin/document-verification/:id/review` — aprova/rejeita; ativação do lavador é ação separada via `PATCH /admin/driver-profiles/:userId/status` |
 | Marketplace | `GET /admin/marketplace/stores`, `GET /admin/marketplace/products`, `PATCH /admin/marketplace/products/:id/status` |
 | Repasses | `POST /admin/payouts/washers`, `POST /admin/payouts/stores`, `GET /admin/payouts`, `GET /admin/payouts/:id`, `PATCH /admin/payouts/:id/status` |
+| Relatórios financeiros | `GET /admin/payments` (lista paginada), `GET /admin/payments/report` (agregado por status/método), `GET /admin/payments/export` (até 5000 linhas, sem paginação — base do CSV) |
 | Cupons | `POST /admin/coupons/campaigns`, `GET /admin/coupons/campaigns`, `PATCH /admin/coupons/campaigns/:id`, `POST /admin/coupons`, `GET /admin/coupons`, `GET /admin/coupons/:id`, `PATCH /admin/coupons/:id`, `DELETE /admin/coupons/:id` |
-| Fidelidade | `POST /admin/loyalty/orders/:orderId/grant`, `POST /admin/loyalty/expire-overdue` |
+| Zonas | `POST /admin/zones`, `GET /admin/zones`, `GET /admin/zones/:id`, `PATCH /admin/zones/:id`, `DELETE /admin/zones/:id` (desativa) |
+| Suporte | `GET /admin/support/tickets`, `GET /admin/support/tickets/:id`, `PATCH /admin/support/tickets/:id/status` |
+| Kit Inicial | `POST /admin/starter-kits`, `GET /admin/starter-kits`, `GET /admin/starter-kits/:washerId`, `PATCH /admin/starter-kits/:washerId/status` |
+| Aluguel de Moto | `POST /admin/rentals`, `GET /admin/rentals`, `GET /admin/rentals/:id`, `PATCH /admin/rentals/:id/assign-driver`, `PATCH /admin/rentals/:id/status` |
+| Fidelidade | `GET /admin/loyalty/report` (agregado: concedido/resgatado/em aberto/expirado + top usuários por saldo), `POST /admin/loyalty/orders/:orderId/grant`, `POST /admin/loyalty/expire-overdue` |
 | Leilões | `GET /admin/auctions`, `GET /admin/auctions/:id`, `PATCH /admin/auctions/:id/cancel`, `POST /admin/auctions/expire-overdue` |
 | Entregas | `POST /admin/deliveries`, `GET /admin/deliveries` |
 

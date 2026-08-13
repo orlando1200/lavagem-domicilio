@@ -43,7 +43,8 @@
     "src/modules/zones/**/*",
     "src/modules/starter-kit/**/*",
     "src/modules/support/**/*",
-    "src/modules/rental/**/*"
+    "src/modules/rental/**/*",
+    "src/modules/document-verification/**/*"
   ],
   "exclude": [
     "node_modules",
@@ -53,7 +54,6 @@
     "src/modules/analytics/**/*",
     "src/modules/compliance/**/*",
     "src/modules/dispatch/**/*",
-    "src/modules/document-verification/**/*",
     "src/modules/face-check/**/*",
     "src/modules/services-catalog/**/*",
     "src/modules/tracking/**/*"

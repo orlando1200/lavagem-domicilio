@@ -546,3 +546,80 @@ Ordem sugerida, por dependência e impacto (não por facilidade):
     Explore + 1 agente Plan pra levantar convenções reais e desenhar a
     implementação contra o schema de verdade antes de qualquer linha de
     código.
+11. **Dashboard, Relatórios Financeiros, Documentos e E2E Checklist**:
+    quarto lote do admin panel — itens 2, 3, 5 e 6 de uma lista de 8
+    pedida pelo usuário (itens 1 já feito, 4 pausado — app cliente não
+    tem nenhum fluxo de criação de pedido, telas de veículo/endereço
+    sozinhas não serviriam pra nada —, 7-8 bloqueados por chaves de
+    sandbox do usuário).
+
+    **Dashboard** (`services/api/src/modules/dashboard/`, módulo novo):
+    `GET /admin/dashboard/summary` — pedidos por status
+    (`groupBy`), receita paga total/hoje (`Payment.aggregate`),
+    lavadores/lojas ativos, novos clientes hoje, aprovações de
+    documentos pendentes. Vira a landing page do admin-web
+    (`app/page.tsx` e o redirect pós-login trocaram de `/pedidos` pra
+    `/dashboard`).
+
+    **Relatórios Financeiros**: estende `payments` module existente
+    (não cria módulo novo) — `AdminPaymentsController` novo
+    (`GET /admin/payments`, `/report`, `/export`) reaproveitando um
+    `buildAdminWhere` privado nos 3 métodos. CSV sem lib nova: backend
+    devolve JSON puro (`/export`, capado em 5000 linhas), frontend
+    converte via `Blob`+`<a download>` (`lib/csv.ts`, ~30 linhas,
+    RFC4180 simples).
+
+    **Documentos** (`document-verification` module, reescrito do zero —
+    o arquivo antigo tinha 8 linhas, referenciava um serviço
+    inexistente e usava `UserRole.admin` minúsculo inválido, mesmo
+    tratamento de descarte total já dado a `zones`/`support`/etc.):
+    self-service `POST`/`GET /document-verification/me` (`LAVADOR`) +
+    admin `GET/PATCH /admin/document-verification`. Sem campo de motivo
+    de rejeição (a coluna não existe em `DocumentVerification`) e sem
+    infra de upload — `fileUrl` é um link colado pelo lavador, mesma
+    pragmática já usada em `ProductOrder.shippingAddress`. Tela admin
+    tem um botão "Ativar lavador" separado da revisão do documento, que
+    reaproveita `PATCH /admin/driver-profiles/:userId/status` (já
+    existia) — é decisão manual do admin, **não** conta quantos
+    documentos foram aprovados (sem regra de "N aprovados = ativa
+    sozinho", não especificada). Espelhado no mobile-driver:
+    `features/documents/` (repository + provider + `DocumentsPage`),
+    ligado no item de menu "Perfil de atuação" do Perfil (antes
+    `onTap: () {}`).
+
+    **Achado real de gap no roteiro do usuário**: o próprio lavador
+    **não consegue** se auto-ativar — `PATCH
+    /driver-profiles/me/availability` (self-service) exige que o perfil
+    já esteja `active`/`inactive`; um perfil recém-criado nasce
+    `pending_documents` e fica preso lá sem intervenção do admin. Sem
+    esse passo, um pedido nunca aparece em `GET /orders/available` pro
+    lavador. Documentado como "Passo 7a" no checklist abaixo.
+
+    **`docs/E2E_CHECKLIST.md`** (novo): script `curl` documentado da
+    sequência crítica completa (registro → veículo/endereço → pedido →
+    registro do lavador → ativação pelo admin → aceite → avanço de
+    status → pagamento → webhook → saldo de pontos), por pedido
+    explícito do usuário — sem infra de teste nova (sem Supertest),
+    "o mínimo é ter esse script documentado e validar que a sequência
+    funciona contra o backend rodando localmente". **Rodado de verdade**
+    contra o stack Docker reconstruído (`docker compose up -d --build`)
+    via um script Node equivalente (ambiente sem `jq`/browser
+    screenshot disponível) — todos os 13 passos + o 7a inserido
+    passaram. Achado extra durante a execução real: `GET
+    /orders/available` devolve um array simples, sem o wrapper
+    `{items,...}` que o resto da documentação de pedidos client-facing
+    usa — corrigido no checklist. Achado de ambiente (não é bug do
+    código): o admin do seed (`admin@giucar.com.br`) já existia no
+    Postgres local de uma criação manual anterior com senha diferente
+    de `Senha123!` (seed usa `upsert` com `update: {}`, não sobrescreve
+    senha existente) — documentado como troubleshooting no checklist,
+    resolvido resetando o hash direto no Postgres do container (só
+    ambiente de dev local).
+
+    Verificação completa: `pnpm --filter api lint/type-check/test/build`
+    (78 testes passando), `pnpm --filter admin-web lint/type-check`
+    (build local falha por uma limitação conhecida do Windows —
+    `next build` tenta symlink em `node_modules` no modo standalone e
+    o Windows nega sem modo dev habilitado; o build real de produção é
+    o do Dockerfile, já validado rodando), `flutter analyze` limpo no
+    mobile-driver.

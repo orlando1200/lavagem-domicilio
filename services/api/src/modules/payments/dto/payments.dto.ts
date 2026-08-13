@@ -1,6 +1,6 @@
 import { ApiPropertyOptional, ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsIn, IsOptional, IsString, IsUUID } from 'class-validator';
-import { PaymentMethod } from '@prisma/client';
+import { IsDateString, IsEnum, IsIn, IsOptional, IsString, IsUUID } from 'class-validator';
+import { PaymentMethod, PaymentStatus } from '@prisma/client';
 
 /** Metodos suportados por enquanto (item 7 do roadmap: "apenas PIX e cartao"). */
 const SUPPORTED_METHODS = [
@@ -46,4 +46,66 @@ export class PaymentWebhookDto {
   })
   @IsIn(['approved', 'rejected', 'pending'])
   status: 'approved' | 'rejected' | 'pending';
+}
+
+export class AdminListPaymentsQueryDto {
+  @ApiPropertyOptional({ enum: PaymentStatus })
+  @IsOptional()
+  @IsEnum(PaymentStatus)
+  status?: PaymentStatus;
+
+  @ApiPropertyOptional({ enum: PaymentMethod })
+  @IsOptional()
+  @IsEnum(PaymentMethod)
+  method?: PaymentMethod;
+
+  @ApiPropertyOptional({ description: 'Data inicial (ISO 8601)' })
+  @IsOptional()
+  @IsDateString()
+  dateFrom?: string;
+
+  @ApiPropertyOptional({ description: 'Data final (ISO 8601)' })
+  @IsOptional()
+  @IsDateString()
+  dateTo?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsUUID()
+  userId?: string;
+
+  @ApiPropertyOptional({ description: 'Busca por referencia externa' })
+  @IsOptional()
+  @IsString()
+  search?: string;
+
+  @ApiPropertyOptional({ default: 1 })
+  @IsOptional()
+  page?: string;
+
+  @ApiPropertyOptional({ default: 20 })
+  @IsOptional()
+  limit?: string;
+}
+
+export class AdminPaymentsReportQueryDto {
+  @ApiPropertyOptional({ enum: PaymentStatus })
+  @IsOptional()
+  @IsEnum(PaymentStatus)
+  status?: PaymentStatus;
+
+  @ApiPropertyOptional({ enum: PaymentMethod })
+  @IsOptional()
+  @IsEnum(PaymentMethod)
+  method?: PaymentMethod;
+
+  @ApiPropertyOptional({ description: 'Data inicial (ISO 8601)' })
+  @IsOptional()
+  @IsDateString()
+  dateFrom?: string;
+
+  @ApiPropertyOptional({ description: 'Data final (ISO 8601)' })
+  @IsOptional()
+  @IsDateString()
+  dateTo?: string;
 }

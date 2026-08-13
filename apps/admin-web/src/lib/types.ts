@@ -36,6 +36,10 @@ export type PayoutStatus = 'pending' | 'approved' | 'paid' | 'rejected';
 
 export type PayoutRecipientType = 'WASHER' | 'STORE';
 
+export type PaymentStatus = 'pending' | 'authorized' | 'paid' | 'failed' | 'refunded';
+
+export type PaymentMethod = 'credit_card' | 'debit_card' | 'pix' | 'cash' | 'wallet';
+
 export type CouponDiscountType = 'percent' | 'fixed';
 
 export type StarterKitStatus = 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled';
@@ -43,6 +47,8 @@ export type StarterKitStatus = 'pending' | 'paid' | 'shipped' | 'delivered' | 'c
 export type SupportTicketStatus = 'open' | 'in_progress' | 'resolved' | 'closed';
 
 export type RentalStatus = 'requested' | 'active' | 'completed' | 'cancelled' | 'overdue';
+
+export type DocumentVerificationStatus = 'pending' | 'approved' | 'rejected';
 
 export interface Paginated<T> {
   data: T[];
@@ -258,6 +264,54 @@ export interface LoyaltyReport {
   totalExpired: number;
   totalExpiredValue: number;
   topHolders: LoyaltyReportHolder[];
+}
+
+export interface DashboardSummary {
+  ordersByStatus: { status: OrderStatus; count: number }[];
+  revenue: {
+    totalPaidAmount: string | number;
+    totalPaidCount: number;
+    todayPaidAmount: string | number;
+    todayPaidCount: number;
+  };
+  activeDrivers: number;
+  activeStores: number;
+  newClientsToday: number;
+  pendingDriverApprovals: number;
+}
+
+export interface Payment {
+  id: string;
+  orderId: string | null;
+  productOrderId: string | null;
+  userId: string;
+  method: PaymentMethod;
+  status: PaymentStatus;
+  amount: string;
+  cashbackUsed: string;
+  externalRef: string | null;
+  createdAt: string;
+  updatedAt: string;
+  user: { id: string; name: string; email: string };
+}
+
+export interface PaymentsReport {
+  totalAmount: string | number;
+  totalCount: number;
+  byStatus: { status: PaymentStatus; amount: string | number; count: number }[];
+  byMethod: { method: PaymentMethod; amount: string | number; count: number }[];
+}
+
+export interface DocumentVerification {
+  id: string;
+  userId: string;
+  docType: string;
+  fileUrl: string;
+  status: DocumentVerificationStatus;
+  reviewedByUserId: string | null;
+  createdAt: string;
+  updatedAt: string;
+  user: { id: string; name: string; email: string; phone: string | null };
 }
 
 export interface Payout {

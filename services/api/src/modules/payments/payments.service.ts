@@ -6,11 +6,20 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { PaymentMethod, PaymentStatus, ProductOrderStatus } from '@prisma/client';
+import { PaymentMethod, PaymentStatus, Prisma, ProductOrderStatus } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 import { LoyaltyService } from '../loyalty/loyalty.service';
 import { PAYMENT_GATEWAY_ADAPTER, PaymentGatewayAdapter } from './adapters/payment-gateway.interface';
-import { CreatePaymentIntentDto, PaymentWebhookDto } from './dto/payments.dto';
+import {
+  AdminListPaymentsQueryDto,
+  AdminPaymentsReportQueryDto,
+  CreatePaymentIntentDto,
+  PaymentWebhookDto,
+} from './dto/payments.dto';
+
+const PAYMENT_ADMIN_INCLUDE = {
+  user: { select: { id: true, name: true, email: true } },
+} satisfies Prisma.PaymentInclude;
 
 const WEBHOOK_STATUS_MAP: Record<PaymentWebhookDto['status'], PaymentStatus> = {
   approved: PaymentStatus.paid,
@@ -184,5 +193,99 @@ export class PaymentsService {
         `Nao foi possivel confirmar o pagamento do pedido de produto ${productOrderId}: ${(error as Error).message}`,
       );
     }
+  }
+
+  // ────────────────────────────────────────────────────────────────────
+  // RELATORIOS FINANCEIROS (ADMIN)
+  // ────────────────────────────────────────────────────────────────────
+
+  private buildAdminWhere(
+    query: AdminListPaymentsQueryDto | AdminPaymentsReportQueryDto,
+  ): Prisma.PaymentWhereInput {
+    return {
+      ...(query.status ? { status: query.status } : {}),
+      ...(query.method ? { method: query.method } : {}),
+      ...('userId' in query && query.userId ? { userId: query.userId } : {}),
+      ...('search' in query && query.search
+        ? { externalRef: { contains: query.search, mode: 'insensitive' } }
+        : {}),
+      ...(query.dateFrom || query.dateTo
+        ? {
+            createdAt: {
+              ...(query.dateFrom ? { gte: new Date(query.dateFrom) } : {}),
+              ...(query.dateTo ? { lte: new Date(query.dateTo) } : {}),
+            },
+          }
+        : {}),
+    };
+  }
+
+  async listPaymentsAsAdmin(query: AdminListPaymentsQueryDto) {
+    const page = Math.max(Number(query.page) || 1, 1);
+    const limit = Math.min(Math.max(Number(query.limit) || 20, 1), 100);
+    const where = this.buildAdminWhere(query);
+
+    const [data, total] = await Promise.all([
+      this.prisma.payment.findMany({
+        where,
+        include: PAYMENT_ADMIN_INCLUDE,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.payment.count({ where }),
+    ]);
+
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
+  }
+
+  async getPaymentsReportAsAdmin(query: AdminPaymentsReportQueryDto) {
+    const where = this.buildAdminWhere(query);
+
+    const [totalAgg, byStatus, byMethod] = await Promise.all([
+      this.prisma.payment.aggregate({ where, _sum: { amount: true }, _count: { _all: true } }),
+      this.prisma.payment.groupBy({
+        by: ['status'],
+        where,
+        _sum: { amount: true },
+        _count: { _all: true },
+      }),
+      this.prisma.payment.groupBy({
+        by: ['method'],
+        where,
+        _sum: { amount: true },
+        _count: { _all: true },
+      }),
+    ]);
+
+    return {
+      totalAmount: totalAgg._sum.amount ?? 0,
+      totalCount: totalAgg._count._all,
+      byStatus: byStatus.map((g) => ({
+        status: g.status,
+        amount: g._sum.amount ?? 0,
+        count: g._count._all,
+      })),
+      byMethod: byMethod.map((g) => ({
+        method: g.method,
+        amount: g._sum.amount ?? 0,
+        count: g._count._all,
+      })),
+    };
+  }
+
+  /**
+   * Exportacao pra CSV: sem paginacao, capado em 5000 linhas (escala
+   * suficiente pra um admin baixar e abrir em planilha; sem lib de CSV
+   * nova — o frontend converte o JSON puro).
+   */
+  async exportPaymentsAsAdmin(query: AdminPaymentsReportQueryDto) {
+    const where = this.buildAdminWhere(query);
+    return this.prisma.payment.findMany({
+      where,
+      include: PAYMENT_ADMIN_INCLUDE,
+      orderBy: { createdAt: 'desc' },
+      take: 5000,
+    });
   }
 }

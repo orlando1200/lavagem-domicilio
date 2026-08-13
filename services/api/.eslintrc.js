@@ -21,17 +21,15 @@ module.exports = {
     'node_modules',
     // Modulos com codigo-fonte corrompido/truncado herdado de uma restauracao
     // anterior do repositorio. Ver docs/FASE9_CORRUPTED_MODULES.md
+    // (zones/starter-kit/support/rental/document-verification ja foram
+    // reescritos do zero e removidos daqui — so tsconfig.json tinha sido
+    // atualizado antes, deixando o lint sem cobertura real nesses modulos)
     'src/modules/analytics',
     'src/modules/compliance',
     'src/modules/dispatch',
-    'src/modules/document-verification',
     'src/modules/face-check',
-    'src/modules/rental',
     'src/modules/services-catalog',
-    'src/modules/starter-kit',
-    'src/modules/support',
     'src/modules/tracking',
-    'src/modules/zones',
   ],
   rules: {
     '@typescript-eslint/interface-name-prefix': 'off',

@@ -22,6 +22,8 @@ import { ZonesModule } from './modules/zones/zones.module';
 import { StarterKitModule } from './modules/starter-kit/starter-kit.module';
 import { SupportModule } from './modules/support/support.module';
 import { RentalModule } from './modules/rental/rental.module';
+import { DocumentVerificationModule } from './modules/document-verification/document-verification.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -48,6 +50,8 @@ import { RentalModule } from './modules/rental/rental.module';
     StarterKitModule,
     SupportModule,
     RentalModule,
+    DocumentVerificationModule,
+    DashboardModule,
   ],
 })
 export class AppModule {}

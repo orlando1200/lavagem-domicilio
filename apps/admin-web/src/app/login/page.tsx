@@ -37,7 +37,7 @@ export default function LoginPage() {
         sameSite: 'lax',
         secure: process.env.NODE_ENV === 'production',
       });
-      router.push('/pedidos');
+      router.push('/dashboard');
       router.refresh();
     } catch (err: any) {
       const message = err?.response?.data?.message;
