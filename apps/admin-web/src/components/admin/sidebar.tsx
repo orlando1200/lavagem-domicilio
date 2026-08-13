@@ -2,7 +2,18 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Package, UserCheck, Store, Wallet } from 'lucide-react';
+import {
+  Package,
+  UserCheck,
+  Store,
+  Wallet,
+  Ticket,
+  MapPin,
+  PackageCheck,
+  LifeBuoy,
+  Bike,
+  Gift,
+} from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 
@@ -11,6 +22,12 @@ const NAV_ITEMS = [
   { href: '/lavadores', label: 'Aprovação de Lavadores', icon: UserCheck },
   { href: '/marketplace', label: 'Marketplace', icon: Store },
   { href: '/repasses', label: 'Repasses', icon: Wallet },
+  { href: '/cupons', label: 'Cupons', icon: Ticket },
+  { href: '/zonas', label: 'Zonas', icon: MapPin },
+  { href: '/kit-inicial', label: 'Kit Inicial', icon: PackageCheck },
+  { href: '/suporte', label: 'Suporte', icon: LifeBuoy },
+  { href: '/aluguel-moto', label: 'Aluguel de Moto', icon: Bike },
+  { href: '/fidelidade', label: 'Fidelidade', icon: Gift },
 ];
 
 export function Sidebar() {

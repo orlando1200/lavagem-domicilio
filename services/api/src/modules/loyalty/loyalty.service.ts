@@ -236,6 +236,77 @@ export class LoyaltyService {
   }
 
   // ────────────────────────────────────────────────────────────────────
+  // RELATORIO (ADMIN)
+  // ────────────────────────────────────────────────────────────────────
+
+  /**
+   * Relatorio agregado do programa de fidelidade: totais de pontos
+   * concedidos/resgatados/em aberto/expirados (em pontos e em reais) +
+   * ranking dos usuarios com maior saldo em aberto. `amount -
+   * redeemedAmount` sempre calculado em JS (nao ha coluna computada no
+   * schema), mesma logica ja usada em `getBalance`/`redeemPoints`.
+   */
+  async getAdminReport(topLimit = 10) {
+    const now = new Date();
+
+    const [grantedAgg, redeemedAgg, activeAgg, expiredAgg, groupedActive] = await Promise.all([
+      this.prisma.loyaltyPoint.aggregate({ _sum: { amount: true } }),
+      this.prisma.loyaltyRedemption.aggregate({ _sum: { amount: true } }),
+      this.prisma.loyaltyPoint.aggregate({
+        where: { expiresAt: { gt: now } },
+        _sum: { amount: true, redeemedAmount: true },
+      }),
+      this.prisma.loyaltyPoint.aggregate({
+        where: { expiresAt: { lte: now } },
+        _sum: { amount: true, redeemedAmount: true },
+      }),
+      this.prisma.loyaltyPoint.groupBy({
+        by: ['userId'],
+        where: { expiresAt: { gt: now } },
+        _sum: { amount: true, redeemedAmount: true },
+      }),
+    ]);
+
+    const totalGranted = grantedAgg._sum.amount ?? 0;
+    const totalRedeemed = redeemedAgg._sum.amount ?? 0;
+    const totalOutstanding = (activeAgg._sum.amount ?? 0) - (activeAgg._sum.redeemedAmount ?? 0);
+    const totalExpired = (expiredAgg._sum.amount ?? 0) - (expiredAgg._sum.redeemedAmount ?? 0);
+
+    const ranked = groupedActive
+      .map((g) => ({
+        userId: g.userId,
+        balance: (g._sum.amount ?? 0) - (g._sum.redeemedAmount ?? 0),
+      }))
+      .filter((g) => g.balance > 0)
+      .sort((a, b) => b.balance - a.balance)
+      .slice(0, Math.min(topLimit, 50));
+
+    const users = await this.prisma.user.findMany({
+      where: { id: { in: ranked.map((r) => r.userId) } },
+      select: { id: true, name: true, email: true },
+    });
+    const userMap = new Map(users.map((u) => [u.id, u]));
+
+    return {
+      totalGranted,
+      totalGrantedValue: this.toReais(totalGranted),
+      totalRedeemed,
+      totalRedeemedValue: this.toReais(totalRedeemed),
+      totalOutstanding,
+      totalOutstandingValue: this.toReais(totalOutstanding),
+      totalExpired,
+      totalExpiredValue: this.toReais(totalExpired),
+      topHolders: ranked.map((r) => ({
+        userId: r.userId,
+        userName: userMap.get(r.userId)?.name ?? '—',
+        userEmail: userMap.get(r.userId)?.email ?? '—',
+        balance: r.balance,
+        balanceValue: this.toReais(r.balance),
+      })),
+    };
+  }
+
+  // ────────────────────────────────────────────────────────────────────
   // EXPIRACAO (job noturno)
   // ────────────────────────────────────────────────────────────────────
 

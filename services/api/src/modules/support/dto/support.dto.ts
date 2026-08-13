@@ -1,84 +1,42 @@
-import { Type } from 'class-transformer';
-import { TicketCategory, TicketPriority, TicketStatus } from '@prisma/client';
-import {
-  IsEnum,
-  IsInt,
-  IsUUID,
-  IsOptional,
-  IsString,
-  IsUUID,
-  Max,
-  MaxLength,
-  Min,
-} from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+import { SupportTicketStatus } from '@prisma/client';
 
 export class CreateSupportTicketDto {
-  @ApiProperty({ enum: TicketCategory })
-  @IsEnum(TicketCategory)
-  category: TicketCategory;
-
-  @ApiPropertyOptional({ enum: TicketPriority })
-  @IsOptional()
-  @IsEnum(TicketPriority)
-  priority?: TicketPriority;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsUUID()
-  orderId?: string;
-
-  @ApiProperty()
+  @ApiProperty({ maxLength: 180 })
   @IsString()
+  @IsNotEmpty()
   @MaxLength(180)
   subject: string;
 
   @ApiProperty()
   @IsString()
-  @MaxLength(4000)
-  description: string;
+  @IsNotEmpty()
+  message: string;
 }
 
-export class ListSupportTicketsDto {
-  @ApiPropertyOptional({ enum: TicketStatus })
-  @IsOptional()
-  @IsEnum(TicketStatus)
-  status?: TicketStatus;
+export class UpdateSupportTicketStatusDto {
+  @ApiProperty({ enum: SupportTicketStatus })
+  @IsEnum(SupportTicketStatus)
+  status: SupportTicketStatus;
+}
 
-  @ApiPropertyOptional({ enum: TicketCategory })
+export class ListSupportTicketsQueryDto {
+  @ApiPropertyOptional({ enum: SupportTicketStatus })
   @IsOptional()
-  @IsEnum(TicketCategory)
-  category?: TicketCategory;
+  @IsEnum(SupportTicketStatus)
+  status?: SupportTicketStatus;
+
+  @ApiPropertyOptional({ description: 'Busca por assunto, nome ou e-mail do solicitante' })
+  @IsOptional()
+  @IsString()
+  search?: string;
 
   @ApiPropertyOptional({ default: 1 })
   @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  page?: number = 1;
+  page?: string;
 
   @ApiPropertyOptional({ default: 20 })
   @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  @Max(100)
-  limit?: number = 20;
+  limit?: string;
 }
-
-export class UpdateSupportTicketDto extends PartialType(CreateSupportTicketDto) {
-  @ApiPropertyOptional({ enum: TicketPriority })
-  @IsOptional()
-  @IsEnum(TicketPriority)
-  priority?: TicketPriority;
-
-  @ApiPropertyOptional({ enum: TicketStatus })
-  @IsOptional()
-  @IsEnum(TicketStatus)
-  status?: TicketStatus;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsUUID()
-  assignedAdminUserId?: string;
-}
-

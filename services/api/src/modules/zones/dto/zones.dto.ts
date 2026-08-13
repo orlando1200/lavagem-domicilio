@@ -3,189 +3,109 @@ import { Type } from 'class-transformer';
 import {
   IsArray,
   IsBoolean,
-  IsNumber,
+  IsNotEmpty,
   IsOptional,
   IsString,
   Length,
-  Min,
-  MinLength,
+  MaxLength,
 } from 'class-validator';
 
 export class CreateZoneDto {
-  @ApiProperty()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  @IsBoolean()
-  surgeEnabled?: boolean;
-
-  @ApiPropertyOptional({ default: true })
-  @IsOptional()
-  @IsBoolean()
-  isActive?: boolean;
-
-  @ApiPropertyOptional({ type: [String], default: [] })
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  neighborhoods?: string[];
-}
-
-export class UpdateZoneDto {
-  @ApiPropertyOptional()
-  @IsOptional()
+  @ApiProperty({ maxLength: 120 })
   @IsString()
+  @IsNotEmpty()
+  @MaxLength(120)
+  city: string;
 
+  @ApiProperty({ maxLength: 2, description: 'UF (2 letras)' })
+  @IsString()
+  @Length(2, 2)
+  state: string;
 
+  @ApiProperty({ maxLength: 120 })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(120)
+  name: string;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  @IsBoolean()
-  surgeEnabled?: boolean;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsBoolean()
-  isActive?: boolean;
+  @ApiProperty({ maxLength: 120, description: 'Slug unico da zona' })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(120)
+  slug: string;
 
   @ApiPropertyOptional({ type: [String] })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
   neighborhoods?: string[];
+
+  @ApiPropertyOptional({ default: true })
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 }
 
-export class CreateZonePricingRuleDto {
-  @ApiProperty()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  surgeMaxMultiplier?: number;
-}
-
-export class ListZonesQueryDto {
-  @ApiPropertyOptional({ description: 'Filter by state (UF)', example: 'SP' })
+export class UpdateZoneDto {
+  @ApiPropertyOptional({ maxLength: 120 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  city?: string;
+
+  @ApiPropertyOptional({ maxLength: 2 })
   @IsOptional()
   @IsString()
   @Length(2, 2)
   state?: string;
 
-  @ApiPropertyOptional({ description: 'Include inactive zones', default: false })
+  @ApiPropertyOptional({ maxLength: 120 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  name?: string;
+
+  @ApiPropertyOptional({ maxLength: 120 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  slug?: string;
+
+  @ApiPropertyOptional({ type: [String] })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  neighborhoods?: string[];
+
+  @ApiPropertyOptional()
   @IsOptional()
   @IsBoolean()
-  includeInactive?: boolean;
+  isActive?: boolean;
+}
+
+export class ListZonesQueryDto {
+  @ApiPropertyOptional({ maxLength: 2 })
+  @IsOptional()
+  @IsString()
+  @Length(2, 2)
+  state?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Type(() => Boolean)
+  @IsBoolean()
+  isActive?: boolean;
+
+  @ApiPropertyOptional({ description: 'Busca por nome ou cidade' })
+  @IsOptional()
+  @IsString()
+  search?: string;
 
   @ApiPropertyOptional({ default: 1 })
   @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  @Min(1)
-  page?: number;
+  page?: string;
 
   @ApiPropertyOptional({ default: 20 })
   @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  @Min(1)
-  limit?: number;
+  limit?: string;
 }
-

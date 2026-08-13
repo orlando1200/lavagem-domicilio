@@ -1,7 +1,7 @@
 # Progresso do Projeto — GIUCAR
 
 ## Última atualização
-2026-08-10
+2026-08-12
 
 > Nota: a versão anterior deste arquivo (17/jul) descrevia uma rodada
 > anterior à recuperação do backend (Fase 9 — ver
@@ -494,3 +494,55 @@ Ordem sugerida, por dependência e impacto (não por facilidade):
    saber que esse código existe pra quem for planejar as próximas
    fases: pode ser trabalho parcialmente feito reaproveitável (ou não —
    não auditado).
+10. **Admin panel — Fases 2-4**: **Cupons, Zonas, Suporte, Fidelidade,
+    Aluguel de Moto e Kit Inicial** — feito. Categorias/Serviços
+    **adiado de propósito** (mesma lógica do Dashboard na Fase 1: não
+    existe nenhum model `ServiceCategory`/`Service`/preço por porte de
+    veículo no schema, nem especificação no PRD — decisão de produto
+    real necessária antes).
+
+    Confirmado na prática (não só por leitura) que 4 dos módulos
+    quarentenados descobertos no item 9 — `zones`, `support`,
+    `starter-kit`, `rental` — eram **mesmo** irrecuperáveis: todos
+    referenciavam models Prisma inexistentes (`coverageZone`,
+    `RentalPartner`, `StarterKitConfig`, `TicketCategory`) e tinham
+    arquivos literalmente truncados (`support.service.ts` começava no
+    meio de uma função, sem import nenhum). Reescritos do zero contra o
+    schema real, seguindo exatamente o padrão de `coupons` (guards,
+    paginação `{data,total,page,limit,totalPages}`, soft-delete onde
+    fazia sentido) — `zones.controller.ts` (público, sem consumidor) e
+    `starter-kit.controller.ts` (self-service, sem necessidade) foram
+    **descartados** em vez de recuperados; `moto-rental.admin.controller.ts`
+    virou `rental.admin.controller.ts` (consistência de nome).
+
+    **Achado real no processo**: não existia — vivo ou morto — nenhuma
+    forma de um usuário criar um `SupportTicket`. Adicionado `POST
+    /support/tickets` + `GET /support/tickets/me`
+    (`CLIENTE`/`LAVADOR`), espelhando exatamente `vehicles`/`addresses`
+    (mesmo padrão do item 8) — sem isso a tela admin de Suporte nunca
+    teria dado real pra mostrar.
+
+    Fidelidade ganhou relatório agregado novo (`GET
+    /admin/loyalty/report`: total concedido/resgatado/em
+    aberto/expirado + top usuários por saldo, via
+    `Prisma.aggregate`/`groupBy`) — pedido explícito do usuário, não
+    existia nenhum endpoint de agregação antes (só concessão manual
+    pontual e expiração em lote).
+
+    Frontend: 6 páginas novas em `apps/admin-web/src/app/(admin)/`
+    (`cupons`, `zonas`, `suporte`, `fidelidade`, `aluguel-moto`,
+    `kit-inicial`), seguindo exatamente as convenções da Fase 1 (query
+    keys `['admin','<recurso>','list'|'detail',...]`, um
+    `lib/api/<recurso>.ts` por recurso, `Sheet` de detalhe com
+    `useMutation` invalidando o recurso, toast via `sonner`). Sem
+    combobox/checkbox/alert-dialog neste projeto ainda — campos
+    booleanos viram `<Select>` de 2 opções, "buscar lavador" reaproveita
+    `listDriverProfiles` + `<Select>` simples (mesmo padrão do
+    assign-driver de Pedidos), lista de bairros da Zona vira
+    `<Textarea>` "separe por vírgula".
+
+    Planejado via `EnterPlanMode`/`ExitPlanMode` antes de escrever
+    código (escopo grande o suficiente pra justificar), com 2 agentes
+    Explore + 1 agente Plan pra levantar convenções reais e desenhar a
+    implementação contra o schema de verdade antes de qualquer linha de
+    código.

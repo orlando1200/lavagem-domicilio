@@ -1,62 +1,108 @@
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma, StarterKitStatus } from '@prisma/client';
+import { PrismaService } from '../../database/prisma.service';
+import {
+  CreateStarterKitDto,
+  ListStarterKitsQueryDto,
+  UpdateStarterKitStatusDto,
+} from './dto/starter-kit.dto';
+
+const STARTER_KIT_INCLUDE = {
+  washer: {
+    include: {
+      user: { select: { id: true, name: true, email: true, phone: true } },
+    },
+  },
+} satisfies Prisma.StarterKitInclude;
+
+@Injectable()
+export class StarterKitService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async createStarterKit(dto: CreateStarterKitDto) {
+    const driverProfile = await this.prisma.driverProfile.findUnique({
+      where: { userId: dto.washerId },
     });
-  }
-
-  // ─── Admin: Upsert Active Config ────────────────────────────────────────────
-
-  async adminUpsertActiveConfig(dto: UpdateStarterKitConfigDto) {
-    const existing = await this.prisma.starterKitConfig.findFirst({
-      where: { isActive: true },
-      orderBy: { createdAt: 'desc' },
-    });
-
-    const data = {
-      ...(dto.productId !== undefined && { productId: dto.productId }),
-      ...(dto.minPrice !== undefined && { minPrice: dto.minPrice }),
-      ...(dto.maxPrice !== undefined && { maxPrice: dto.maxPrice }),
-      ...(dto.maxInstallments !== undefined && { maxInstallments: dto.maxInstallments }),
-      ...(dto.isActive !== undefined && { isActive: dto.isActive }),
-    };
-
-    if (existing) {
-      return this.prisma.starterKitConfig.update({
-        where: { id: existing.id },
-        data,
-        include: {
-          product: { select: { id: true, name: true, sku: true } },
-        },
-      });
+    if (!driverProfile) {
+      throw new NotFoundException('Perfil de motorista/loja nao encontrado');
     }
 
-    return this.prisma.starterKitConfig.create({
+    const existing = await this.prisma.starterKit.findUnique({
+      where: { washerId: dto.washerId },
+    });
+    if (existing) {
+      throw new ConflictException('Kit inicial ja existe para este lavador');
+    }
+
+    return this.prisma.starterKit.create({
       data: {
-        productId: dto.productId ?? '',
-        minPrice: dto.minPrice ?? 900,
-        maxPrice: dto.maxPrice ?? 1000,
-        maxInstallments: dto.maxInstallments ?? 12,
-        isActive: dto.isActive ?? true,
+        washerId: dto.washerId,
+        price: dto.price,
+        installments: dto.installments ?? 1,
       },
-      include: {
-        product: { select: { id: true, name: true, sku: true } },
-      },
+      include: STARTER_KIT_INCLUDE,
     });
   }
-}
 
-    const map: Record<string, TransactionStatus> = {
-      approved: TransactionStatus.paid,
-      authorized: TransactionStatus.authorized,
-      approved: TransactionStatus.paid,
-      authorized: TransactionStatus.authorized,
-      pending: TransactionStatus.pending,
-      in_process: TransactionStatus.pending,
-      in_mediation: TransactionStatus.pending,
-      rejected: TransactionStatus.failed,
-      cancelled: TransactionStatus.cancelled,
-      refunded: TransactionStatus.refunded,
-      charged_back: TransactionStatus.refunded,
+  async listStarterKits(query: ListStarterKitsQueryDto) {
+    const page = Math.max(Number(query.page) || 1, 1);
+    const limit = Math.min(Math.max(Number(query.limit) || 20, 1), 100);
+
+    const where: Prisma.StarterKitWhereInput = {
+      ...(query.status ? { status: query.status } : {}),
+      ...(query.search
+        ? {
+            washer: {
+              user: {
+                OR: [
+                  { name: { contains: query.search, mode: 'insensitive' } },
+                  { email: { contains: query.search, mode: 'insensitive' } },
+                ],
+              },
+            },
+          }
+        : {}),
     };
 
-    return map[mpStatus] ?? TransactionStatus.pending;
+    const [items, total] = await Promise.all([
+      this.prisma.starterKit.findMany({
+        where,
+        include: STARTER_KIT_INCLUDE,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.starterKit.count({ where }),
+    ]);
+
+    return { data: items, total, page, limit, totalPages: Math.ceil(total / limit) };
+  }
+
+  async getStarterKitByWasherId(washerId: string) {
+    return this.findStarterKitOrThrow(washerId);
+  }
+
+  async updateStatusAsAdmin(washerId: string, dto: UpdateStarterKitStatusDto) {
+    const kit = await this.findStarterKitOrThrow(washerId);
+
+    return this.prisma.starterKit.update({
+      where: { washerId },
+      data: {
+        status: dto.status,
+        ...(dto.status === StarterKitStatus.paid && !kit.paidAt ? { paidAt: new Date() } : {}),
+      },
+      include: STARTER_KIT_INCLUDE,
+    });
+  }
+
+  private async findStarterKitOrThrow(washerId: string) {
+    const kit = await this.prisma.starterKit.findUnique({
+      where: { washerId },
+      include: STARTER_KIT_INCLUDE,
+    });
+    if (!kit) {
+      throw new NotFoundException('Kit inicial nao encontrado');
+    }
+    return kit;
   }
 }
-

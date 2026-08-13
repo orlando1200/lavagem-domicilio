@@ -1,48 +1,58 @@
-import { IsNumber, IsOptional, IsUUID, Max, Min } from 'class-validator';
-import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import {
+  IsEnum,
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsPositive,
+  IsString,
+  IsUUID,
+  Min,
+} from 'class-validator';
+import { StarterKitStatus } from '@prisma/client';
 
-export class CreateKitCheckoutDto {
-  @ApiProperty({ description: 'Number of installments (1 to maxInstallments)', minimum: 1 })
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+export class CreateStarterKitDto {
+  @ApiProperty({ description: 'userId do lavador (DriverProfile.userId)' })
   @IsUUID()
-  productId?: string;
+  washerId: string;
 
-  @ApiPropertyOptional({ description: 'Minimum price (BRL)', example: 900 })
-  @IsOptional()
+  @ApiProperty({ description: 'Preco do kit inicial em reais' })
   @Type(() => Number)
   @IsNumber()
-  @Min(0)
-  minPrice?: number;
+  @IsPositive()
+  price: number;
 
-  @ApiPropertyOptional({ description: 'Maximum price (BRL)', example: 1000 })
+  @ApiPropertyOptional({ default: 1, description: 'Numero de parcelas' })
   @IsOptional()
   @Type(() => Number)
-  @IsNumber()
-  @Min(0)
-  maxPrice?: number;
-
-  @ApiPropertyOptional({ description: 'Maximum installments allowed', example: 6 })
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
+  @IsInt()
   @Min(1)
-  @Max(12)
-  maxInstallments?: number;
+  installments?: number;
+}
 
-  @ApiPropertyOptional({ description: 'Whether this config is active' })
+export class UpdateStarterKitStatusDto {
+  @ApiProperty({ enum: StarterKitStatus })
+  @IsEnum(StarterKitStatus)
+  status: StarterKitStatus;
+}
+
+export class ListStarterKitsQueryDto {
+  @ApiPropertyOptional({ enum: StarterKitStatus })
   @IsOptional()
+  @IsEnum(StarterKitStatus)
+  status?: StarterKitStatus;
+
+  @ApiPropertyOptional({ description: 'Busca por nome ou e-mail do lavador' })
+  @IsOptional()
+  @IsString()
+  search?: string;
+
+  @ApiPropertyOptional({ default: 1 })
+  @IsOptional()
+  page?: string;
+
+  @ApiPropertyOptional({ default: 20 })
+  @IsOptional()
+  limit?: string;
+}

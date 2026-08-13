@@ -1,195 +1,48 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsString,
-  IsOptional,
-  IsEnum,
-  IsNumber,
-  IsPositive,
-  IsUUID,
-  MaxLength,
-  Length,
-  IsInt,
-  Min,
-} from 'class-validator';
 import { Type } from 'class-transformer';
-import { RentalPartnerStatus, RentalOfferStatus, RentalLeadStatus, PricePeriod } from '@prisma/client';
-import { CursorPaginationDto } from '@common/dto/pagination.dto';
-
-// ─── Rental Partner DTOs ──────────────────────────────────────────────────────
-
-export class CreateRentalPartnerDto {
-  @ApiProperty()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  status?: RentalPartnerStatus;
-}
-
-export class ListRentalPartnersDto extends CursorPaginationDto {
-  @ApiPropertyOptional({ default: 1, minimum: 1 })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  page?: number;
-
-  @ApiPropertyOptional({ enum: RentalPartnerStatus })
-  @IsOptional()
-  @IsEnum(RentalPartnerStatus)
-  status?: RentalPartnerStatus;
-}
-
-// ─── Rental Offer DTOs ────────────────────────────────────────────────────────
-
-  status?: RentalPartnerStatus;
-}
-
-// ─── Rental Offer DTOs ────────────────────────────────────────────────────────
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  status?: RentalOfferStatus;
-}
-
-export class ListRentalOffersDto extends CursorPaginationDto {
-  @ApiPropertyOptional({ default: 1, minimum: 1 })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  page?: number;
-
-  @ApiPropertyOptional({ enum: RentalOfferStatus })
-  @IsOptional()
-  @IsEnum(RentalOfferStatus)
-  status?: RentalOfferStatus;
-
-  @ApiPropertyOptional()
-  @IsOptional()
+import { IsEnum, IsNumber, IsOptional, IsPositive, IsString, IsUUID } from 'class-validator';
+import { RentalStatus } from '@prisma/client';
+
+export class CreateRentalDto {
+  @ApiProperty({ description: 'Id do usuario locatario (lavador)' })
   @IsUUID()
-  partnerId?: string;
+  userId: string;
 
-  @ApiPropertyOptional()
+  @ApiProperty({ description: 'Valor semanal do aluguel em reais' })
+  @Type(() => Number)
+  @IsNumber()
+  @IsPositive()
+  weeklyRate: number;
+}
+
+export class AssignRentalDriverDto {
+  @ApiProperty({ description: 'userId do DriverProfile a atribuir' })
+  @IsUUID()
+  driverId: string;
+}
+
+export class UpdateRentalStatusDto {
+  @ApiProperty({ enum: RentalStatus })
+  @IsEnum(RentalStatus)
+  status: RentalStatus;
+}
+
+export class ListRentalsQueryDto {
+  @ApiPropertyOptional({ enum: RentalStatus })
   @IsOptional()
+  @IsEnum(RentalStatus)
+  status?: RentalStatus;
+
+  @ApiPropertyOptional({ description: 'Busca por nome ou e-mail do locatario' })
+  @IsOptional()
+  @IsString()
+  search?: string;
+
+  @ApiPropertyOptional({ default: 1 })
+  @IsOptional()
+  page?: string;
+
+  @ApiPropertyOptional({ default: 20 })
+  @IsOptional()
+  limit?: string;
+}

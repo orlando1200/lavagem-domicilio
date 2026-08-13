@@ -36,6 +36,14 @@ export type PayoutStatus = 'pending' | 'approved' | 'paid' | 'rejected';
 
 export type PayoutRecipientType = 'WASHER' | 'STORE';
 
+export type CouponDiscountType = 'percent' | 'fixed';
+
+export type StarterKitStatus = 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled';
+
+export type SupportTicketStatus = 'open' | 'in_progress' | 'resolved' | 'closed';
+
+export type RentalStatus = 'requested' | 'active' | 'completed' | 'cancelled' | 'overdue';
+
 export interface Paginated<T> {
   data: T[];
   total: number;
@@ -81,6 +89,19 @@ export interface Address {
 export interface Zone {
   id: string;
   name: string;
+}
+
+export interface ZoneAdmin {
+  id: string;
+  city: string;
+  state: string;
+  name: string;
+  slug: string;
+  neighborhoods: string[];
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  _count: { drivers: number; orders: number };
 }
 
 export interface Order {
@@ -153,6 +174,90 @@ export interface Product {
   status: ProductStatus;
   createdAt: string;
   store: { id: string; name: string };
+}
+
+export interface CouponCampaign {
+  id: string;
+  name: string;
+  description: string | null;
+  startsAt: string;
+  endsAt: string | null;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface Coupon {
+  id: string;
+  code: string;
+  discountType: CouponDiscountType;
+  discountValue: string;
+  maxUses: number | null;
+  usedCount: number;
+  minOrderAmount: string | null;
+  expiresAt: string | null;
+  isActive: boolean;
+  campaignId: string | null;
+  createdAt: string;
+  campaign: CouponCampaign | null;
+}
+
+export interface StarterKit {
+  washerId: string;
+  status: StarterKitStatus;
+  price: string;
+  installments: number;
+  paidAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  washer: {
+    userId: string;
+    user: { id: string; name: string; email: string; phone: string | null };
+  };
+}
+
+export interface SupportTicket {
+  id: string;
+  userId: string;
+  subject: string;
+  message: string;
+  status: SupportTicketStatus;
+  createdAt: string;
+  updatedAt: string;
+  user: { id: string; name: string; email: string };
+}
+
+export interface Rental {
+  id: string;
+  userId: string;
+  driverId: string | null;
+  status: RentalStatus;
+  weeklyRate: string;
+  startedAt: string | null;
+  endedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  user: { id: string; name: string; email: string };
+  driver: { userId: string; user: { id: string; name: string; email: string } } | null;
+}
+
+export interface LoyaltyReportHolder {
+  userId: string;
+  userName: string;
+  userEmail: string;
+  balance: number;
+  balanceValue: number;
+}
+
+export interface LoyaltyReport {
+  totalGranted: number;
+  totalGrantedValue: number;
+  totalRedeemed: number;
+  totalRedeemedValue: number;
+  totalOutstanding: number;
+  totalOutstandingValue: number;
+  totalExpired: number;
+  totalExpiredValue: number;
+  topHolders: LoyaltyReportHolder[];
 }
 
 export interface Payout {

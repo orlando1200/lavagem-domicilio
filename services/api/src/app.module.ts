@@ -18,6 +18,10 @@ import { AuctionsModule } from './modules/auctions/auctions.module';
 import { LoyaltyModule } from './modules/loyalty/loyalty.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { MapsModule } from './modules/maps/maps.module';
+import { ZonesModule } from './modules/zones/zones.module';
+import { StarterKitModule } from './modules/starter-kit/starter-kit.module';
+import { SupportModule } from './modules/support/support.module';
+import { RentalModule } from './modules/rental/rental.module';
 
 @Module({
   imports: [
@@ -40,6 +44,10 @@ import { MapsModule } from './modules/maps/maps.module';
     LoyaltyModule,
     PaymentsModule,
     MapsModule,
+    ZonesModule,
+    StarterKitModule,
+    SupportModule,
+    RentalModule,
   ],
 })
 export class AppModule {}

@@ -1,171 +1,85 @@
-      throw new NotFoundException('Support ticket not found');
-    }
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+import { PrismaService } from '../../database/prisma.service';
+import {
+  CreateSupportTicketDto,
+  ListSupportTicketsQueryDto,
+  UpdateSupportTicketStatusDto,
+} from './dto/support.dto';
 
-    return this.prisma.supportTicket.update({
-      where: { id },
-      data: {
-        ...(dto.category ? { category: dto.category } : {}),
-        ...(dto.priority ? { priority: dto.priority } : {}),
-        ...(dto.status ? { status: dto.status } : {}),
-        ...(dto.subject !== undefined ? { subject: dto.subject } : {}),
-        ...(dto.description !== undefined ? { description: dto.description } : {}),
-        ...(dto.assignedAdminUserId !== undefined
-          ? { assignedAdminUserId: dto.assignedAdminUserId }
-          : {}),
-      },
-      include: { requester: { include: { profile: true } } },
+const SUPPORT_TICKET_INCLUDE = {
+  user: { select: { id: true, name: true, email: true } },
+} satisfies Prisma.SupportTicketInclude;
+
+@Injectable()
+export class SupportService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  createTicket(userId: string, dto: CreateSupportTicketDto) {
+    return this.prisma.supportTicket.create({
+      data: { userId, subject: dto.subject, message: dto.message },
     });
   }
 
-  async closeMine(id: string, requesterUserId: string) {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  listMyTickets(userId: string) {
+    return this.prisma.supportTicket.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
     });
   }
 
-  private async list(query: ListSupportTicketsDto & { requesterUserId?: string }) {
-    const page = query.page ?? 1;
-    const limit = query.limit ?? 20;
-    const skip = (page - 1) * limit;
-    const where: any = {
-      ...(query.requesterUserId ? { requesterUserId: query.requesterUserId } : {}),
+  async listTicketsForAdmin(query: ListSupportTicketsQueryDto) {
+    const page = Math.max(Number(query.page) || 1, 1);
+    const limit = Math.min(Math.max(Number(query.limit) || 20, 1), 100);
+
+    const where: Prisma.SupportTicketWhereInput = {
       ...(query.status ? { status: query.status } : {}),
-      ...(query.category ? { category: query.category } : {}),
+      ...(query.search
+        ? {
+            OR: [
+              { subject: { contains: query.search, mode: 'insensitive' } },
+              { user: { name: { contains: query.search, mode: 'insensitive' } } },
+              { user: { email: { contains: query.search, mode: 'insensitive' } } },
+            ],
+          }
+        : {}),
     };
-    if (query.search) {
-      where.OR = [
-        { subject: { contains: query.search, mode: 'insensitive' } },
-        { description: { contains: query.search, mode: 'insensitive' } },
-        { requester: { email: { contains: query.search, mode: 'insensitive' } } },
-        { requester: { profile: { fullName: { contains: query.search, mode: 'insensitive' } } } },
-      ];
-    }
 
-    const [data, total] = await Promise.all([
-      this.prisma.supportTicket.count({ where }),
-    ]);
-
-    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
-  }
-}
-          requester: { include: { profile: true } },
-        },
+    const [items, total] = await Promise.all([
+      this.prisma.supportTicket.findMany({
+        where,
+        include: SUPPORT_TICKET_INCLUDE,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
       }),
       this.prisma.supportTicket.count({ where }),
     ]);
 
-    return { data: data.map(toTicketResponse), total, page, limit, totalPages: Math.ceil(total / limit) };
+    return { data: items, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
-}
 
-function toTicketResponse(ticket: any) {
-  return {
-    id: ticket.id,
-    protocol: `SUP-${ticket.id.slice(0, 8).toUpperCase()}`,
-    subject: ticket.subject,
-    customerName: ticket.requester?.profile?.fullName ?? ticket.requester?.email ?? 'Cliente',
-    customerEmail: ticket.requester?.email,
-    channel: ticket.channel ?? 'app',
-    priority: ticket.priority,
-    status: mapTicketStatusToFrontend(ticket.status),
-    assignedTo: ticket.assignedAdminUserId,
-    lastInteractionAt: ticket.updatedAt?.toISOString?.() ?? ticket.updatedAt,
-    createdAt: ticket.createdAt?.toISOString?.() ?? ticket.createdAt,
-    tags: [],
-    messages: [],
-  };
-}
+  async getTicketByIdForAdmin(id: string) {
+    return this.findTicketOrThrow(id);
+  }
 
-function mapTicketStatusToFrontend(status: string): 'open' | 'in_progress' | 'waiting_customer' | 'resolved' {
-  switch (status) {
-    case 'open':
-      return 'open';
-    case 'pending_internal':
-      return 'in_progress';
-    case 'pending_user':
-      return 'waiting_customer';
-    case 'resolved':
-    case 'closed':
-      return 'resolved';
-    default:
-      return 'open';
+  async updateStatusAsAdmin(id: string, dto: UpdateSupportTicketStatusDto) {
+    await this.findTicketOrThrow(id);
+    return this.prisma.supportTicket.update({
+      where: { id },
+      data: { status: dto.status },
+      include: SUPPORT_TICKET_INCLUDE,
+    });
+  }
+
+  private async findTicketOrThrow(id: string) {
+    const ticket = await this.prisma.supportTicket.findUnique({
+      where: { id },
+      include: SUPPORT_TICKET_INCLUDE,
+    });
+    if (!ticket) {
+      throw new NotFoundException('Ticket de suporte nao encontrado');
+    }
+    return ticket;
   }
 }

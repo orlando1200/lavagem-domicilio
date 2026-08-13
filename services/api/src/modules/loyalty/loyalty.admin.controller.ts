@@ -1,4 +1,4 @@
-import { Controller, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, ParseUUIDPipe, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -32,5 +32,13 @@ export class AdminLoyaltyController {
   })
   expireOverdue() {
     return this.loyaltyService.expireOverduePoints();
+  }
+
+  @Get('report')
+  @ApiOperation({
+    summary: 'Relatorio agregado do programa de fidelidade (totais + top saldos)',
+  })
+  getReport(@Query('limit') limit?: string) {
+    return this.loyaltyService.getAdminReport(limit ? Number(limit) : 10);
   }
 }

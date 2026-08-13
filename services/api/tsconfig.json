@@ -39,7 +39,11 @@
     "src/modules/auctions/**/*",
     "src/modules/loyalty/**/*",
     "src/modules/payments/**/*",
-    "src/modules/maps/**/*"
+    "src/modules/maps/**/*",
+    "src/modules/zones/**/*",
+    "src/modules/starter-kit/**/*",
+    "src/modules/support/**/*",
+    "src/modules/rental/**/*"
   ],
   "exclude": [
     "node_modules",
@@ -51,11 +55,7 @@
     "src/modules/dispatch/**/*",
     "src/modules/document-verification/**/*",
     "src/modules/face-check/**/*",
-    "src/modules/rental/**/*",
     "src/modules/services-catalog/**/*",
-    "src/modules/starter-kit/**/*",
-    "src/modules/support/**/*",
-    "src/modules/tracking/**/*",
-    "src/modules/zones/**/*"
+    "src/modules/tracking/**/*"
   ]
 }

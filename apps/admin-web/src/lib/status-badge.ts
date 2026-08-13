@@ -1,5 +1,15 @@
 import type { BadgeProps } from '@/components/ui/badge';
-import type { DriverStatus, OrderStatus, PayoutStatus, ProductStatus, StoreStatus } from './types';
+import type {
+  CouponDiscountType,
+  DriverStatus,
+  OrderStatus,
+  PayoutStatus,
+  ProductStatus,
+  RentalStatus,
+  StarterKitStatus,
+  StoreStatus,
+  SupportTicketStatus,
+} from './types';
 
 type Variant = NonNullable<BadgeProps['variant']>;
 
@@ -151,3 +161,102 @@ export const PRODUCT_STATUS_OPTIONS: ProductStatus[] = [
 ];
 
 export const PAYOUT_STATUS_OPTIONS: PayoutStatus[] = ['pending', 'approved', 'paid', 'rejected'];
+
+const COUPON_DISCOUNT_TYPE_LABEL: Record<CouponDiscountType, string> = {
+  percent: 'Percentual',
+  fixed: 'Valor fixo',
+};
+
+export function couponDiscountTypeLabel(type: CouponDiscountType): string {
+  return COUPON_DISCOUNT_TYPE_LABEL[type] ?? type;
+}
+
+const STARTER_KIT_STATUS_LABEL: Record<StarterKitStatus, string> = {
+  pending: 'Pendente',
+  paid: 'Pago',
+  shipped: 'Enviado',
+  delivered: 'Entregue',
+  cancelled: 'Cancelado',
+};
+
+const STARTER_KIT_STATUS_VARIANT: Record<StarterKitStatus, Variant> = {
+  pending: 'warning',
+  paid: 'default',
+  shipped: 'default',
+  delivered: 'success',
+  cancelled: 'destructive',
+};
+
+export function starterKitStatusLabel(status: StarterKitStatus): string {
+  return STARTER_KIT_STATUS_LABEL[status] ?? status;
+}
+export function starterKitStatusVariant(status: StarterKitStatus): Variant {
+  return STARTER_KIT_STATUS_VARIANT[status] ?? 'secondary';
+}
+
+export const STARTER_KIT_STATUS_OPTIONS: StarterKitStatus[] = [
+  'pending',
+  'paid',
+  'shipped',
+  'delivered',
+  'cancelled',
+];
+
+const SUPPORT_TICKET_STATUS_LABEL: Record<SupportTicketStatus, string> = {
+  open: 'Aberto',
+  in_progress: 'Em andamento',
+  resolved: 'Resolvido',
+  closed: 'Fechado',
+};
+
+const SUPPORT_TICKET_STATUS_VARIANT: Record<SupportTicketStatus, Variant> = {
+  open: 'warning',
+  in_progress: 'default',
+  resolved: 'success',
+  closed: 'secondary',
+};
+
+export function supportTicketStatusLabel(status: SupportTicketStatus): string {
+  return SUPPORT_TICKET_STATUS_LABEL[status] ?? status;
+}
+export function supportTicketStatusVariant(status: SupportTicketStatus): Variant {
+  return SUPPORT_TICKET_STATUS_VARIANT[status] ?? 'secondary';
+}
+
+export const SUPPORT_TICKET_STATUS_OPTIONS: SupportTicketStatus[] = [
+  'open',
+  'in_progress',
+  'resolved',
+  'closed',
+];
+
+const RENTAL_STATUS_LABEL: Record<RentalStatus, string> = {
+  requested: 'Solicitada',
+  active: 'Ativa',
+  completed: 'Concluída',
+  cancelled: 'Cancelada',
+  overdue: 'Atrasada',
+};
+
+const RENTAL_STATUS_VARIANT: Record<RentalStatus, Variant> = {
+  requested: 'warning',
+  active: 'success',
+  completed: 'secondary',
+  cancelled: 'destructive',
+  overdue: 'destructive',
+};
+
+export function rentalStatusLabel(status: RentalStatus): string {
+  return RENTAL_STATUS_LABEL[status] ?? status;
+}
+export function rentalStatusVariant(status: RentalStatus): Variant {
+  return RENTAL_STATUS_VARIANT[status] ?? 'secondary';
+}
+
+export const RENTAL_STATUS_OPTIONS: RentalStatus[] = [
+  'requested',
+  'active',
+  'completed',
+  'cancelled',
+  'overdue',
+];

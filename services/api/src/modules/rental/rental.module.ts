@@ -1,23 +1,10 @@
 import { Module } from '@nestjs/common';
-import { DatabaseModule } from '@database/database.module';
+import { AdminRentalController } from './rental.admin.controller';
 import { RentalService } from './rental.service';
-import {
-  RentalPartnersController,
-  RentalOffersController,
-  RentalLeadsController,
-} from './rental.controller';
-import { AdminMotoRentalController } from './moto-rental.admin.controller';
 
 @Module({
-  imports: [DatabaseModule],
-  controllers: [
-    RentalPartnersController,
-    RentalOffersController,
-    RentalLeadsController,
-    AdminMotoRentalController,
-  ],
+  controllers: [AdminRentalController],
   providers: [RentalService],
   exports: [RentalService],
 })
 export class RentalModule {}
-

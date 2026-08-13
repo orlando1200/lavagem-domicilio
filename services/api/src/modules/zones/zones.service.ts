@@ -1,109 +1,112 @@
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+import { PrismaService } from '../../database/prisma.service';
+import { CreateZoneDto, ListZonesQueryDto, UpdateZoneDto } from './dto/zones.dto';
+
+const ZONE_INCLUDE = {
+  _count: { select: { drivers: true, orders: true } },
+} satisfies Prisma.ZoneInclude;
+
+@Injectable()
 export class ZonesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async listZones(query: ListZonesQueryDto) {
-    const where: any = {
-      ...(query.includeInactive ? {} : { isActive: true }),
-      ...(query.state ? { state: query.state.toUpperCase() } : {}),
-    };
-
-    const page = query.page ?? 1;
-    const limit = query.limit ?? 20;
-
-    const [items, total] = await Promise.all([
-      this.prisma.coverageZone.findMany({
-        where,
-        include: { pricingRules: true },
-        orderBy: [{ state: 'asc' }, { name: 'asc' }],
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
-      this.prisma.coverageZone.count({ where }),
-    ]);
-
-    return { items, total, page, limit };
-  }
-
-  async getZone(id: string) {
-    const zone = await this.prisma.coverageZone.findUnique({
-      totalPages: Math.ceil(total / limit),
-    };
-  }
-
-  async getZone(id: string) {
-    const zone = await this.prisma.coverageZone.findUnique({
-  async getZonePricingRules(zoneId: string) {
-    const zone = await this.prisma.coverageZone.findUnique({
-      where: { id: zoneId },
-    });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      throw new ConflictException('Zone with this slug already exists');
+  async createZone(dto: CreateZoneDto) {
+    const slugInUse = await this.prisma.zone.findUnique({ where: { slug: dto.slug } });
+    if (slugInUse) {
+      throw new ConflictException('Ja existe uma zona com este slug');
     }
 
-    return this.prisma.coverageZone.create({
+    return this.prisma.zone.create({
       data: {
         city: dto.city,
         state: dto.state.toUpperCase(),
         name: dto.name,
         slug: dto.slug,
-        surgeEnabled: dto.surgeEnabled ?? false,
-        isActive: dto.isActive ?? true,
         neighborhoods: dto.neighborhoods ?? [],
+        isActive: dto.isActive ?? true,
       },
-      include: { pricingRules: true },
+      include: ZONE_INCLUDE,
     });
   }
 
+  async listZones(query: ListZonesQueryDto) {
+    const page = Math.max(Number(query.page) || 1, 1);
+    const limit = Math.min(Math.max(Number(query.limit) || 20, 1), 100);
+
+    const where: Prisma.ZoneWhereInput = {
+      ...(query.state ? { state: query.state.toUpperCase() } : {}),
+      ...(query.isActive !== undefined ? { isActive: query.isActive } : {}),
+      ...(query.search
+        ? {
+            OR: [
+              { name: { contains: query.search, mode: 'insensitive' } },
+              { city: { contains: query.search, mode: 'insensitive' } },
+            ],
+          }
+        : {}),
+    };
+
+    const [items, total] = await Promise.all([
+      this.prisma.zone.findMany({
+        where,
+        include: ZONE_INCLUDE,
+        orderBy: [{ state: 'asc' }, { name: 'asc' }],
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.zone.count({ where }),
+    ]);
+
+    return { data: items, total, page, limit, totalPages: Math.ceil(total / limit) };
+  }
+
+  async getZoneById(id: string) {
+    return this.findZoneOrThrow(id);
+  }
+
   async updateZone(id: string, dto: UpdateZoneDto) {
-    await this.ensureZoneExists(id);
+    await this.findZoneOrThrow(id);
 
-
-
-
-
-
-
+    if (dto.slug) {
+      const slugInUse = await this.prisma.zone.findFirst({
+        where: { slug: dto.slug, id: { not: id } },
+      });
+      if (slugInUse) {
+        throw new ConflictException('Ja existe uma zona com este slug');
       }
     }
 
-    return this.prisma.coverageZone.update({
+    return this.prisma.zone.update({
       where: { id },
       data: {
         ...(dto.city !== undefined ? { city: dto.city } : {}),
         ...(dto.state !== undefined ? { state: dto.state.toUpperCase() } : {}),
         ...(dto.name !== undefined ? { name: dto.name } : {}),
         ...(dto.slug !== undefined ? { slug: dto.slug } : {}),
-        ...(dto.surgeEnabled !== undefined ? { surgeEnabled: dto.surgeEnabled } : {}),
-        ...(dto.isActive !== undefined ? { isActive: dto.isActive } : {}),
         ...(dto.neighborhoods !== undefined ? { neighborhoods: dto.neighborhoods } : {}),
+        ...(dto.isActive !== undefined ? { isActive: dto.isActive } : {}),
       },
-      include: { pricingRules: true },
+      include: ZONE_INCLUDE,
     });
   }
 
-  async deleteZone(id: string) {
-    await this.ensureZoneExists(id);
+  async deactivateZone(id: string) {
+    await this.findZoneOrThrow(id);
+    // Soft-delete: Zone tem FK de DriverProfile.currentZoneId e
+    // Order.zoneId — apagar de verdade quebraria historico.
+    return this.prisma.zone.update({
+      where: { id },
+      data: { isActive: false },
+      include: ZONE_INCLUDE,
+    });
+  }
+
+  private async findZoneOrThrow(id: string) {
+    const zone = await this.prisma.zone.findUnique({ where: { id }, include: ZONE_INCLUDE });
+    if (!zone) {
+      throw new NotFoundException('Zona nao encontrada');
+    }
+    return zone;
+  }
+}

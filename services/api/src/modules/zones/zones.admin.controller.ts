@@ -1,96 +1,58 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Patch,
-  Delete,
-  Param,
   Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
   Query,
   UseGuards,
-  ParseUUIDPipe,
 } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiTags,
-} from '@nestjs/swagger';
-import { JwtAuthGuard } from '@modules/auth/guards/jwt-auth.guard';
-import { RolesGuard } from '@common/guards/roles.guard';
-import { Roles } from '@common/decorators/roles.decorator';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
 import { ZonesService } from './zones.service';
-import {
-  CreateZoneDto,
-  CreateZonePricingRuleDto,
-  ListZonesQueryDto,
-  UpdateZoneDto,
-  UpdateZonePricingRuleDto,
-} from './dto/zones.dto';
+import { CreateZoneDto, ListZonesQueryDto, UpdateZoneDto } from './dto/zones.dto';
 
 @ApiTags('admin/zones')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.admin)
+@Roles(UserRole.ADMIN)
 @Controller('admin/zones')
 export class AdminZonesController {
   constructor(private readonly zonesService: ZonesService) {}
 
+  @Post()
+  @ApiOperation({ summary: 'Cria uma zona de cobertura' })
+  createZone(@Body() dto: CreateZoneDto) {
+    return this.zonesService.createZone(dto);
+  }
+
   @Get()
-  @ApiOperation({ summary: 'List zones' })
+  @ApiOperation({ summary: 'Lista zonas de cobertura com filtros' })
   listZones(@Query() query: ListZonesQueryDto) {
     return this.zonesService.listZones(query);
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get zone by id' })
+  @ApiOperation({ summary: 'Detalhes de uma zona de cobertura' })
   getZone(@Param('id', ParseUUIDPipe) id: string) {
-    return this.zonesService.getZone(id);
-  }
-
-  @Post()
-  @ApiOperation({ summary: 'Create zone' })
-  createZone(@Body() dto: CreateZoneDto) {
-    return this.zonesService.createZone(dto);
+    return this.zonesService.getZoneById(id);
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update zone' })
-  updateZone(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdateZoneDto,
-  ) {
+  @ApiOperation({ summary: 'Atualiza uma zona de cobertura' })
+  updateZone(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateZoneDto) {
     return this.zonesService.updateZone(id, dto);
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete zone' })
-  deleteZone(@Param('id', ParseUUIDPipe) id: string) {
-    return this.zonesService.deleteZone(id);
-  }
-
-  @Get(':id/pricing-rules')
-  @ApiOperation({ summary: 'List zone pricing rules' })
-  getPricingRules(@Param('id', ParseUUIDPipe) id: string) {
-    return this.zonesService.getZonePricingRules(id);
-  }
-
-  @Post(':id/pricing-rules')
-  @ApiOperation({ summary: 'Create zone pricing rule' })
-  createPricingRule(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: CreateZonePricingRuleDto,
-  ) {
-    return this.zonesService.createPricingRule(id, dto);
-  }
-
-  @Patch('pricing-rules/:ruleId')
-  @ApiOperation({ summary: 'Update zone pricing rule' })
-  updatePricingRule(
-    @Param('ruleId', ParseUUIDPipe) ruleId: string,
-    @Body() dto: UpdateZonePricingRuleDto,
-  ) {
-    return this.zonesService.updatePricingRule(ruleId, dto);
+  @ApiOperation({ summary: 'Desativa uma zona de cobertura' })
+  deactivateZone(@Param('id', ParseUUIDPipe) id: string) {
+    return this.zonesService.deactivateZone(id);
   }
 }
-
