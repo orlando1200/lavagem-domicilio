@@ -10,11 +10,13 @@ class TokenStorage {
 
   Future<String?> readToken() => _storage.read(key: _tokenKey);
 
-  Future<void> saveToken(String token) => _storage.write(key: _tokenKey, value: token);
+  Future<void> saveToken(String token) =>
+      _storage.write(key: _tokenKey, value: token);
 
   Future<String?> readStoreId() => _storage.read(key: _storeIdKey);
 
-  Future<void> saveStoreId(String storeId) => _storage.write(key: _storeIdKey, value: storeId);
+  Future<void> saveStoreId(String storeId) =>
+      _storage.write(key: _storeIdKey, value: storeId);
 
   Future<void> clearAll() async {
     await _storage.delete(key: _tokenKey);

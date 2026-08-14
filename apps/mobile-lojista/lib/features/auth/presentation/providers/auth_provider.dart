@@ -78,6 +78,20 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  /// Recarrega o perfil/loja atual do backend (usado apos editar o
+  /// perfil em `/profile/edit`, pra refletir o nome novo na home sem
+  /// exigir logout/login).
+  Future<void> refreshProfile() async {
+    try {
+      final user = await _repository.fetchCurrentUser();
+      if (user != null) {
+        state = AuthState.authenticated(user);
+      }
+    } catch (_) {
+      // Mantem o estado atual em caso de falha de rede.
+    }
+  }
+
   Future<void> logout() async {
     await _repository.logout();
     state = const AuthState.unauthenticated();

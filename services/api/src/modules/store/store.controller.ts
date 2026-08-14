@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -8,6 +8,8 @@ import { AuthenticatedUser, CurrentUser } from '../../common/decorators/current-
 import { StoreService } from './store.service';
 import { CreateStoreDto } from './dto/create-store.dto';
 import { CreateStoreProductDto } from './dto/create-store-product.dto';
+import { UpdateStoreProductDto } from './dto/update-store-product.dto';
+import { UpdateLogisticsPlanDto } from './dto/update-logistics-plan.dto';
 
 /**
  * Gestao da propria loja do lojista (dados sensiveis: `bankInfo`,
@@ -47,8 +49,27 @@ export class StoreController {
     return this.storeService.listProductsByStore(storeId, user);
   }
 
+  @Patch(':id/products/:productId')
+  updateProduct(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') storeId: string,
+    @Param('productId') productId: string,
+    @Body() dto: UpdateStoreProductDto,
+  ) {
+    return this.storeService.updateProduct(storeId, productId, user, dto);
+  }
+
   @Get(':id/orders')
   listOrders(@CurrentUser() user: AuthenticatedUser, @Param('id') storeId: string) {
     return this.storeService.listOrdersByStore(storeId, user);
+  }
+
+  @Patch(':id/logistics-plan')
+  updateLogisticsPlan(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') storeId: string,
+    @Body() dto: UpdateLogisticsPlanDto,
+  ) {
+    return this.storeService.updateLogisticsPlan(storeId, user, dto);
   }
 }

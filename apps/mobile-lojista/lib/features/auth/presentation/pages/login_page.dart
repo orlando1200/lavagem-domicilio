@@ -58,7 +58,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 420),
                   child: Column(
@@ -68,7 +69,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       const SizedBox(height: 12),
                       Text(
                         'GIUCAR',
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineMedium
+                            ?.copyWith(
                               color: AppColors.textPrimary,
                               fontWeight: FontWeight.w900,
                               letterSpacing: 4,
@@ -91,7 +95,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             children: [
                               Text(
                                 'Entrar na loja',
-                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleLarge
+                                    ?.copyWith(
                                       fontWeight: FontWeight.w800,
                                       color: AppColors.textPrimary,
                                     ),
@@ -100,13 +107,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               TextFormField(
                                 controller: _emailController,
                                 keyboardType: TextInputType.emailAddress,
-                                style: const TextStyle(color: AppColors.textPrimary),
+                                style: const TextStyle(
+                                    color: AppColors.textPrimary),
                                 decoration: const InputDecoration(
                                   labelText: 'E-mail da loja',
-                                  prefixIcon: Icon(Icons.storefront_outlined, color: AppColors.primary),
+                                  prefixIcon: Icon(Icons.storefront_outlined,
+                                      color: AppColors.primary),
                                 ),
                                 validator: (value) {
-                                  if (value == null || value.isEmpty || !value.contains('@')) {
+                                  if (value == null ||
+                                      value.isEmpty ||
+                                      !value.contains('@')) {
                                     return 'Informe um e-mail válido';
                                   }
                                   return null;
@@ -116,10 +127,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               TextFormField(
                                 controller: _passwordController,
                                 obscureText: _obscurePassword,
-                                style: const TextStyle(color: AppColors.textPrimary),
+                                style: const TextStyle(
+                                    color: AppColors.textPrimary),
                                 decoration: InputDecoration(
                                   labelText: 'Senha',
-                                  prefixIcon: const Icon(Icons.lock_outline_rounded, color: AppColors.primary),
+                                  prefixIcon: const Icon(
+                                      Icons.lock_outline_rounded,
+                                      color: AppColors.primary),
                                   suffixIcon: IconButton(
                                     icon: Icon(
                                       _obscurePassword
@@ -128,7 +142,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                       color: AppColors.textMuted,
                                     ),
                                     onPressed: () => setState(
-                                      () => _obscurePassword = !_obscurePassword,
+                                      () =>
+                                          _obscurePassword = !_obscurePassword,
                                     ),
                                   ),
                                 ),
@@ -165,7 +180,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                 const SizedBox(height: 12),
                                 Text(
                                   authState.message,
-                                  style: const TextStyle(color: AppColors.error),
+                                  style:
+                                      const TextStyle(color: AppColors.error),
                                   textAlign: TextAlign.center,
                                 ),
                               ],
@@ -241,9 +257,18 @@ class _LoginNeonBackdrop extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          _NeonGlow(alignment: const Alignment(-1.0, -1.0), color: AppColors.primary, size: 380),
-          _NeonGlow(alignment: const Alignment(1.0, -0.4), color: AppColors.accent, size: 340),
-          _NeonGlow(alignment: const Alignment(0.6, 1.1), color: AppColors.primaryAlt, size: 320),
+          _NeonGlow(
+              alignment: const Alignment(-1.0, -1.0),
+              color: AppColors.primary,
+              size: 380),
+          _NeonGlow(
+              alignment: const Alignment(1.0, -0.4),
+              color: AppColors.accent,
+              size: 340),
+          _NeonGlow(
+              alignment: const Alignment(0.6, 1.1),
+              color: AppColors.primaryAlt,
+              size: 320),
         ],
       ),
     );
@@ -251,7 +276,8 @@ class _LoginNeonBackdrop extends StatelessWidget {
 }
 
 class _NeonGlow extends StatelessWidget {
-  const _NeonGlow({required this.alignment, required this.color, required this.size});
+  const _NeonGlow(
+      {required this.alignment, required this.color, required this.size});
 
   final Alignment alignment;
   final Color color;

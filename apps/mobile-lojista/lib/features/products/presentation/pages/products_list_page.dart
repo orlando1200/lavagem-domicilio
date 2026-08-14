@@ -49,15 +49,33 @@ class ProductsListPage extends ConsumerWidget {
                   if (products.isEmpty) const _ProductsEmpty(),
                   if (pending.isNotEmpty) ...[
                     _SectionTitle('Pendentes de aprovação'),
-                    ...pending.map((p) => _ProductCard(product: p)),
+                    ...pending.map((p) => _ProductCard(
+                          product: p,
+                          onTap: () async {
+                            await context.push('/products/edit', extra: p);
+                            ref.invalidate(storeProductsProvider);
+                          },
+                        )),
                   ],
                   if (active.isNotEmpty) ...[
                     _SectionTitle('Ativos'),
-                    ...active.map((p) => _ProductCard(product: p)),
+                    ...active.map((p) => _ProductCard(
+                          product: p,
+                          onTap: () async {
+                            await context.push('/products/edit', extra: p);
+                            ref.invalidate(storeProductsProvider);
+                          },
+                        )),
                   ],
                   if (rejected.isNotEmpty) ...[
                     _SectionTitle('Rejeitados'),
-                    ...rejected.map((p) => _ProductCard(product: p)),
+                    ...rejected.map((p) => _ProductCard(
+                          product: p,
+                          onTap: () async {
+                            await context.push('/products/edit', extra: p);
+                            ref.invalidate(storeProductsProvider);
+                          },
+                        )),
                   ],
                   const SizedBox(height: 8),
                   FilledButton.icon(
@@ -154,50 +172,55 @@ class _SectionTitle extends StatelessWidget {
 }
 
 class _ProductCard extends StatelessWidget {
-  const _ProductCard({required this.product});
+  const _ProductCard({required this.product, required this.onTap});
 
   final StoreProduct product;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return NeonSurface(
       margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    product.name,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
-                        ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      product.name,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textPrimary,
+                          ),
+                    ),
                   ),
-                ),
-                _StatusBadge(status: product.uiStatus),
-              ],
-            ),
-            const SizedBox(height: 6),
-            if (product.uiStatus == ProductStatus.rejeitado)
-              Text(
-                'Motivo: ${product.rejectionReason ?? '-'}',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-              )
-            else
-              Text(
-                'R\$ ${product.price.toStringAsFixed(2)} · ${product.catalogTarget.label} · ${product.stockQuantity} un',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
+                  _StatusBadge(status: product.uiStatus),
+                ],
               ),
-          ],
+              const SizedBox(height: 6),
+              if (product.uiStatus == ProductStatus.rejeitado)
+                Text(
+                  'Motivo: ${product.rejectionReason ?? '-'}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                )
+              else
+                Text(
+                  'R\$ ${product.price.toStringAsFixed(2)} · ${product.catalogTarget.label} · ${product.stockQuantity} un',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                ),
+            ],
+          ),
         ),
       ),
     );

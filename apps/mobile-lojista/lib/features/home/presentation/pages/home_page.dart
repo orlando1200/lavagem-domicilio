@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_scaffold.dart';
 import '../../../../core/widgets/neon_surface.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/presentation/providers/auth_state.dart';
 import '../../../orders/data/models/store_order_model.dart';
 import '../../../orders/orders_provider.dart';
+import '../../../payouts/data/models/store_payout_model.dart';
+import '../../../payouts/payouts_provider.dart';
+import '../../../products/data/models/store_product.dart';
+import '../../../products/products_provider.dart';
 
 /// Home do Portal do Lojista: saldo a receber, metricas da loja e
 /// pedidos recentes.
@@ -60,6 +66,8 @@ class _HomeTab extends ConsumerWidget {
       authenticated: (user) => user.storeName,
       orElse: () => 'Loja',
     );
+    final user =
+        authState.maybeWhen(authenticated: (u) => u, orElse: () => null);
 
     return CustomScrollView(
       slivers: [
@@ -72,11 +80,9 @@ class _HomeTab extends ConsumerWidget {
             delegate: SliverChildListDelegate([
               const _BalanceCard(),
               const SizedBox(height: 20),
-              const _MetricsSection(),
+              _MetricsSection(user: user),
               const SizedBox(height: 20),
               const _RecentOrdersSection(),
-              const SizedBox(height: 16),
-              const _AuctionEntryCard(),
               const SizedBox(height: 16),
               FilledButton.icon(
                 onPressed: () => context.push('/products/new'),
@@ -121,7 +127,8 @@ class _HomeHeader extends StatelessWidget {
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) => const SizedBox(
                     height: 40,
-                    child: Icon(Icons.bolt_rounded, color: AppColors.primary, size: 30),
+                    child: Icon(Icons.bolt_rounded,
+                        color: AppColors.primary, size: 30),
                   ),
                 ),
               ),
@@ -137,10 +144,14 @@ class _HomeHeader extends StatelessWidget {
                         colors: AppColors.primaryAccentGradient,
                       ),
                       boxShadow: [
-                        BoxShadow(color: AppColors.glow, blurRadius: 18, spreadRadius: 1),
+                        BoxShadow(
+                            color: AppColors.glow,
+                            blurRadius: 18,
+                            spreadRadius: 1),
                       ],
                     ),
-                    child: const Icon(Icons.storefront_rounded, color: AppColors.textPrimary, size: 26),
+                    child: const Icon(Icons.storefront_rounded,
+                        color: AppColors.textPrimary, size: 26),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -149,17 +160,19 @@ class _HomeHeader extends StatelessWidget {
                       children: [
                         Text(
                           'Olá, $storeName!',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                color: AppColors.textPrimary,
-                                fontWeight: FontWeight.w900,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    color: AppColors.textPrimary,
+                                    fontWeight: FontWeight.w900,
+                                  ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           'Resumo da sua loja',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
                         ),
                       ],
                     ),
@@ -249,11 +262,13 @@ class _NeonFusionSpot extends StatelessWidget {
   }
 }
 
-class _BalanceCard extends StatelessWidget {
+class _BalanceCard extends ConsumerWidget {
   const _BalanceCard();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final payoutsAsync = ref.watch(storePayoutsProvider);
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -276,19 +291,60 @@ class _BalanceCard extends StatelessWidget {
                 ),
           ),
           const SizedBox(height: 6),
-          Text(
-            'R\$ 2.450,80',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w900,
-                ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Próximo repasse: 25/07',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.textPrimary.withValues(alpha: 0.85),
-                ),
+          payoutsAsync.when(
+            loading: () => Text(
+              '...',
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w900,
+                  ),
+            ),
+            error: (error, stackTrace) => Text(
+              'Indisponível',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+            data: (payouts) {
+              final pendingTotal = payouts
+                  .where((p) => p.status == 'pending' || p.status == 'approved')
+                  .fold<double>(0, (sum, p) => sum + p.netAmount);
+              final lastPaid = payouts
+                  .where((p) => p.status == 'paid' && p.paidAt != null)
+                  .fold<StorePayoutModel?>(
+                    null,
+                    (latest, p) =>
+                        latest == null || p.paidAt!.isAfter(latest.paidAt!)
+                            ? p
+                            : latest,
+                  );
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'R\$ ${pendingTotal.toStringAsFixed(2)}',
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w900,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    lastPaid != null
+                        ? 'Último repasse: R\$ ${lastPaid.netAmount.toStringAsFixed(2)} em '
+                            '${lastPaid.paidAt!.day.toString().padLeft(2, '0')}/${lastPaid.paidAt!.month.toString().padLeft(2, '0')}'
+                        : payouts.isEmpty
+                            ? 'Nenhum repasse ainda'
+                            : 'Aguardando primeiro repasse',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textPrimary.withValues(alpha: 0.85),
+                        ),
+                  ),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -296,11 +352,31 @@ class _BalanceCard extends StatelessWidget {
   }
 }
 
-class _MetricsSection extends StatelessWidget {
-  const _MetricsSection();
+class _MetricsSection extends ConsumerWidget {
+  const _MetricsSection({required this.user});
+
+  final StoreUser? user;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ordersAsync = ref.watch(storeOrdersProvider);
+    final productsAsync = ref.watch(storeProductsProvider);
+
+    final salesValue = ordersAsync.maybeWhen(
+        data: (orders) => '${orders.length}', orElse: () => '...');
+    final pendingValue = ordersAsync.maybeWhen(
+      data: (orders) => '${orders.where((o) => o.status == 'pending').length}',
+      orElse: () => '...',
+    );
+    final activeProductsValue = productsAsync.maybeWhen(
+      data: (products) =>
+          '${products.where((p) => p.uiStatus == ProductStatus.ativo).length}',
+      orElse: () => '...',
+    );
+    final commissionValue = user?.commissionTakeRate != null
+        ? '${(user!.commissionTakeRate! * 100).toStringAsFixed(0)}%'
+        : '...';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -319,11 +395,11 @@ class _MetricsSection extends StatelessWidget {
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
           childAspectRatio: 1.6,
-          children: const [
-            _MetricTile(value: '28', label: 'Vendas'),
-            _MetricTile(value: '12', label: 'Produtos ativos'),
-            _MetricTile(value: '4.8', label: 'Avaliação'),
-            _MetricTile(value: '23%', label: 'Comissão'),
+          children: [
+            _MetricTile(value: salesValue, label: 'Vendas'),
+            _MetricTile(value: activeProductsValue, label: 'Produtos ativos'),
+            _MetricTile(value: pendingValue, label: 'Pedidos pendentes'),
+            _MetricTile(value: commissionValue, label: 'Comissão'),
           ],
         ),
       ],
@@ -391,7 +467,8 @@ class _RecentOrdersSection extends ConsumerWidget {
               child: SizedBox(
                 width: 22,
                 height: 22,
-                child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: AppColors.primary),
               ),
             ),
           ),
@@ -428,7 +505,8 @@ class _RecentOrdersSection extends ConsumerWidget {
                 )
               : Column(
                   children: [
-                    for (final order in orders.take(5)) _OrderCard(order: order),
+                    for (final order in orders.take(5))
+                      _OrderCard(order: order),
                   ],
                 ),
         ),
@@ -495,57 +573,6 @@ class _OrderCard extends StatelessWidget {
   }
 }
 
-class _AuctionEntryCard extends StatelessWidget {
-  const _AuctionEntryCard();
-  @override
-  Widget build(BuildContext context) {
-    return NeonSurface(
-      child: InkWell(
-        onTap: () => context.push('/auction'),
-        borderRadius: BorderRadius.circular(20),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppColors.accentContainer,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(Icons.storefront_rounded, color: AppColors.accent),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Leilão de Serviços Pesados',
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary,
-                          ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Envie ofertas para polimento, cristalização e mais',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 // ── Perfil ───────────────────────────────────────────────────────────────────
 
 class _ProfileTab extends ConsumerWidget {
@@ -556,8 +583,10 @@ class _ProfileTab extends ConsumerWidget {
     final authState = ref.watch(authProvider);
 
     return authState.when(
-      initial: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
-      loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+      initial: () => const Center(
+          child: CircularProgressIndicator(color: AppColors.primary)),
+      loading: () => const Center(
+          child: CircularProgressIndicator(color: AppColors.primary)),
       authenticated: (user) => Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(title: const Text('Perfil')),
@@ -574,7 +603,8 @@ class _ProfileTab extends ConsumerWidget {
                     colors: AppColors.primaryAccentGradient,
                   ),
                   boxShadow: [
-                    BoxShadow(color: AppColors.glow, blurRadius: 24, spreadRadius: 1),
+                    BoxShadow(
+                        color: AppColors.glow, blurRadius: 24, spreadRadius: 1),
                   ],
                 ),
                 child: Center(
@@ -619,7 +649,7 @@ class _ProfileTab extends ConsumerWidget {
             _ProfileMenuItem(
               icon: Icons.edit_outlined,
               title: 'Editar Perfil',
-              onTap: () {},
+              onTap: () => context.push('/profile/edit'),
             ),
             _ProfileMenuItem(
               icon: Icons.security_outlined,
@@ -630,7 +660,8 @@ class _ProfileTab extends ConsumerWidget {
             NeonSurface(
               child: ListTile(
                 leading: const Icon(Icons.exit_to_app, color: AppColors.error),
-                title: const Text('Sair', style: TextStyle(color: AppColors.error)),
+                title: const Text('Sair',
+                    style: TextStyle(color: AppColors.error)),
                 onTap: () async {
                   await ref.read(authProvider.notifier).logout();
                   if (context.mounted) context.go('/login');
@@ -641,7 +672,8 @@ class _ProfileTab extends ConsumerWidget {
         ),
       ),
       unauthenticated: () => const Center(
-        child: Text('Não autenticado', style: TextStyle(color: AppColors.textPrimary)),
+        child: Text('Não autenticado',
+            style: TextStyle(color: AppColors.textPrimary)),
       ),
       error: (msg) => Center(
         child: Text(msg, style: const TextStyle(color: AppColors.error)),
@@ -676,7 +708,8 @@ class _ProfileMenuItem extends StatelessWidget {
         ),
         title: Text(
           title,
-          style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+          style: const TextStyle(
+              fontWeight: FontWeight.w600, color: AppColors.textPrimary),
         ),
         trailing: Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
         onTap: onTap,

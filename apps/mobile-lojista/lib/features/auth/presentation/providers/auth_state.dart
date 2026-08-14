@@ -9,6 +9,8 @@ class StoreUser {
     required this.storeType,
     required this.logisticsMode,
     this.storeId,
+    this.commissionMonthlyFee,
+    this.commissionTakeRate,
   });
 
   final String id;
@@ -22,10 +24,18 @@ class StoreUser {
   /// ainda nao foi criada no backend real.
   final String? storeId;
 
+  /// Mensalidade/comissao reais do `CommissionPlan` da loja (GET
+  /// /stores/:id), populados por `AuthRepository.login`/
+  /// `fetchCurrentUser`. Nulos ate a primeira carga bem-sucedida.
+  final double? commissionMonthlyFee;
+  final double? commissionTakeRate;
+
   StoreUser copyWith({
     StoreType? storeType,
     LogisticsMode? logisticsMode,
     String? storeId,
+    double? commissionMonthlyFee,
+    double? commissionTakeRate,
   }) {
     return StoreUser(
       id: id,
@@ -34,6 +44,8 @@ class StoreUser {
       storeType: storeType ?? this.storeType,
       logisticsMode: logisticsMode ?? this.logisticsMode,
       storeId: storeId ?? this.storeId,
+      commissionMonthlyFee: commissionMonthlyFee ?? this.commissionMonthlyFee,
+      commissionTakeRate: commissionTakeRate ?? this.commissionTakeRate,
     );
   }
 }

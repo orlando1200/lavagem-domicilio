@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
@@ -7,6 +8,8 @@ import {
 import { PrismaService } from '../../database/prisma.service';
 import { CreateStoreDto } from './dto/create-store.dto';
 import { CreateStoreProductDto } from './dto/create-store-product.dto';
+import { UpdateStoreProductDto } from './dto/update-store-product.dto';
+import { UpdateLogisticsPlanDto } from './dto/update-logistics-plan.dto';
 import { getCommissionRate } from './store.constants';
 import { LogisticsPlan, Prisma, ProductStatus, UserRole } from '@prisma/client';
 
@@ -124,6 +127,81 @@ export class StoreService {
     return this.prisma.product.findMany({
       where: { storeId },
       orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  /**
+   * Edicao do proprio lojista. `status` (quando enviado) so alterna
+   * `active`/`inactive` num produto que ja passou pela aprovacao do
+   * admin — nunca deixa o lojista sair de `pending_approval`/`rejected`
+   * direto pra `active` (isso e exclusivo de
+   * `PATCH /admin/marketplace/products/:id/status`).
+   */
+  async updateProduct(
+    storeId: string,
+    productId: string,
+    requester: { id: string; role: UserRole },
+    dto: UpdateStoreProductDto,
+  ) {
+    await this.findStoreForOwner(storeId, requester);
+
+    const product = await this.prisma.product.findUnique({ where: { id: productId } });
+    if (!product || product.storeId !== storeId) {
+      throw new NotFoundException('Produto nao encontrado nesta loja');
+    }
+
+    if (dto.status) {
+      const currentIsToggleable =
+        product.status === ProductStatus.active || product.status === ProductStatus.inactive;
+      if (!currentIsToggleable) {
+        throw new BadRequestException(
+          `Nao e possivel alterar o status a partir de "${product.status}" — aguarde a aprovacao do admin`,
+        );
+      }
+    }
+
+    const data: Prisma.ProductUpdateInput = {};
+    if (dto.name !== undefined) data.name = dto.name;
+    if (dto.description !== undefined) data.description = dto.description;
+    if (dto.sku !== undefined) data.sku = dto.sku;
+    if (dto.category !== undefined) data.category = dto.category;
+    if (dto.price !== undefined) data.price = dto.price;
+    if (dto.stockQuantity !== undefined) data.stockQuantity = dto.stockQuantity;
+    if (dto.catalogTarget !== undefined) data.catalogTarget = dto.catalogTarget;
+    if (dto.weightGrams !== undefined) data.weightGrams = dto.weightGrams;
+    if (dto.status !== undefined) {
+      data.status = dto.status === 'active' ? ProductStatus.active : ProductStatus.inactive;
+    }
+
+    return this.prisma.product.update({ where: { id: productId }, data });
+  }
+
+  /**
+   * Troca a modalidade logistica da loja e recalcula o `CommissionPlan`
+   * pela mesma tabela usada na criacao (`getCommissionRate`) — nunca
+   * deixa `logisticsPlan`/`monthlyFee`/`takeRate` dessincronizarem.
+   */
+  async updateLogisticsPlan(
+    storeId: string,
+    requester: { id: string; role: UserRole },
+    dto: UpdateLogisticsPlanDto,
+  ) {
+    const store = await this.findStoreForOwner(storeId, requester);
+    const rate = getCommissionRate(store.storeType, dto.logisticsPlan);
+
+    return this.prisma.store.update({
+      where: { id: storeId },
+      data: {
+        logisticsPlan: dto.logisticsPlan,
+        commissionPlan: {
+          update: {
+            logisticsPlan: dto.logisticsPlan,
+            monthlyFee: rate.monthlyFee,
+            takeRate: rate.takeRate,
+          },
+        },
+      },
+      include: { commissionPlan: true },
     });
   }
 

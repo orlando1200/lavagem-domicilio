@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, ProductOrderDeliveryStatus } from '@prisma/client';
+import { Prisma, ProductOrderDeliveryStatus, ProductOrderStatus } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 import {
   AdminCreateDeliveryDto,
@@ -248,7 +248,7 @@ export class DeliveriesService {
       data: {
         deliveryStatus: newStatus,
         ...(newStatus === ProductOrderDeliveryStatus.DELIVERED
-          ? { deliveredAt: new Date() }
+          ? { deliveredAt: new Date(), status: ProductOrderStatus.delivered }
           : {}),
       },
       include: DELIVERY_INCLUDE,

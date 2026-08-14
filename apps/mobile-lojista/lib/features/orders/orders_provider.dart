@@ -7,7 +7,8 @@ import 'data/store_orders_repository.dart';
 /// lojista logado (GET /stores/:id/orders). Retorna lista vazia quando
 /// ainda nao ha `storeId` disponivel (mesmo padrao de
 /// `storeProductsProvider`).
-final storeOrdersProvider = FutureProvider.autoDispose<List<StoreOrderModel>>((ref) async {
+final storeOrdersProvider =
+    FutureProvider.autoDispose<List<StoreOrderModel>>((ref) async {
   final authState = ref.watch(authProvider);
   final storeId = authState.maybeWhen(
     authenticated: (user) => user.storeId,

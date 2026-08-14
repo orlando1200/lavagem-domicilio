@@ -11,10 +11,12 @@ class StoreProduct {
     required this.catalogTarget,
     this.status = 'pending_approval',
     this.rejectionReason,
+    this.description,
   });
 
   final String id;
   final String name;
+  final String? description;
   final double price;
   final int stockQuantity;
   final CatalogTarget catalogTarget;
@@ -25,9 +27,11 @@ class StoreProduct {
     return StoreProduct(
       id: json['id'] as String,
       name: json['name'] as String? ?? '',
+      description: json['description'] as String?,
       price: (json['price'] as num?)?.toDouble() ?? 0,
       stockQuantity: (json['stockQuantity'] as num?)?.toInt() ?? 0,
-      catalogTarget: _catalogTargetFromBackend(json['catalogTarget'] as String?),
+      catalogTarget:
+          _catalogTargetFromBackend(json['catalogTarget'] as String?),
       status: json['status'] as String? ?? 'pending_approval',
       rejectionReason: json['rejectionReason'] as String?,
     );

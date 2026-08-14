@@ -5,33 +5,51 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/neon_surface.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../data/models/store_product.dart';
 import '../../data/products_repository.dart';
 import '../../products_provider.dart';
 
-/// Tela de cadastro de produto do lojista.
-///
-/// Campos: foto, titulo, descricao, preco, estoque e destino do catalogo
-/// ([CatalogTarget]). O produto enviado fica pendente de aprovacao,
-/// enviado via POST /stores/:id/products.
-class ProductFormPage extends ConsumerStatefulWidget {
-  const ProductFormPage({super.key});
+/// Edicao de um produto ja cadastrado (PATCH /stores/:id/products/:id).
+/// Mesmos campos de `product_form_page.dart` (sem foto/banner de
+/// sugestao, que so fazem sentido na criacao), mais um switch de
+/// ativar/pausar quando o produto ja foi aprovado.
+class ProductEditPage extends ConsumerStatefulWidget {
+  const ProductEditPage({super.key, required this.product});
+
+  final StoreProduct product;
 
   @override
-  ConsumerState<ProductFormPage> createState() => _ProductFormPageState();
+  ConsumerState<ProductEditPage> createState() => _ProductEditPageState();
 }
 
-class _ProductFormPageState extends ConsumerState<ProductFormPage> {
+class _ProductEditPageState extends ConsumerState<ProductEditPage> {
   final _formKey = GlobalKey<FormState>();
-  final _titleController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  final _priceController = TextEditingController();
-  final _stockController = TextEditingController();
+  late final TextEditingController _titleController;
+  late final TextEditingController _descriptionController;
+  late final TextEditingController _priceController;
+  late final TextEditingController _stockController;
+  late CatalogTarget _catalogTarget;
+  late bool _isActive;
 
-  CatalogTarget _catalogTarget = CatalogTarget.lojaLavador;
-  bool _hasPhoto = false;
   bool _submitting = false;
   String? _errorMessage;
-  bool _catalogTargetInitialized = false;
+
+  bool get _canToggleStatus =>
+      widget.product.status == 'active' || widget.product.status == 'inactive';
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(text: widget.product.name);
+    _descriptionController =
+        TextEditingController(text: widget.product.description ?? '');
+    _priceController =
+        TextEditingController(text: widget.product.price.toStringAsFixed(2));
+    _stockController =
+        TextEditingController(text: widget.product.stockQuantity.toString());
+    _catalogTarget = widget.product.catalogTarget;
+    _isActive = widget.product.status == 'active';
+  }
 
   @override
   void dispose() {
@@ -42,25 +60,12 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
     super.dispose();
   }
 
-  /// Pre-seleciona o destino do catalogo de acordo com o [StoreType] da
-  /// loja logada (Lavador -> Loja do Lavador, Cliente -> Loja do Cliente),
-  /// para manter a sugestao de produtos coerente com o tipo de loja.
-  void _initCatalogTargetFromStoreType(StoreType storeType) {
-    if (_catalogTargetInitialized) return;
-    _catalogTargetInitialized = true;
-    _catalogTarget = storeType == StoreType.lavador
-        ? CatalogTarget.lojaLavador
-        : CatalogTarget.lojaCliente;
-  }
-
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     final authState = ref.read(authProvider);
     final storeId = authState.maybeWhen(
-      authenticated: (user) => user.storeId,
-      orElse: () => null,
-    );
+        authenticated: (user) => user.storeId, orElse: () => null);
     if (storeId == null) {
       setState(() => _errorMessage = 'Loja não encontrada para este usuário.');
       return;
@@ -71,18 +76,21 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
       _errorMessage = null;
     });
     try {
-      await ref.read(productsRepositoryProvider).createProduct(
+      await ref.read(productsRepositoryProvider).updateProduct(
             storeId: storeId,
+            productId: widget.product.id,
             name: _titleController.text.trim(),
             description: _descriptionController.text.trim(),
             price: double.parse(_priceController.text.replaceAll(',', '.')),
             stockQuantity: int.parse(_stockController.text),
             catalogTarget: _catalogTarget,
+            status:
+                _canToggleStatus ? (_isActive ? 'active' : 'inactive') : null,
           );
       if (!mounted) return;
       ref.invalidate(storeProductsProvider);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Produto enviado para análise!')),
+        const SnackBar(content: Text('Produto atualizado!')),
       );
       context.pop();
     } catch (e) {
@@ -95,18 +103,9 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authProvider);
-    final storeType = authState.maybeWhen(
-      authenticated: (user) => user.storeType,
-      orElse: () => null,
-    );
-    if (storeType != null) {
-      _initCatalogTargetFromStoreType(storeType);
-    }
-
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Cadastrar produto')),
+      appBar: AppBar(title: const Text('Editar produto')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
@@ -115,58 +114,33 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  'Seu produto será analisado antes de publicar',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                ),
-                if (storeType != null) ...[
-                  const SizedBox(height: 12),
+                if (_canToggleStatus) ...[
                   NeonSurface(
-                    padding: const EdgeInsets.all(14),
-                    backgroundColor: AppColors.primaryContainer,
-                    borderColor: AppColors.primary.withValues(alpha: 0.3),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(Icons.lightbulb_outline_rounded,
-                            color: AppColors.primary, size: 20),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            'Sua loja é ${storeType.label}. ${storeType.examplesLabel}',
-                            style:
-                                Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: AppColors.textPrimary,
-                                    ),
-                          ),
-                        ),
-                      ],
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Produto ativo',
+                          style: TextStyle(color: AppColors.textPrimary)),
+                      subtitle: Text(
+                        _isActive
+                            ? 'Visível no catálogo'
+                            : 'Pausado — não aparece no catálogo',
+                        style: TextStyle(color: AppColors.textSecondary),
+                      ),
+                      activeColor: AppColors.primary,
+                      value: _isActive,
+                      onChanged: (v) => setState(() => _isActive = v),
                     ),
                   ),
+                  const SizedBox(height: 16),
                 ],
-                const SizedBox(height: 16),
-                _PhotoPicker(
-                  hasPhoto: _hasPhoto,
-                  onTap: () => setState(() => _hasPhoto = !_hasPhoto),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  'Informações',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
-                      ),
-                ),
-                const SizedBox(height: 12),
                 TextFormField(
                   controller: _titleController,
                   style: const TextStyle(color: AppColors.textPrimary),
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: 'Título do produto',
-                    hintText: _catalogTarget.examplesLabel,
-                    prefixIcon: const Icon(Icons.label_outline_rounded,
+                    prefixIcon: Icon(Icons.label_outline_rounded,
                         color: AppColors.primary),
                   ),
                   validator: (value) {
@@ -253,7 +227,7 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
                 ),
                 const SizedBox(height: 12),
                 ...CatalogTarget.values.map(
-                  (target) => _CatalogTargetCard(
+                  (target) => _CatalogTargetTile(
                     target: target,
                     selected: _catalogTarget == target,
                     onTap: () => setState(() => _catalogTarget = target),
@@ -275,11 +249,9 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
                           height: 20,
                           width: 20,
                           child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.primaryDark,
-                          ),
+                              strokeWidth: 2, color: AppColors.primaryDark),
                         )
-                      : const Text('Enviar para análise'),
+                      : const Text('Salvar alterações'),
                 ),
               ],
             ),
@@ -290,62 +262,9 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
   }
 }
 
-class _PhotoPicker extends StatelessWidget {
-  const _PhotoPicker({required this.hasPhoto, required this.onTap});
-
-  final bool hasPhoto;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return NeonSurface(
-      borderColor: AppColors.primary.withValues(alpha: 0.4),
-      backgroundColor: AppColors.primaryContainer,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 28),
-          child: Column(
-            children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.surface,
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Icon(
-                  hasPhoto
-                      ? Icons.check_circle_rounded
-                      : Icons.camera_alt_outlined,
-                  color: AppColors.primary,
-                  size: 26,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                hasPhoto ? 'Foto adicionada' : 'Adicionar foto do produto',
-                style: const TextStyle(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CatalogTargetCard extends StatelessWidget {
-  const _CatalogTargetCard({
-    required this.target,
-    required this.selected,
-    required this.onTap,
-  });
+class _CatalogTargetTile extends StatelessWidget {
+  const _CatalogTargetTile(
+      {required this.target, required this.selected, required this.onTap});
 
   final CatalogTarget target;
   final bool selected;
@@ -373,32 +292,12 @@ class _CatalogTargetCard extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      target.label,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary,
-                          ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      target.description,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      target.examplesLabel,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textMuted,
-                            fontStyle: FontStyle.italic,
-                          ),
-                    ),
-                  ],
+                child: Text(
+                  target.label,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                      ),
                 ),
               ),
             ],

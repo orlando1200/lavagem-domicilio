@@ -4,16 +4,57 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/neon_surface.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../data/store_plan_repository.dart';
 
 /// Tela "Plano da loja": comparativo entre Logística Integrada e Própria
 /// para o [StoreType] atual do lojista logado.
 ///
 /// Todos os valores de mensalidade/comissão vem de [StorePlanRules].
-class PlanPage extends ConsumerWidget {
+/// Trocar de plano chama o backend de verdade (PATCH
+/// /stores/:id/logistics-plan) antes de atualizar o estado local — antes
+/// desta correção a troca so existia no app, nunca era persistida.
+class PlanPage extends ConsumerStatefulWidget {
   const PlanPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PlanPage> createState() => _PlanPageState();
+}
+
+class _PlanPageState extends ConsumerState<PlanPage> {
+  bool _submitting = false;
+
+  Future<void> _selectPlan(LogisticsMode mode) async {
+    final authState = ref.read(authProvider);
+    final user =
+        authState.maybeWhen(authenticated: (u) => u, orElse: () => null);
+    if (user == null || user.storeId == null || mode == user.logisticsMode)
+      return;
+
+    setState(() => _submitting = true);
+    try {
+      await ref
+          .read(storePlanRepositoryProvider)
+          .updateLogisticsPlan(user.storeId!, mode);
+      ref.read(authProvider.notifier).updatePlan(
+            storeType: user.storeType,
+            logisticsMode: mode,
+          );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Plano atualizado!')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
     final user = authState.maybeWhen(
       authenticated: (u) => u,
@@ -24,7 +65,8 @@ class PlanPage extends ConsumerWidget {
       return const Scaffold(
         backgroundColor: AppColors.background,
         body: Center(
-          child: Text('Não autenticado', style: TextStyle(color: AppColors.textPrimary)),
+          child: Text('Não autenticado',
+              style: TextStyle(color: AppColors.textPrimary)),
         ),
       );
     }
@@ -47,10 +89,7 @@ class PlanPage extends ConsumerWidget {
               (mode) => _PlanCard(
                 mode: mode,
                 isCurrent: user.logisticsMode == mode,
-                onSelect: () => ref.read(authProvider.notifier).updatePlan(
-                      storeType: user.storeType,
-                      logisticsMode: mode,
-                    ),
+                onSelect: _submitting ? () {} : () => _selectPlan(mode),
               ),
             ),
             const SizedBox(height: 8),
@@ -90,7 +129,8 @@ class PlanPage extends ConsumerWidget {
                         ),
                   ),
                   Text(
-                    StorePlanRules.summaryFor(user.logisticsMode, user.storeType),
+                    StorePlanRules.summaryFor(
+                        user.logisticsMode, user.storeType),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: AppColors.primary,
                           fontWeight: FontWeight.w700,
@@ -122,7 +162,8 @@ class _PlanCard extends StatelessWidget {
     return NeonSurface(
       margin: const EdgeInsets.only(bottom: 12),
       borderColor: isCurrent ? AppColors.primary : AppColors.border,
-      glowColor: isCurrent ? AppColors.glow : AppColors.glow.withValues(alpha: 0.08),
+      glowColor:
+          isCurrent ? AppColors.glow : AppColors.glow.withValues(alpha: 0.08),
       child: InkWell(
         onTap: onSelect,
         borderRadius: BorderRadius.circular(20),
@@ -144,7 +185,8 @@ class _PlanCard extends StatelessWidget {
                   ),
                   if (isCurrent)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: AppColors.primaryContainer,
                         borderRadius: BorderRadius.circular(12),
@@ -176,10 +218,11 @@ class _PlanCard extends StatelessWidget {
                       Expanded(
                         child: Text(
                           type.label,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppColors.textPrimary,
-                                fontWeight: FontWeight.w600,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: AppColors.textPrimary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                         ),
                       ),
                       Text(
@@ -246,11 +289,13 @@ class _LogisticsTariffSection extends StatelessWidget {
                     child: Row(
                       children: [
                         Icon(
-                          type == currentStoreType && mode == currentLogisticsMode
+                          type == currentStoreType &&
+                                  mode == currentLogisticsMode
                               ? Icons.check_circle_rounded
                               : Icons.circle_outlined,
                           size: 16,
-                          color: type == currentStoreType && mode == currentLogisticsMode
+                          color: type == currentStoreType &&
+                                  mode == currentLogisticsMode
                               ? AppColors.primary
                               : AppColors.textMuted,
                         ),
@@ -258,18 +303,20 @@ class _LogisticsTariffSection extends StatelessWidget {
                         Expanded(
                           child: Text(
                             type.label,
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: AppColors.textPrimary,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: AppColors.textPrimary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
                           ),
                         ),
                         Text(
                           StorePlanRules.summaryFor(mode, type),
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w800,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w800,
+                                  ),
                         ),
                       ],
                     ),

@@ -18,7 +18,8 @@ class ProductsRepository {
 
   Future<List<StoreProduct>> listProducts(String storeId) async {
     try {
-      final response = await _dio.get<List<dynamic>>('/stores/$storeId/products');
+      final response =
+          await _dio.get<List<dynamic>>('/stores/$storeId/products');
       final data = response.data ?? [];
       return data
           .map((json) => StoreProduct.fromJson(json as Map<String, dynamic>))
@@ -45,6 +46,39 @@ class ProductsRepository {
           'price': price,
           'stockQuantity': stockQuantity,
           'catalogTarget': catalogTargetToBackend(catalogTarget),
+        },
+      );
+      return StoreProduct.fromJson(response.data!);
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// PATCH /stores/:id/products/:productId — edicao do proprio lojista.
+  /// `status` (quando enviado) so alterna `active`/`inactive`; o backend
+  /// rejeita qualquer tentativa de sair de `pending_approval`/`rejected`
+  /// por aqui.
+  Future<StoreProduct> updateProduct({
+    required String storeId,
+    required String productId,
+    String? name,
+    String? description,
+    double? price,
+    int? stockQuantity,
+    CatalogTarget? catalogTarget,
+    String? status,
+  }) async {
+    try {
+      final response = await _dio.patch<Map<String, dynamic>>(
+        '/stores/$storeId/products/$productId',
+        data: {
+          if (name != null) 'name': name,
+          if (description != null) 'description': description,
+          if (price != null) 'price': price,
+          if (stockQuantity != null) 'stockQuantity': stockQuantity,
+          if (catalogTarget != null)
+            'catalogTarget': catalogTargetToBackend(catalogTarget),
+          if (status != null) 'status': status,
         },
       );
       return StoreProduct.fromJson(response.data!);

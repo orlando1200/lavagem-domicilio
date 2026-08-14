@@ -82,10 +82,11 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                     children: [
                       Text(
                         'Dados da loja',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.textPrimary,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.textPrimary,
+                                ),
                       ),
                       const SizedBox(height: 16),
                       TextFormField(
@@ -93,7 +94,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         style: const TextStyle(color: AppColors.textPrimary),
                         decoration: const InputDecoration(
                           labelText: 'Nome da loja',
-                          prefixIcon: Icon(Icons.storefront_outlined, color: AppColors.primary),
+                          prefixIcon: Icon(Icons.storefront_outlined,
+                              color: AppColors.primary),
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
@@ -109,10 +111,13 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         style: const TextStyle(color: AppColors.textPrimary),
                         decoration: const InputDecoration(
                           labelText: 'E-mail',
-                          prefixIcon: Icon(Icons.mail_outline_rounded, color: AppColors.primary),
+                          prefixIcon: Icon(Icons.mail_outline_rounded,
+                              color: AppColors.primary),
                         ),
                         validator: (value) {
-                          if (value == null || value.isEmpty || !value.contains('@')) {
+                          if (value == null ||
+                              value.isEmpty ||
+                              !value.contains('@')) {
                             return 'Informe um e-mail válido';
                           }
                           return null;
@@ -125,7 +130,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         style: const TextStyle(color: AppColors.textPrimary),
                         decoration: InputDecoration(
                           labelText: 'Senha',
-                          prefixIcon: const Icon(Icons.lock_outline_rounded, color: AppColors.primary),
+                          prefixIcon: const Icon(Icons.lock_outline_rounded,
+                              color: AppColors.primary),
                           suffixIcon: IconButton(
                             icon: Icon(
                               _obscurePassword
@@ -152,7 +158,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         style: const TextStyle(color: AppColors.textPrimary),
                         decoration: const InputDecoration(
                           labelText: 'CPF ou CNPJ',
-                          prefixIcon: Icon(Icons.badge_outlined, color: AppColors.primary),
+                          prefixIcon: Icon(Icons.badge_outlined,
+                              color: AppColors.primary),
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
@@ -264,7 +271,8 @@ class _SelectableCard extends StatelessWidget {
     return NeonSurface(
       margin: const EdgeInsets.only(bottom: 12),
       borderColor: selected ? AppColors.primary : AppColors.border,
-      glowColor: selected ? AppColors.glow : AppColors.glow.withValues(alpha: 0.08),
+      glowColor:
+          selected ? AppColors.glow : AppColors.glow.withValues(alpha: 0.08),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(20),
@@ -273,7 +281,9 @@ class _SelectableCard extends StatelessWidget {
           child: Row(
             children: [
               Icon(
-                selected ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded,
+                selected
+                    ? Icons.radio_button_checked_rounded
+                    : Icons.radio_button_off_rounded,
                 color: selected ? AppColors.primary : AppColors.textMuted,
               ),
               const SizedBox(width: 12),

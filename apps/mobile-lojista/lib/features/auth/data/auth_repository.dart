@@ -7,7 +7,8 @@ import '../../../../core/constants/app_constants.dart';
 import '../presentation/providers/auth_state.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  return AuthRepository(ref.watch(dioProvider), ref.watch(tokenStorageProvider));
+  return AuthRepository(
+      ref.watch(dioProvider), ref.watch(tokenStorageProvider));
 });
 
 String _storeTypeToBackend(StoreType type) {
@@ -26,6 +27,14 @@ String _logisticsModeToBackend(LogisticsMode mode) {
     case LogisticsMode.propria:
       return 'OWN';
   }
+}
+
+StoreType _storeTypeFromBackend(String value) {
+  return value == 'CLIENTE' ? StoreType.cliente : StoreType.lavador;
+}
+
+LogisticsMode _logisticsModeFromBackend(String value) {
+  return value == 'OWN' ? LogisticsMode.propria : LogisticsMode.integrada;
 }
 
 /// Repositorio de autenticacao/cadastro do lojista, conectado ao backend
@@ -49,18 +58,51 @@ class AuthRepository {
       final user = data['user'] as Map<String, dynamic>;
 
       final storeId = await _tokenStorage.readStoreId();
+      final storeDetails =
+          storeId != null ? await _fetchStoreDetails(storeId) : null;
 
       return StoreUser(
         id: user['id'] as String,
         storeName: user['name'] as String? ?? '',
         email: user['email'] as String? ?? email,
-        storeType: StoreType.lavador,
-        logisticsMode: LogisticsMode.integrada,
+        storeType: storeDetails?.storeType ?? StoreType.lavador,
+        logisticsMode: storeDetails?.logisticsMode ?? LogisticsMode.integrada,
         storeId: storeId,
+        commissionMonthlyFee: storeDetails?.commissionMonthlyFee,
+        commissionTakeRate: storeDetails?.commissionTakeRate,
       );
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);
     }
+  }
+
+  /// Busca os dados reais da loja (GET /stores/:id) — tipo de loja,
+  /// modalidade de logistica e plano de comissao. Antes deste fix,
+  /// `login`/`fetchCurrentUser` sempre devolviam `LAVADOR`/`INTEGRATED`
+  /// hardcoded, entao a tela de Plano mostrava dado errado pra qualquer
+  /// loja que nao fosse essa combinacao exata.
+  Future<
+      ({
+        StoreType storeType,
+        LogisticsMode logisticsMode,
+        double? commissionMonthlyFee,
+        double? commissionTakeRate,
+      })> _fetchStoreDetails(String storeId) async {
+    final response = await _dio.get<Map<String, dynamic>>('/stores/$storeId');
+    final store = response.data!;
+    final commissionPlan = store['commissionPlan'] as Map<String, dynamic>?;
+
+    return (
+      storeType: _storeTypeFromBackend(store['storeType'] as String),
+      logisticsMode:
+          _logisticsModeFromBackend(store['logisticsPlan'] as String),
+      commissionMonthlyFee: commissionPlan != null
+          ? double.tryParse(commissionPlan['monthlyFee'].toString())
+          : null,
+      commissionTakeRate: commissionPlan != null
+          ? double.tryParse(commissionPlan['takeRate'].toString())
+          : null,
+    );
   }
 
   /// Cria o usuario (POST /auth/register) e, em seguida, a loja vinculada
@@ -103,6 +145,8 @@ class AuthRepository {
       );
       final storeId = storeResponse.data!['id'] as String;
       await _tokenStorage.saveStoreId(storeId);
+      final commissionPlan =
+          storeResponse.data!['commissionPlan'] as Map<String, dynamic>?;
 
       return StoreUser(
         id: ownerUserId,
@@ -111,6 +155,12 @@ class AuthRepository {
         storeType: storeType,
         logisticsMode: logisticsMode,
         storeId: storeId,
+        commissionMonthlyFee: commissionPlan != null
+            ? double.tryParse(commissionPlan['monthlyFee'].toString())
+            : null,
+        commissionTakeRate: commissionPlan != null
+            ? double.tryParse(commissionPlan['takeRate'].toString())
+            : null,
       );
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);
@@ -122,13 +172,18 @@ class AuthRepository {
       final response = await _dio.get<Map<String, dynamic>>('/users/me');
       final user = response.data!;
       final storeId = await _tokenStorage.readStoreId();
+      final storeDetails =
+          storeId != null ? await _fetchStoreDetails(storeId) : null;
+
       return StoreUser(
         id: user['id'] as String,
         storeName: user['name'] as String? ?? '',
         email: user['email'] as String? ?? '',
-        storeType: StoreType.lavador,
-        logisticsMode: LogisticsMode.integrada,
+        storeType: storeDetails?.storeType ?? StoreType.lavador,
+        logisticsMode: storeDetails?.logisticsMode ?? LogisticsMode.integrada,
         storeId: storeId,
+        commissionMonthlyFee: storeDetails?.commissionMonthlyFee,
+        commissionTakeRate: storeDetails?.commissionTakeRate,
       );
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);

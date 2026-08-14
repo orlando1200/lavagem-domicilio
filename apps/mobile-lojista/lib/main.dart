@@ -8,8 +8,11 @@ import 'features/auth/presentation/providers/auth_provider.dart';
 import 'features/auth/presentation/providers/auth_state.dart';
 import 'features/home/presentation/pages/home_page.dart';
 import 'features/plans/presentation/pages/plan_page.dart';
+import 'features/products/data/models/store_product.dart';
+import 'features/products/presentation/pages/product_edit_page.dart';
 import 'features/products/presentation/pages/product_form_page.dart';
 import 'features/products/presentation/pages/products_list_page.dart';
+import 'features/profile/presentation/pages/edit_profile_page.dart';
 
 void main() {
   runApp(const ProviderScope(child: GiucarLojistaApp()));
@@ -41,7 +44,8 @@ final _routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final authState = ref.read(authProvider);
       final isAuthenticated = authState is AuthAuthenticated;
-      final isAuthRoute = state.matchedLocation == '/login' || state.matchedLocation == '/register';
+      final isAuthRoute = state.matchedLocation == '/login' ||
+          state.matchedLocation == '/register';
 
       if (!isAuthenticated && !isAuthRoute) {
         return '/login';
@@ -73,8 +77,18 @@ final _routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const ProductFormPage(),
       ),
       GoRoute(
+        path: '/products/edit',
+        builder: (context, state) => ProductEditPage(
+          product: state.extra as StoreProduct,
+        ),
+      ),
+      GoRoute(
         path: '/plan',
         builder: (context, state) => const PlanPage(),
+      ),
+      GoRoute(
+        path: '/profile/edit',
+        builder: (context, state) => const EditProfilePage(),
       ),
     ],
   );

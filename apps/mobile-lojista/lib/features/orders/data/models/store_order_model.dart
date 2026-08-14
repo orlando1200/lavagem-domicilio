@@ -7,7 +7,10 @@ double _parseDouble(dynamic value, [double fallback = 0]) {
 }
 
 class StoreOrderItem {
-  const StoreOrderItem({required this.productName, required this.quantity, required this.totalPrice});
+  const StoreOrderItem(
+      {required this.productName,
+      required this.quantity,
+      required this.totalPrice});
 
   final String productName;
   final int quantity;
@@ -43,7 +46,8 @@ class StoreOrderModel {
   final List<StoreOrderItem> items;
   final String? buyerName;
 
-  String get itemsSummary => items.map((i) => '${i.quantity}x ${i.productName}').join(', ');
+  String get itemsSummary =>
+      items.map((i) => '${i.quantity}x ${i.productName}').join(', ');
 
   String get statusLabel {
     switch (status) {

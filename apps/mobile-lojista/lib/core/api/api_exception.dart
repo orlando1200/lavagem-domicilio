@@ -13,13 +13,15 @@ class ApiException implements Exception {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
-        return ApiException('Tempo de conexao esgotado. Verifique sua internet.');
+        return ApiException(
+            'Tempo de conexao esgotado. Verifique sua internet.');
       case DioExceptionType.connectionError:
         return ApiException('Nao foi possivel conectar ao servidor.');
       case DioExceptionType.badResponse:
         final statusCode = error.response?.statusCode;
         final data = error.response?.data;
-        final message = _extractMessage(data) ?? 'Erro ao comunicar com o servidor.';
+        final message =
+            _extractMessage(data) ?? 'Erro ao comunicar com o servidor.';
         return ApiException(message, statusCode: statusCode);
       case DioExceptionType.cancel:
         return ApiException('Requisicao cancelada.');
@@ -32,7 +34,8 @@ class ApiException implements Exception {
     if (data is Map) {
       final message = data['message'];
       if (message is String) return message;
-      if (message is List && message.isNotEmpty) return message.first.toString();
+      if (message is List && message.isNotEmpty)
+        return message.first.toString();
     }
     return null;
   }

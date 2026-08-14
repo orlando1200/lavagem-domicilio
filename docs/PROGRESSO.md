@@ -684,3 +684,64 @@ Ordem sugerida, por dependência e impacto (não por facilidade):
     dois que faltavam — `GET /payments/orders/:orderId` (`fetchForOrder`,
     404 antes do pagamento → 200 `status:"paid"` depois) e `PATCH
     /orders/:id/cancel` (→ `status:"cancelled"`).
+13. **mobile-lojista — diagnóstico + dados reais/edição/plano
+    persistido**. Terceira app Flutter, não tocada até esta sessão.
+    Diagnóstico (agente Explore) mostrou que **não é shell vazio** —
+    auth, criação de loja/produto, listagem de produtos/pedidos já
+    eram reais — mas achou lacunas concretas, algumas bugs de verdade:
+
+    - **Bug real corrigido**: `AuthRepository.login()`/`fetchCurrentUser()`
+      hardcoded `storeType: LAVADOR`/`logisticsMode: INTEGRATED` sempre,
+      nunca buscavam o dado real da loja — qualquer lojista fora dessa
+      combinação via a tela de Plano errada toda vez que reabria o
+      app. Corrigido buscando `GET /stores/:id` de verdade.
+    - **Bug real de backend corrigido**: `payouts.service.ts` filtra
+      repasses de loja por `ProductOrderStatus.delivered`, mas nada no
+      código jamais setava esse status — o módulo `deliveries` só
+      atualizava `deliveryStatus` (campo de logística do
+      lavador-entregador), nunca sincronizava de volta pro status
+      comercial. Repasses de venda de produto pra loja nunca eram
+      gerados corretamente, silenciosamente. Corrigido em
+      `deliveries.service.ts`: ao marcar `deliveryStatus: DELIVERED`,
+      agora também seta `status: ProductOrderStatus.delivered` no
+      mesmo update.
+    - **Dados fabricados removidos**: saldo/vendas/comissão hardcoded
+      na home viraram reais (`GET /payouts/me/store` novo no client,
+      `storeOrdersProvider`/`storeProductsProvider` já existentes,
+      `commissionPlan.takeRate` real vindo do fix acima). "Avaliação"
+      (4.8 fixo) foi **removida** — `Store` não tem coluna de
+      avaliação no schema, sem dado real pra mostrar; substituída por
+      "Pedidos pendentes" (real). Card "Leilão de Serviços Pesados"
+      (rota `/auction` inexistente) **removido** — por arquitetura
+      (confirmada pelo usuário), leilão de serviço pesado é fluxo de
+      `CARWASH_SHOP` dentro do `mobile-driver`, não pertence à loja de
+      produtos do marketplace.
+    - **Edição de produto** (novo): backend só tinha `POST`/`GET` pro
+      lojista. `PATCH /stores/:id/products/:productId` novo — edita
+      campos e alterna `active`/`inactive` **só** num produto já
+      aprovado (rejeita tentativa de pular a aprovação do admin com
+      400, confirmado ao vivo). Tela nova `product_edit_page.dart`,
+      tap no card da lista abre editar.
+    - **Plano persistido** (fix): `PlanPage`/`updatePlan()` só mudava
+      estado local do Riverpod, nunca chamava o backend — lojista
+      achava que trocou de plano e nada mudava. `PATCH
+      /stores/:id/logistics-plan` novo (recalcula `CommissionPlan` via
+      `getCommissionRate`, já existente, reaproveitado) + `PlanPage`
+      agora chama o backend antes de atualizar o estado local.
+    - **Editar Perfil** (novo, antes `onTap: () {}`): liga em `PATCH
+      /users/me` (já existia, genérico). "Alterar Senha" deixado como
+      estava — não existe endpoint de troca de senha em nenhum lugar
+      do backend, fora de escopo (não é fio solto, seria feature de
+      segurança nova por conta própria).
+
+    Verificação: backend `pnpm --filter api lint/type-check/test/build`
+    (78 testes passando, incluindo `store.service.spec.ts` já
+    existente), `flutter analyze` limpo no mobile-lojista. Ao vivo
+    (`docker compose up -d --build api` pra pegar o backend novo): dois
+    scripts novos no scratchpad da sessão (`lojista-check.mjs`,
+    22 asserções — criação de loja/produto, edição, guarda contra
+    auto-aprovação, troca de plano com recálculo, `GET
+    /payouts/me/store`, `PATCH /users/me`; `delivery-sync-check.mjs`,
+    7 asserções — fluxo completo admin cria entrega → lavador aceita →
+    avança até `DELIVERED` → confirma `ProductOrder.status` virou
+    `delivered`) — todos passando contra o backend real.
