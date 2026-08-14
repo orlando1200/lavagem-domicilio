@@ -670,18 +670,17 @@ Ordem sugerida, por dependência e impacto (não por facilidade):
     /payments/orders/:orderId` (usado por `fetchForOrder`, método novo)
     devolve 404 quando ainda não há pagamento.
 
-    **Verificação end-to-end ao vivo pendente**: o Docker Desktop deste
-    ambiente parou de subir durante esta sessão por um bug próprio,
-    sem relação com o projeto — o processo de backend do Docker Desktop
-    crasha ao tentar recriar um socket AF_UNIX travado
-    (`%LOCALAPPDATA%\Docker\run\dockerInference`), e o Windows recusa
-    remover o arquivo mesmo com `Remove-Item -Force`/`rmdir` (precisa de
-    reboot pra liberar o handle preso no nível do SO). A maioria dos
-    endpoints usados aqui (`vehicles`, `addresses`, criação/consulta de
-    `orders`, `payments/intent`+`webhook`) já foi validada ao vivo no
-    item 11 (E2E Checklist) na mesma sessão; faltam confirmar ao vivo
-    especificamente `GET /payments/orders/:orderId` (`fetchForOrder`) e
-    `PATCH /orders/:id/cancel` — pendente de reboot da máquina do
-    usuário. Script de verificação pronto em
-    `item4-check.mjs` (scratchpad da sessão) pra rodar assim que o
-    Docker voltar.
+    **Verificação end-to-end ao vivo — concluída**: o Docker Desktop
+    deste ambiente parou de subir por um bug próprio, sem relação com o
+    projeto (o backend do Docker Desktop crashava tentando recriar
+    sockets AF_UNIX travados — `dockerInference`, depois
+    `docker-secrets-engine\engine.sock` — que o Windows recusava
+    remover mesmo com `Remove-Item -Force`/`rmdir`; resolvido matando
+    todos os processos `docker*` e relançando, o que finalmente liberou
+    os arquivos travados sem precisar reboot completo). Com o stack de
+    pé (`docker compose up -d`), rodado o script `item4-check.mjs`
+    (scratchpad da sessão, replica exatamente as chamadas dos novos
+    repositórios Dart): todos os 25 contratos confirmados, incluindo os
+    dois que faltavam — `GET /payments/orders/:orderId` (`fetchForOrder`,
+    404 antes do pagamento → 200 `status:"paid"` depois) e `PATCH
+    /orders/:id/cancel` (→ `status:"cancelled"`).
