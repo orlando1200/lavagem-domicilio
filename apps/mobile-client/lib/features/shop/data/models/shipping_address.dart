@@ -23,7 +23,8 @@ class ShippingAddress {
   Map<String, dynamic> toJson() => {
         'street': street,
         'number': number,
-        if (complement != null && complement!.isNotEmpty) 'complement': complement,
+        if (complement != null && complement!.isNotEmpty)
+          'complement': complement,
         'neighborhood': neighborhood,
         'city': city,
         'state': state,

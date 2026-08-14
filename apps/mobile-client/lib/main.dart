@@ -3,9 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/widgets/placeholder_page.dart';
+import 'features/addresses/presentation/pages/add_address_page.dart';
+import 'features/addresses/presentation/pages/addresses_page.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 import 'features/home/presentation/pages/home_page.dart';
 import 'features/orders/presentation/orders_list_page.dart';
+import 'features/orders/presentation/pages/new_order_page.dart';
+import 'features/orders/presentation/pages/order_detail_page.dart';
 import 'features/shop/presentation/pages/shop_page.dart';
 import 'features/shop/presentation/pages/product_detail_page.dart';
 import 'features/shop/presentation/pages/cart_page.dart';
@@ -13,6 +17,8 @@ import 'features/shop/presentation/pages/checkout_page.dart';
 import 'features/auctions/presentation/pages/auctions_list_page.dart';
 import 'features/auctions/presentation/pages/create_auction_page.dart';
 import 'features/auctions/presentation/pages/auction_detail_page.dart';
+import 'features/vehicles/presentation/pages/add_vehicle_page.dart';
+import 'features/vehicles/presentation/pages/vehicles_page.dart';
 
 void main() {
   runApp(const ProviderScope(child: GiucarApp()));
@@ -54,6 +60,12 @@ final GoRouter _router = GoRouter(
       builder: (context, state) => const OrdersListPage(),
     ),
     GoRoute(
+      path: '/orders/:id',
+      builder: (context, state) => OrderDetailPage(
+        orderId: state.pathParameters['id']!,
+      ),
+    ),
+    GoRoute(
       path: '/register',
       builder: (context, state) => const PlaceholderPage(title: 'Cadastro'),
     ),
@@ -91,23 +103,33 @@ final GoRouter _router = GoRouter(
     ),
     GoRoute(
       path: '/moto-rental',
-      builder: (context, state) => const PlaceholderPage(title: 'Aluguel de Moto'),
+      builder: (context, state) =>
+          const PlaceholderPage(title: 'Aluguel de Moto'),
     ),
     GoRoute(
       path: '/catalog',
-      builder: (context, state) => const PlaceholderPage(title: 'Catálogo de Serviços'),
+      builder: (context, state) => const NewOrderPage(),
     ),
     GoRoute(
       path: '/vehicles',
-      builder: (context, state) => const PlaceholderPage(title: 'Meus Veículos'),
+      builder: (context, state) => const VehiclesPage(),
+    ),
+    GoRoute(
+      path: '/vehicles/new',
+      builder: (context, state) => const AddVehiclePage(),
     ),
     GoRoute(
       path: '/addresses',
-      builder: (context, state) => const PlaceholderPage(title: 'Meus Endereços'),
+      builder: (context, state) => const AddressesPage(),
+    ),
+    GoRoute(
+      path: '/addresses/new',
+      builder: (context, state) => const AddAddressPage(),
     ),
     GoRoute(
       path: '/payment-history',
-      builder: (context, state) => const PlaceholderPage(title: 'Histórico de Pagamentos'),
+      builder: (context, state) =>
+          const PlaceholderPage(title: 'Histórico de Pagamentos'),
     ),
     GoRoute(
       path: '/engagement',
@@ -115,7 +137,7 @@ final GoRouter _router = GoRouter(
     ),
     GoRoute(
       path: '/quote',
-      builder: (context, state) => const PlaceholderPage(title: 'Solicitar Orçamento'),
+      builder: (context, state) => const NewOrderPage(),
     ),
   ],
 );

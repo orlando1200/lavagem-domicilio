@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/api/api_exception.dart';
 import 'models/payment_intent_model.dart';
+import 'models/payment_model.dart';
 
 final paymentsRepositoryProvider = Provider<PaymentsRepository>((ref) {
   return PaymentsRepository(ref.watch(dioProvider));
@@ -21,7 +22,8 @@ class PaymentsRepository {
     required String method,
   }) async {
     try {
-      final response = await _dio.post<Map<String, dynamic>>('/payments/intent', data: {
+      final response =
+          await _dio.post<Map<String, dynamic>>('/payments/intent', data: {
         if (orderId != null) 'orderId': orderId,
         if (productOrderId != null) 'productOrderId': productOrderId,
         'method': method,
@@ -47,6 +49,21 @@ class PaymentsRepository {
         'status': 'approved',
       });
     } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// Consulta o pagamento existente de um pedido de lavagem
+  /// (GET /payments/orders/:orderId). Devolve `null` quando ainda nao
+  /// existe pagamento (404) em vez de propagar erro — e um estado
+  /// esperado (pedido criado mas ainda nao pago), nao uma falha.
+  Future<PaymentModel?> fetchForOrder(String orderId) async {
+    try {
+      final response =
+          await _dio.get<Map<String, dynamic>>('/payments/orders/$orderId');
+      return PaymentModel.fromJson(response.data!);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) return null;
       throw ApiException.fromDioException(e);
     }
   }

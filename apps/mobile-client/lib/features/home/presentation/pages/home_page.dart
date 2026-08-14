@@ -136,7 +136,8 @@ class _HomeHeader extends StatelessWidget {
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) => const SizedBox(
                     height: 44,
-                    child: Icon(Icons.bolt_rounded, color: AppColors.primary, size: 32),
+                    child: Icon(Icons.bolt_rounded,
+                        color: AppColors.primary, size: 32),
                   ),
                 ),
               ),
@@ -152,10 +153,14 @@ class _HomeHeader extends StatelessWidget {
                         colors: AppColors.primaryAccentGradient,
                       ),
                       boxShadow: [
-                        BoxShadow(color: AppColors.glow, blurRadius: 18, spreadRadius: 1),
+                        BoxShadow(
+                            color: AppColors.glow,
+                            blurRadius: 18,
+                            spreadRadius: 1),
                       ],
                     ),
-                    child: const Icon(Icons.bolt_rounded, color: AppColors.textPrimary, size: 28),
+                    child: const Icon(Icons.bolt_rounded,
+                        color: AppColors.textPrimary, size: 28),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -164,17 +169,19 @@ class _HomeHeader extends StatelessWidget {
                       children: [
                         Text(
                           userName.isEmpty ? 'Olá!' : 'Olá, $userName!',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                color: AppColors.textPrimary,
-                                fontWeight: FontWeight.w900,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    color: AppColors.textPrimary,
+                                    fontWeight: FontWeight.w900,
+                                  ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           'Pronto para deixar seu veículo brilhando?',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
                         ),
                       ],
                     ),
@@ -283,7 +290,8 @@ class _EngagementHighlightCard extends ConsumerWidget {
             child: SizedBox(
               width: 22,
               height: 22,
-              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+              child: CircularProgressIndicator(
+                  strokeWidth: 2, color: AppColors.primary),
             ),
           ),
         ),
@@ -319,7 +327,8 @@ class _EngagementHighlightBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final subtitle = engagement.nextExpirationAmount != null && engagement.nextExpirationAt != null
+    final subtitle = engagement.nextExpirationAmount != null &&
+            engagement.nextExpirationAt != null
         ? '${engagement.nextExpirationAmount} pontos expiram em '
             '${engagement.nextExpirationAt!.day}/${engagement.nextExpirationAt!.month}'
         : 'Nenhum ponto expirando no momento';
@@ -341,7 +350,8 @@ class _EngagementHighlightBody extends StatelessWidget {
                       color: AppColors.primaryContainer,
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: const Icon(Icons.workspace_premium_rounded, color: AppColors.primary),
+                    child: const Icon(Icons.workspace_premium_rounded,
+                        color: AppColors.primary),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -351,17 +361,19 @@ class _EngagementHighlightBody extends StatelessWidget {
                         Text(
                           '${engagement.balance} pontos · '
                           'R\$ ${engagement.balanceValue.toStringAsFixed(2)}',
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.textPrimary,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.textPrimary,
+                                  ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           subtitle,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
                         ),
                       ],
                     ),
@@ -462,7 +474,7 @@ class _QuickActionsCard extends StatelessWidget {
               _QuickAction(
                 icon: Icons.storefront_outlined,
                 label: 'Serviços\nPesados',
-                onTap: () => context.push('/auction'),
+                onTap: () => context.push('/auctions'),
               ),
               _QuickAction(
                 icon: Icons.directions_car,
@@ -556,10 +568,20 @@ class _ServicesSection extends StatelessWidget {
           child: ListView(
             scrollDirection: Axis.horizontal,
             children: const [
-              _ServiceChip(title: 'Lavagem a Seco', price: 'R\$ 59,90', icon: Icons.eco),
-              _ServiceChip(title: 'Lavagem Express', price: 'R\$ 89,90', icon: Icons.local_car_wash),
-              _ServiceChip(title: 'Polimento', price: 'a partir R\$ 499,90', icon: Icons.auto_fix_high),
-              _ServiceChip(title: 'Cristalização', price: 'Leilão', icon: Icons.shield_moon),
+              _ServiceChip(
+                  title: 'Lavagem a Seco', price: 'R\$ 59,90', icon: Icons.eco),
+              _ServiceChip(
+                  title: 'Lavagem Express',
+                  price: 'R\$ 89,90',
+                  icon: Icons.local_car_wash),
+              _ServiceChip(
+                  title: 'Polimento',
+                  price: 'a partir R\$ 499,90',
+                  icon: Icons.auto_fix_high),
+              _ServiceChip(
+                  title: 'Cristalização',
+                  price: 'Leilão',
+                  icon: Icons.shield_moon),
             ],
           ),
         ),
@@ -761,11 +783,13 @@ class _ProfileTab extends ConsumerWidget {
     final authState = ref.watch(authProvider);
 
     return authState.when(
-      initial: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+      initial: () => const Center(
+          child: CircularProgressIndicator(color: AppColors.primary)),
       loading: () => const _ProfileLoading(),
       authenticated: (user) => _ProfileView(user: user, ref: ref),
       unauthenticated: () => const Center(
-        child: Text('Não autenticado', style: TextStyle(color: AppColors.textPrimary)),
+        child: Text('Não autenticado',
+            style: TextStyle(color: AppColors.textPrimary)),
       ),
       error: (msg) => Center(
         child: Text(msg, style: const TextStyle(color: AppColors.error)),
@@ -822,7 +846,8 @@ class _ProfileView extends StatelessWidget {
                   colors: AppColors.primaryAccentGradient,
                 ),
                 boxShadow: [
-                  BoxShadow(color: AppColors.glow, blurRadius: 24, spreadRadius: 1),
+                  BoxShadow(
+                      color: AppColors.glow, blurRadius: 24, spreadRadius: 1),
                 ],
               ),
               child: Center(
@@ -888,7 +913,8 @@ class _ProfileView extends StatelessWidget {
           NeonSurface(
             child: ListTile(
               leading: const Icon(Icons.exit_to_app, color: AppColors.error),
-              title: const Text('Sair', style: TextStyle(color: AppColors.error)),
+              title:
+                  const Text('Sair', style: TextStyle(color: AppColors.error)),
               onTap: () async {
                 await ref.read(authProvider.notifier).logout();
                 if (context.mounted) context.go('/login');
@@ -927,7 +953,8 @@ class _ProfileMenuItem extends StatelessWidget {
         ),
         title: Text(
           title,
-          style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+          style: const TextStyle(
+              fontWeight: FontWeight.w600, color: AppColors.textPrimary),
         ),
         trailing: Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
         onTap: onTap,

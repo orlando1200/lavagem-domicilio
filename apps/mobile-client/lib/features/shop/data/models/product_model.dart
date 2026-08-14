@@ -40,7 +40,8 @@ class ProductModel {
   /// Nao ha campo de imagem/emoji no `Product` real do backend — usa a
   /// inicial do nome como avatar visual (cor deterministica fica a
   /// cargo da UI, nao do model).
-  String get initial => name.trim().isEmpty ? '?' : name.trim()[0].toUpperCase();
+  String get initial =>
+      name.trim().isEmpty ? '?' : name.trim()[0].toUpperCase();
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {
     final store = json['store'] as Map<String, dynamic>?;

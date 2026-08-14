@@ -29,4 +29,46 @@ class OrdersRepository {
       throw ApiException.fromDioException(e);
     }
   }
+
+  /// POST /orders devolve o Order completo direto (sem wrapper).
+  /// Dispara matching automatico no backend (exceto HEAVY_SERVICE, que
+  /// fica pending para o fluxo de leilao).
+  Future<OrderModel> createOrder({
+    required String vehicleId,
+    required String addressId,
+    String? serviceType,
+    required List<Map<String, dynamic>> items,
+  }) async {
+    try {
+      final response = await _dio.post<Map<String, dynamic>>('/orders', data: {
+        'vehicleId': vehicleId,
+        'addressId': addressId,
+        if (serviceType != null) 'serviceType': serviceType,
+        'items': items,
+      });
+      return OrderModel.fromJson(response.data!);
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// GET /orders/:id devolve o Order completo direto (sem wrapper).
+  Future<OrderModel> fetchOrder(String id) async {
+    try {
+      final response = await _dio.get<Map<String, dynamic>>('/orders/$id');
+      return OrderModel.fromJson(response.data!);
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  Future<void> cancelOrder(String id, {String? reason}) async {
+    try {
+      await _dio.patch<void>('/orders/$id/cancel', data: {
+        if (reason != null && reason.isNotEmpty) 'reason': reason,
+      });
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
 }

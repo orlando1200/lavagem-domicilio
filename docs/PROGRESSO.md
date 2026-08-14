@@ -1,7 +1,7 @@
 # Progresso do Projeto — GIUCAR
 
 ## Última atualização
-2026-08-12
+2026-08-14
 
 > Nota: a versão anterior deste arquivo (17/jul) descrevia uma rodada
 > anterior à recuperação do backend (Fase 9 — ver
@@ -623,3 +623,65 @@ Ordem sugerida, por dependência e impacto (não por facilidade):
     o Windows nega sem modo dev habilitado; o build real de produção é
     o do Dockerfile, já validado rodando), `flutter analyze` limpo no
     mobile-driver.
+12. **Mobile-client — item 4: fluxo completo de pedido de lavagem**
+    (`features/vehicles`, `features/addresses` novos + `features/orders`
+    e `features/shop/data/payments_repository.dart` estendidos). Antes
+    deste trabalho o app cliente não tinha **nenhum** fluxo de criação
+    de pedido — nem mockado; toda CTA relevante (`/catalog`,
+    `/vehicles`, `/addresses`, `/quote`) apontava pra `PlaceholderPage`.
+    Trabalho 100% client-side — o backend (`vehicles`, `addresses`,
+    `orders`, `payments`) já estava pronto.
+
+    Wizard de 4 passos (`new_order_page.dart`, mesmo padrão imperativo
+    `ConsumerStatefulWidget` + `_step`/`_submitting`/`_errorMessage` já
+    usado no checkout de marketplace): serviço (lista fixa local —
+    `DRY_WASH`/`EXPRESS_WASH`, mesmos preços já hardcoded na home, já
+    que não existe catálogo de serviços real no schema) → veículo →
+    endereço → revisão+pagamento (mock, reaproveitando
+    `PaymentsRepository` que já era genérico). Nova tela de
+    detalhe/acompanhamento (`order_detail_page.dart`, rota
+    `/orders/:id`) com estado de pagamento (pagar agora/retomar
+    pagamento/pago/recusado — `Order` e `Payment` são desacoplados no
+    schema, pedido aparece em `/orders` independente do pagamento) e
+    cancelamento.
+
+    **`HEAVY_SERVICE` fica de fora deste wizard de propósito** — o
+    usuário confirmou que esse tipo de serviço (estética automotiva,
+    funilaria, tapeçaria, elétrico automotivo) pertence ao sistema de
+    leilão já existente entre cliente e loja `CARWASH_SHOP`
+    (`/auctions`), não a um checkout de preço fixo. Acompanha um gap já
+    existente e fora de escopo: `/auctions/new` depende de um pedido
+    `pending` preexistente que hoje nada no client cria (só
+    `HEAVY_SERVICE` fica `pending` sem matching automático) — não é
+    regressão introduzida aqui.
+
+    **Bug real corrigido de brinde**: botão "Serviços Pesados" na home
+    chamava `context.push('/auction')` (singular, rota morta) em vez de
+    `/auctions` (plural, rota real já registrada) — o banner irmão na
+    mesma tela já usava a forma certa.
+
+    Verificação: `flutter analyze` limpo (só os mesmos `info`
+    pré-existentes de `prefer_const_constructors` já tolerados no
+    resto do repo) + `dart format`. Contratos de API confirmados por
+    leitura direta do código (`orders.service.ts`, `payments.service.ts`,
+    DTOs de `vehicles`/`addresses`) — `resolveZoneId` já resolve zona
+    sozinha por endereço quando `zoneId` não é enviado, `POST /orders`
+    devolve o `Order` completo sem wrapper, `GET
+    /payments/orders/:orderId` (usado por `fetchForOrder`, método novo)
+    devolve 404 quando ainda não há pagamento.
+
+    **Verificação end-to-end ao vivo pendente**: o Docker Desktop deste
+    ambiente parou de subir durante esta sessão por um bug próprio,
+    sem relação com o projeto — o processo de backend do Docker Desktop
+    crasha ao tentar recriar um socket AF_UNIX travado
+    (`%LOCALAPPDATA%\Docker\run\dockerInference`), e o Windows recusa
+    remover o arquivo mesmo com `Remove-Item -Force`/`rmdir` (precisa de
+    reboot pra liberar o handle preso no nível do SO). A maioria dos
+    endpoints usados aqui (`vehicles`, `addresses`, criação/consulta de
+    `orders`, `payments/intent`+`webhook`) já foi validada ao vivo no
+    item 11 (E2E Checklist) na mesma sessão; faltam confirmar ao vivo
+    especificamente `GET /payments/orders/:orderId` (`fetchForOrder`) e
+    `PATCH /orders/:id/cancel` — pendente de reboot da máquina do
+    usuário. Script de verificação pronto em
+    `item4-check.mjs` (scratchpad da sessão) pra rodar assim que o
+    Docker voltar.

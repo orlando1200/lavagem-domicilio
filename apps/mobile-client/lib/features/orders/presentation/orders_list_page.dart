@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/neon_surface.dart';
 import '../orders_provider.dart';
@@ -52,46 +53,51 @@ class _OrderCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return NeonSurface(
       margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: AppColors.primaryContainer,
-                borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: () => context.push('/orders/${order.id}'),
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryContainer,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child:
+                    const Icon(Icons.local_car_wash, color: AppColors.primary),
               ),
-              child: const Icon(Icons.local_car_wash, color: AppColors.primary),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Pedido #${order.id.substring(0, order.id.length.clamp(0, 8))}',
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w700,
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Pedido #${order.id.substring(0, order.id.length.clamp(0, 8))}',
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    order.statusLabel,
-                    style: TextStyle(color: AppColors.textSecondary),
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    Text(
+                      order.statusLabel,
+                      style: TextStyle(color: AppColors.textSecondary),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            Text(
-              'R\$ ${order.totalAmount.toStringAsFixed(2)}',
-              style: const TextStyle(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w800,
+              Text(
+                'R\$ ${order.totalAmount.toStringAsFixed(2)}',
+                style: const TextStyle(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -109,7 +115,8 @@ class _OrdersEmpty extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.receipt_long_outlined, color: AppColors.textMuted, size: 48),
+            Icon(Icons.receipt_long_outlined,
+                color: AppColors.textMuted, size: 48),
             const SizedBox(height: 12),
             Text(
               'Você ainda não tem pedidos.',
@@ -137,7 +144,8 @@ class _OrdersError extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.wifi_off_rounded, color: AppColors.error, size: 48),
+            const Icon(Icons.wifi_off_rounded,
+                color: AppColors.error, size: 48),
             const SizedBox(height: 12),
             Text(
               message,
@@ -145,7 +153,8 @@ class _OrdersError extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
-            FilledButton(onPressed: onRetry, child: const Text('Tentar novamente')),
+            FilledButton(
+                onPressed: onRetry, child: const Text('Tentar novamente')),
           ],
         ),
       ),

@@ -46,11 +46,15 @@ class CartNotifier extends StateNotifier<CartState> {
   void add(ProductModel product, {int quantity = 1}) {
     final index = state.items.indexWhere((i) => i.product.id == product.id);
     if (index == -1) {
-      state = CartState(items: [...state.items, CartItem(product: product, quantity: quantity)]);
+      state = CartState(items: [
+        ...state.items,
+        CartItem(product: product, quantity: quantity)
+      ]);
       return;
     }
     final updated = [...state.items];
-    updated[index] = updated[index].copyWith(quantity: updated[index].quantity + quantity);
+    updated[index] =
+        updated[index].copyWith(quantity: updated[index].quantity + quantity);
     state = CartState(items: updated);
   }
 
@@ -60,13 +64,15 @@ class CartNotifier extends StateNotifier<CartState> {
       return;
     }
     final updated = state.items
-        .map((i) => i.product.id == productId ? i.copyWith(quantity: quantity) : i)
+        .map((i) =>
+            i.product.id == productId ? i.copyWith(quantity: quantity) : i)
         .toList();
     state = CartState(items: updated);
   }
 
   void removeItem(String productId) {
-    state = CartState(items: state.items.where((i) => i.product.id != productId).toList());
+    state = CartState(
+        items: state.items.where((i) => i.product.id != productId).toList());
   }
 
   void clear() {

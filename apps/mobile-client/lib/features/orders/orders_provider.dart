@@ -8,3 +8,10 @@ import 'data/orders_repository.dart';
 final myOrdersProvider = FutureProvider.autoDispose<List<OrderModel>>((ref) {
   return ref.watch(ordersRepositoryProvider).fetchMyOrders();
 });
+
+/// FutureProvider.family.autoDispose para o detalhe/acompanhamento de
+/// um pedido especifico (GET /orders/:id).
+final orderDetailProvider =
+    FutureProvider.family.autoDispose<OrderModel, String>((ref, orderId) {
+  return ref.watch(ordersRepositoryProvider).fetchOrder(orderId);
+});

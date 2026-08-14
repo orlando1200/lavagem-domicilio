@@ -21,7 +21,8 @@ class PaymentIntentModel {
     return PaymentIntentModel(
       paymentId: payment?['id'] as String? ?? '',
       status: payment?['status'] as String? ?? 'pending',
-      externalRef: payment?['externalRef'] as String? ?? gateway?['externalRef'] as String?,
+      externalRef: payment?['externalRef'] as String? ??
+          gateway?['externalRef'] as String?,
       qrCode: gateway?['qrCode'] as String?,
       checkoutUrl: gateway?['checkoutUrl'] as String?,
     );
