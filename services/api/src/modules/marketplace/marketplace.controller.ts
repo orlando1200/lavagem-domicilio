@@ -31,8 +31,13 @@ export class MarketplaceController {
   @Post('client/checkout')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.CLIENTE)
-  @ApiOperation({ summary: 'Cliente finaliza a compra do carrinho: cria um ProductOrder por loja' })
+  @Roles(UserRole.CLIENTE, UserRole.LAVADOR)
+  @ApiOperation({
+    summary:
+      'Finaliza a compra do carrinho: cria um ProductOrder por loja. ' +
+      'Rota unica pros dois catalogos (CLIENTE em /client/catalog, LAVADOR ' +
+      'em /driver/catalog) — o service e agnostico ao role do comprador.',
+  })
   checkout(@CurrentUser() user: AuthenticatedUser, @Body() dto: CheckoutDto) {
     return this.marketplaceService.checkout(user.id, dto);
   }

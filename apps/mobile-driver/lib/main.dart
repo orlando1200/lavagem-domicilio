@@ -10,6 +10,10 @@ import 'features/home/presentation/pages/home_page.dart';
 import 'features/orders/presentation/pages/active_order_page.dart';
 import 'features/auctions/presentation/pages/auctions_page.dart';
 import 'features/auctions/presentation/pages/submit_bid_page.dart';
+import 'features/shop/presentation/pages/shop_page.dart';
+import 'features/shop/presentation/pages/product_detail_page.dart';
+import 'features/shop/presentation/pages/cart_page.dart';
+import 'features/shop/presentation/pages/checkout_page.dart';
 
 void main() {
   runApp(const ProviderScope(child: GiucarDriverApp()));
@@ -74,6 +78,24 @@ final GoRouter _router = GoRouter(
       builder: (context, state) => SubmitBidPage(
         auctionId: state.pathParameters['id']!,
       ),
+    ),
+    GoRoute(
+      path: '/shop',
+      builder: (context, state) => const ShopPage(),
+    ),
+    GoRoute(
+      path: '/shop/product/:id',
+      builder: (context, state) => ProductDetailPage(
+        productId: state.pathParameters['id']!,
+      ),
+    ),
+    GoRoute(
+      path: '/shop/cart',
+      builder: (context, state) => const CartPage(),
+    ),
+    GoRoute(
+      path: '/shop/checkout',
+      builder: (context, state) => const CheckoutPage(),
     ),
   ],
 );

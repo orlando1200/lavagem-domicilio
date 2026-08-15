@@ -1,7 +1,7 @@
 # Progresso do Projeto — GIUCAR
 
 ## Última atualização
-2026-08-14
+2026-08-15
 
 > Nota: a versão anterior deste arquivo (17/jul) descrevia uma rodada
 > anterior à recuperação do backend (Fase 9 — ver
@@ -790,3 +790,29 @@ Ordem sugerida, por dependência e impacto (não por facilidade):
     (`engagement-check.mjs`, 13 asserções: paga um pedido → confirma
     saldo/concessão → resgata pontos → confirma resgate aparece no
     histórico) contra o backend real.
+17. **mobile-driver — "Loja de produtos"** (usuário confirmou o escopo:
+    lojas de produto/peça/acessório automotivo, não confundir com
+    leilão de serviço pesado). Card "Loja de produtos" na home era
+    `onTap: () {}`. **Bug de backend encontrado antes de escrever
+    qualquer UI**: `POST /marketplace/client/checkout` era
+    `@Roles(UserRole.CLIENTE)`-only — se a feature fosse construída sem
+    o fix, ficaria navegável mas o checkout sempre retornaria 403 pro
+    lavador. Inspeção do `marketplace.service.ts` confirmou que o
+    método de checkout não tem nenhuma lógica específica de CLIENTE
+    (`buyerWasherId` existe no schema mas não é usado por ele), então o
+    fix seguro foi só alargar o guard: `@Roles(UserRole.CLIENTE,
+    UserRole.LAVADOR)`. Feature nova no `mobile-driver` (`features/shop/`)
+    espelhando a já existente do `mobile-client` — catálogo
+    (`GET /marketplace/driver/catalog`, endpoint que já existia mas não
+    tinha consumidor), carrinho, checkout com endereço + pagamento mock,
+    rotas namespaced sob `/shop/*` pra não colidir com as rotas
+    top-level já existentes do app do lavador.
+
+    Verificação: backend `pnpm --filter api lint/type-check/test/build`
+    (78 testes passando). `flutter analyze` limpo no mobile-driver. Ao
+    vivo (`docker compose up -d --build api` pra pegar o guard novo,
+    script `driver-shop-check.mjs`): confirma que um LAVADOR recém-
+    registrado consegue listar o catálogo e fechar checkout com sucesso
+    (201 — antes do fix seria 403, essa é a asserção central), que
+    CLIENTE continua funcionando sem regressão, e que ADMIN continua
+    bloqueado (guard não ficou aberto demais).

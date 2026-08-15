@@ -32,7 +32,8 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   Widget build(BuildContext context) {
     ref.listen<DriverOrdersState>(driverOrdersProvider, (previous, next) {
-      if (next.errorMessage != null && next.errorMessage != previous?.errorMessage) {
+      if (next.errorMessage != null &&
+          next.errorMessage != previous?.errorMessage) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(next.errorMessage!)),
         );
@@ -76,7 +77,8 @@ class _HomeTab extends ConsumerWidget {
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
-          child: _HomeHeader(userName: userName, isOnline: ordersState.isOnline),
+          child:
+              _HomeHeader(userName: userName, isOnline: ordersState.isOnline),
         ),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
@@ -181,10 +183,14 @@ class _HomeHeader extends ConsumerWidget {
                         colors: AppColors.primaryAccentGradient,
                       ),
                       boxShadow: [
-                        BoxShadow(color: AppColors.glow, blurRadius: 18, spreadRadius: 1),
+                        BoxShadow(
+                            color: AppColors.glow,
+                            blurRadius: 18,
+                            spreadRadius: 1),
                       ],
                     ),
-                    child: const Icon(Icons.local_car_wash_rounded, color: AppColors.textPrimary, size: 28),
+                    child: const Icon(Icons.local_car_wash_rounded,
+                        color: AppColors.textPrimary, size: 28),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -193,17 +199,19 @@ class _HomeHeader extends ConsumerWidget {
                       children: [
                         Text(
                           userName.isEmpty ? 'Olá!' : 'Olá, $userName!',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                color: AppColors.textPrimary,
-                                fontWeight: FontWeight.w900,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    color: AppColors.textPrimary,
+                                    fontWeight: FontWeight.w900,
+                                  ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           'Pronto para mais lavagens hoje? · Carro Lavador',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
                         ),
                       ],
                     ),
@@ -233,7 +241,8 @@ class _OnlineToggle extends ConsumerWidget {
         decoration: BoxDecoration(
           color: isOnline ? AppColors.primaryContainer : AppColors.surfaceAlt,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: isOnline ? AppColors.primary : AppColors.border),
+          border: Border.all(
+              color: isOnline ? AppColors.primary : AppColors.border),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -355,10 +364,13 @@ class _StatsGrid extends StatelessWidget {
       crossAxisSpacing: 12,
       childAspectRatio: 1.6,
       children: [
-        _StatCard(value: 'R\$ ${stats.earningsToday.toStringAsFixed(0)}', label: 'Ganhos hoje'),
+        _StatCard(
+            value: 'R\$ ${stats.earningsToday.toStringAsFixed(0)}',
+            label: 'Ganhos hoje'),
         _StatCard(value: '${stats.washesToday}', label: 'Lavagens'),
         _StatCard(value: stats.rating.toStringAsFixed(1), label: 'Avaliação'),
-        _StatCard(value: '${stats.onlineHours.toStringAsFixed(0)}h', label: 'Online'),
+        _StatCard(
+            value: '${stats.onlineHours.toStringAsFixed(0)}h', label: 'Online'),
       ],
     );
   }
@@ -436,9 +448,12 @@ class _ActiveOrderCard extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: 10),
-              _OrderDetailLine(icon: Icons.directions_car_rounded, text: '${order.serviceName} · ${order.vehicle}'),
+              _OrderDetailLine(
+                  icon: Icons.directions_car_rounded,
+                  text: '${order.serviceName} · ${order.vehicle}'),
               const SizedBox(height: 4),
-              _OrderDetailLine(icon: Icons.location_on_outlined, text: _addressLine(order)),
+              _OrderDetailLine(
+                  icon: Icons.location_on_outlined, text: _addressLine(order)),
               const SizedBox(height: 14),
               Row(
                 children: [
@@ -498,16 +513,21 @@ class _AvailableOrderCard extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 10),
-            _OrderDetailLine(icon: Icons.directions_car_rounded, text: '${order.serviceName} · ${order.vehicle}'),
+            _OrderDetailLine(
+                icon: Icons.directions_car_rounded,
+                text: '${order.serviceName} · ${order.vehicle}'),
             const SizedBox(height: 4),
-            _OrderDetailLine(icon: Icons.location_on_outlined, text: _addressLine(order)),
+            _OrderDetailLine(
+                icon: Icons.location_on_outlined, text: _addressLine(order)),
             const SizedBox(height: 14),
             Row(
               children: [
                 Expanded(
                   child: FilledButton(
                     onPressed: () {
-                      ref.read(driverOrdersProvider.notifier).acceptOrder(order.id);
+                      ref
+                          .read(driverOrdersProvider.notifier)
+                          .acceptOrder(order.id);
                     },
                     child: const Text('Aceitar'),
                   ),
@@ -516,7 +536,9 @@ class _AvailableOrderCard extends ConsumerWidget {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () {
-                      ref.read(driverOrdersProvider.notifier).rejectOrder(order.id);
+                      ref
+                          .read(driverOrdersProvider.notifier)
+                          .rejectOrder(order.id);
                     },
                     child: const Text('Recusar'),
                   ),
@@ -571,13 +593,16 @@ class _EmptyOrdersState extends StatelessWidget {
               const SizedBox(
                 width: 28,
                 height: 28,
-                child: CircularProgressIndicator(strokeWidth: 2.5, color: AppColors.primary),
+                child: CircularProgressIndicator(
+                    strokeWidth: 2.5, color: AppColors.primary),
               )
             else
               Icon(Icons.search_rounded, color: AppColors.textMuted, size: 32),
             const SizedBox(height: 8),
             Text(
-              isLoading ? 'Carregando pedidos...' : 'Procurando pedidos próximos...',
+              isLoading
+                  ? 'Carregando pedidos...'
+                  : 'Procurando pedidos próximos...',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppColors.textSecondary,
                   ),
@@ -601,7 +626,8 @@ class _OfflineHint extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         child: Row(
           children: [
-            const Icon(Icons.power_settings_new_rounded, color: AppColors.accent),
+            const Icon(Icons.power_settings_new_rounded,
+                color: AppColors.accent),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -641,7 +667,7 @@ class _ToolsSection extends StatelessWidget {
                 icon: Icons.shopping_bag_outlined,
                 label: 'Loja de produtos',
                 sub: 'Repõe seu kit',
-                onTap: () {},
+                onTap: () => context.push('/shop'),
               ),
             ),
             const SizedBox(width: 12),
@@ -711,7 +737,10 @@ class _ToolCard extends StatelessWidget {
                         children: [
                           Text(
                             label,
-                            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelMedium
+                                ?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: AppColors.textPrimary,
                                 ),
@@ -719,14 +748,18 @@ class _ToolCard extends StatelessWidget {
                           const SizedBox(height: 2),
                           Text(
                             sub,
-                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelSmall
+                                ?.copyWith(
                                   color: AppColors.textSecondary,
                                 ),
                           ),
                         ],
                       ),
                     ),
-                    Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
+                    Icon(Icons.chevron_right_rounded,
+                        color: AppColors.textMuted),
                   ],
                 )
               : Column(
@@ -820,11 +853,15 @@ class _ProfileTab extends ConsumerWidget {
     final ordersState = ref.watch(driverOrdersProvider);
 
     return authState.when(
-      initial: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
-      loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
-      authenticated: (user) => _ProfileView(user: user, isOnline: ordersState.isOnline, ref: ref),
+      initial: () => const Center(
+          child: CircularProgressIndicator(color: AppColors.primary)),
+      loading: () => const Center(
+          child: CircularProgressIndicator(color: AppColors.primary)),
+      authenticated: (user) =>
+          _ProfileView(user: user, isOnline: ordersState.isOnline, ref: ref),
       unauthenticated: () => const Center(
-        child: Text('Não autenticado', style: TextStyle(color: AppColors.textPrimary)),
+        child: Text('Não autenticado',
+            style: TextStyle(color: AppColors.textPrimary)),
       ),
       error: (msg) => Center(
         child: Text(msg, style: const TextStyle(color: AppColors.error)),
@@ -834,7 +871,8 @@ class _ProfileTab extends ConsumerWidget {
 }
 
 class _ProfileView extends StatelessWidget {
-  const _ProfileView({required this.user, required this.isOnline, required this.ref});
+  const _ProfileView(
+      {required this.user, required this.isOnline, required this.ref});
 
   final DriverUser user;
   final bool isOnline;
@@ -858,7 +896,8 @@ class _ProfileView extends StatelessWidget {
                   colors: AppColors.primaryAccentGradient,
                 ),
                 boxShadow: [
-                  BoxShadow(color: AppColors.glow, blurRadius: 24, spreadRadius: 1),
+                  BoxShadow(
+                      color: AppColors.glow, blurRadius: 24, spreadRadius: 1),
                 ],
               ),
               child: Center(
@@ -936,7 +975,8 @@ class _ProfileView extends StatelessWidget {
           NeonSurface(
             child: ListTile(
               leading: const Icon(Icons.exit_to_app, color: AppColors.error),
-              title: const Text('Sair', style: TextStyle(color: AppColors.error)),
+              title:
+                  const Text('Sair', style: TextStyle(color: AppColors.error)),
               onTap: () async {
                 await ref.read(driverAuthProvider.notifier).logout();
                 if (context.mounted) context.go('/login');
@@ -975,7 +1015,8 @@ class _ProfileMenuItem extends StatelessWidget {
         ),
         title: Text(
           title,
-          style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+          style: const TextStyle(
+              fontWeight: FontWeight.w600, color: AppColors.textPrimary),
         ),
         trailing: Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
         onTap: onTap,

@@ -245,7 +245,11 @@ pública.
 - `GET /marketplace/driver/catalog` — mesma coisa, `catalogTarget`
   `LAVADOR`/`AMBOS`
 - `GET /marketplace/products/:id`
-- `POST /marketplace/client/checkout` — CLIENTE. `{ items: [{productId, quantity}], shippingAddress: {...snapshot JSON...} }` — cria um `ProductOrder` por loja distinta no carrinho.
+- `POST /marketplace/client/checkout` — CLIENTE ou LAVADOR (rota única
+  pros dois catálogos — o service é agnóstico ao role do comprador,
+  só muda qual catálogo alimentou o carrinho). `{ items:
+  [{productId, quantity}], shippingAddress: {...snapshot JSON...} }`
+  — cria um `ProductOrder` por loja distinta no carrinho.
 
 ---
 
