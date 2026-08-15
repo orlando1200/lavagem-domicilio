@@ -49,6 +49,12 @@ const List<HeavyService> heavyServices = [
     'Capas de couro sob medida e revestimento completo dos bancos.',
     '🛋️',
   ),
+  HeavyService(
+    'eletrico_automotivo',
+    'Elétrico Automotivo',
+    'Diagnóstico e reparo de sistemas elétricos do veículo.',
+    '🔌',
+  ),
 ];
 
 String heavyServiceTitle(String id) {

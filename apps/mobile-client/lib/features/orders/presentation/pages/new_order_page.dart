@@ -10,12 +10,14 @@ import '../../../vehicles/presentation/providers/vehicles_provider.dart';
 import '../../../shop/data/payments_repository.dart';
 import '../../data/models/order_model.dart';
 import '../../data/orders_repository.dart';
+import '../../orders_provider.dart';
 
 typedef _WashService = ({
   String serviceType,
   String name,
   double price,
-  IconData icon
+  IconData icon,
+  bool isAuction,
 });
 
 const _services = <_WashService>[
@@ -23,13 +25,22 @@ const _services = <_WashService>[
     serviceType: 'DRY_WASH',
     name: 'Lavagem a Seco',
     price: 59.90,
-    icon: Icons.eco
+    icon: Icons.eco,
+    isAuction: false,
   ),
   (
     serviceType: 'EXPRESS_WASH',
     name: 'Lavagem Express',
     price: 89.90,
-    icon: Icons.local_car_wash
+    icon: Icons.local_car_wash,
+    isAuction: false,
+  ),
+  (
+    serviceType: 'HEAVY_SERVICE',
+    name: 'Serviço Pesado (Leilão)',
+    price: 0,
+    icon: Icons.gavel_rounded,
+    isAuction: true,
   ),
 ];
 
@@ -49,9 +60,10 @@ const _methods = <_PaymentMethod>[
 /// try/catch/finally) do checkout de marketplace em
 /// `checkout_page.dart`, so que com mais passos.
 ///
-/// HEAVY_SERVICE fica fora deste wizard de proposito — pertence ao
-/// fluxo de leilao ja existente (`/auctions/new`), que parte de um
-/// pedido `pending` preexistente (fora de escopo aqui).
+/// `HEAVY_SERVICE` segue o mesmo caminho ate a revisao, mas sem preco
+/// fixo nem pagamento — ao confirmar, cria o pedido `pending` e leva
+/// direto pra `/auctions/new` (fluxo de leilao ja existente, que lista
+/// os pedidos `pending` do cliente pra abrir o leilao).
 class NewOrderPage extends ConsumerStatefulWidget {
   const NewOrderPage({super.key});
 
@@ -104,14 +116,34 @@ class _NewOrderPageState extends ConsumerState<NewOrderPage> {
 
     try {
       final order = await ref.read(ordersRepositoryProvider).createOrder(
-        vehicleId: vehicle.id,
-        addressId: address.id,
-        serviceType: service.serviceType,
-        items: [
-          {'name': service.name, 'price': service.price, 'quantity': 1},
-        ],
-      );
+            vehicleId: vehicle.id,
+            addressId: address.id,
+            serviceType: service.serviceType,
+            items: service.isAuction
+                ? [
+                    {
+                      'name': 'Serviço pesado — preço definido no leilão',
+                      'price': 0,
+                      'quantity': 1,
+                    },
+                  ]
+                : [
+                    {
+                      'name': service.name,
+                      'price': service.price,
+                      'quantity': 1
+                    },
+                  ],
+          );
       if (!mounted) return;
+      if (service.isAuction) {
+        // HEAVY_SERVICE fica `pending` (nunca passa pelo matching normal)
+        // — /auctions/new le os pedidos `pending` do cliente pra abrir o
+        // leilao, entao so precisamos invalidar a lista antes de navegar.
+        ref.invalidate(myOrdersProvider);
+        context.go('/auctions/new');
+        return;
+      }
       setState(() {
         _createdOrder = order;
         _step = 4;
@@ -259,7 +291,9 @@ class _ServiceStep extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        'R\$ ${service.price.toStringAsFixed(2)}',
+                        service.isAuction
+                            ? 'A definir em leilão'
+                            : 'R\$ ${service.price.toStringAsFixed(2)}',
                         style: const TextStyle(
                             color: AppColors.primary,
                             fontWeight: FontWeight.w800),
@@ -465,7 +499,9 @@ class _ReviewStep extends StatelessWidget {
                   Text('Total',
                       style: TextStyle(color: AppColors.textSecondary)),
                   Text(
-                    'R\$ ${service.price.toStringAsFixed(2)}',
+                    service.isAuction
+                        ? 'A definir em leilão'
+                        : 'R\$ ${service.price.toStringAsFixed(2)}',
                     style: const TextStyle(
                         color: AppColors.primary,
                         fontWeight: FontWeight.w800,
@@ -473,6 +509,15 @@ class _ReviewStep extends StatelessWidget {
                   ),
                 ],
               ),
+              if (service.isAuction) ...[
+                const SizedBox(height: 10),
+                Text(
+                  'Lojas de carwash cadastradas vão enviar ofertas de preço, '
+                  'prazo e garantia no próximo passo.',
+                  style:
+                      TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                ),
+              ],
             ],
           ),
         ),
@@ -488,7 +533,8 @@ class _ReviewStep extends StatelessWidget {
                   child: CircularProgressIndicator(
                       strokeWidth: 2, color: AppColors.primaryDark),
                 )
-              : const Text('Confirmar pedido'),
+              : Text(
+                  service.isAuction ? 'Abrir para leilão' : 'Confirmar pedido'),
         ),
       ],
     );

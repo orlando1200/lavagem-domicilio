@@ -745,3 +745,24 @@ Ordem sugerida, por dependência e impacto (não por facilidade):
     7 asserções — fluxo completo admin cria entrega → lavador aceita →
     avança até `DELIVERED` → confirma `ProductOrder.status` virou
     `delivered`) — todos passando contra o backend real.
+14. **mobile-client — fecha o loop `HEAVY_SERVICE` → leilão**. O
+    usuário confirmou (nesta sessão) que leilão de serviço pesado
+    (estética automotiva, funilaria, tapeçaria, elétrico automotivo) é
+    prioridade real de produto. Investigação mostrou que
+    `/auctions/new` (`CreateAuctionPage`) já era uma tela completa e
+    funcional — lista os pedidos `pending` do cliente e deixa escolher
+    serviços/orçamento/prazo — mas **nada no client jamais criava um
+    pedido `HEAVY_SERVICE`**, então a lista sempre aparecia vazia. Gap
+    fechado sem tocar backend: `NewOrderPage` (wizard de pedido) ganhou
+    um terceiro card de serviço ("Serviço Pesado (Leilão)"); ao
+    confirmar, cria o pedido `pending` (sem preço fixo, sem pagamento —
+    preço vem das pujas das lojas `CARWASH_SHOP`) e navega direto pra
+    `/auctions/new`. `heavy_services.dart` ganhou "Elétrico Automotivo"
+    (as outras três categorias que o usuário pediu — estética,
+    funilaria, tapeçaria — já existiam no catálogo fixo).
+
+    Verificação: `flutter analyze` limpo, e ao vivo (script novo
+    `auction-loop-check.mjs`, 6 asserções: cria pedido `HEAVY_SERVICE`
+    → confirma que aparece `pending` em `GET /orders` → `POST
+    /auctions` com esse pedido → 201) confirmando o loop de ponta a
+    ponta contra o backend real.
