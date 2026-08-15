@@ -227,7 +227,15 @@ pública.
 - `POST /stores` — cria a loja do usuário autenticado
 - `GET /stores/:id` — só o dono (ou admin)
 - `POST /stores/:id/products` / `GET /stores/:id/products`
+- `PATCH /stores/:id/products/:productId` — edição do próprio lojista
+  (nome, descrição, preço, estoque, categoria, catálogo, peso). O
+  campo `status` (opcional) só alterna `active`↔`inactive` num produto
+  **já aprovado** — tentar sair de `pending_approval`/`rejected` por
+  aqui dá `400` (essa transição é exclusiva do admin, ver abaixo)
 - `GET /stores/:id/orders` — pedidos de produto recebidos pela loja
+- `PATCH /stores/:id/logistics-plan` — troca `LogisticsPlan`
+  (`INTEGRATED`/`OWN`) e recalcula `CommissionPlan` (mensalidade +
+  taxa) pela mesma tabela usada na criação da loja
 
 ## Marketplace (`/marketplace`) — vitrine pública + checkout
 
@@ -283,7 +291,11 @@ estados). Ver `docs/E2E_CHECKLIST.md` (Passo 7a).
 - `GET /driver/deliveries` — disponíveis/pendentes
 - `GET /driver/deliveries/active`
 - `PATCH /driver/deliveries/:id/accept`
-- `PATCH /driver/deliveries/:id/status`
+- `PATCH /driver/deliveries/:id/status` — quando o novo status é
+  `DELIVERED`, também sincroniza `ProductOrder.status` para
+  `delivered` (fix — antes ficava só em `deliveryStatus`, e o pipeline
+  de repasse de loja, que filtra por `ProductOrderStatus.delivered`,
+  nunca encontrava pedidos elegíveis)
 
 ## Maps (`/maps`)
 
