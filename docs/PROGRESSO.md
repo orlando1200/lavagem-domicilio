@@ -140,63 +140,33 @@ não há chaves configuradas nesta máquina.
 
 ## Bloqueios / débitos técnicos conhecidos
 
-- **Incidente do GitHub Actions (2026-08-06)**: os commits `9aa8a88`,
-  `5f9f091`, `0fd58c1` e `844ac1e` foram pushados pro `main` e
-  confirmados como HEAD via API, mas nenhum workflow run foi criado —
-  confirmado incidente ativo em [githubstatus.com](https://githubstatus.com)
-  ("Incident with Actions": capacidade de runners reduzida, webhook
-  deliveries atrasadas). Diagnóstico completo feito via API pública
-  (workflow `state: active`, arquivo `ci.yml` presente no HEAD, zero
-  causa local) antes de concluir que era só o incidente. Tentativa de
-  re-disparo com commit vazio (`0fd58c1`) não funcionou enquanto o
-  incidente seguia ativo — comportamento esperado, não confiável até o
-  GitHub normalizar. Adicionado `workflow_dispatch` ao `ci.yml`
-  (commit `844ac1e`) pra permitir disparo manual pela UI/API do GitHub
-  da próxima vez que isso acontecer, sem depender de push. **Ação
-  pendente**: conferir manualmente se os commits acima passaram no CI
-  assim que o incidente for resolvido (ou disparar via "Run workflow"
-  na aba Actions).
-- ~~CI falha no Linux~~ — **resolvido** (run #34, commit `8900ed4`,
-  `Status: Success` nos 3 jobs). Causa real, só descoberta depois de
-  conseguir o texto do log (o endpoint de logs da API do GitHub exige
-  token de admin, então dependeu de alguém com acesso ao repo colar o
-  log manualmente): `ci.yml` rodava `pnpm run test -- --ci --coverage`,
-  e o `pnpm` estava repassando um `"--"` **literal** como primeiro
-  argumento pro jest (`jest "--" "--ci" "--coverage"`), em vez de
-  tratar como separador. O jest interpreta qualquer argumento
-  posicional como padrão de nome de teste — `"--"` não bate com nenhum
-  arquivo, daí "No tests found, exiting with code 1". Não era diferença
-  de SO/Node/pnpm (por isso nenhuma das reproduções locais pegava:
-  nenhuma delas usou exatamente `pnpm run <script> -- <args>` do jeito
-  que o workflow usava). Trocado por `pnpm exec jest --ci --coverage`,
-  que invoca o jest direto sem passar pelo forwarding de argumentos do
-  `pnpm run`. O teardown (`module.close()`) adicionado nos specs durante
-  a investigação foi mantido por ser boa prática, mas não era a causa.
-- **Sem Postgres/Docker nesta máquina** — as três migrations novas desta
-  semana (`20260803000000_add_auctions_and_driver_profiles`,
-  `20260804000000_add_loyalty_redemptions`,
-  `20260806000000_unify_washer_into_driver_profile`) nunca foram
-  aplicadas a um banco real, só validadas via `prisma generate`/
-  `build`/`test`. A última em particular tem um `DROP TABLE` —
-  revisar/testar em staging antes de aplicar em produção se algum dia
-  houver dado real de `Washer` pra perder.
-- **Mismatch de shape entre `GET /orders` e o app cliente**: o backend
-  retorna `{ items, nextCursor }` (paginação por cursor), mas
-  `orders_repository.dart` no `mobile-client` espera um array puro —
-  bug pré-existente, não corrigido (fora do escopo do que foi pedido,
-  mas afeta a listagem de pedidos em produção).
-- ~~Naming divergente `MERCADOPAGO_*` vs `MERCADO_PAGO_*`~~ — resolvido,
-  renomeado para `MERCADO_PAGO_ACCESS_TOKEN`/`MERCADO_PAGO_PUBLIC_KEY`.
-- **App Lavador**: fluxo completo de registro com escolha de perfil
-  (Moto/Carro/Loja) ainda não existe no app real — só login. O preview
-  HTML já modela esse fluxo (`#escolha-perfil` → `#cadastro-loja`); o
-  app Flutter, não.
-- **`admin-web` real** (Next.js) continua quase vazio — só landing
-  page. Commits que pareciam ser progresso do painel admin editavam
-  `apps/preview/preview_admin.html` (mockup estático), não o app real.
-- **Testes e2e**: nenhum configurado em nenhum pacote.
-- **Deploy AWS**: só existe o documento de arquitetura, sem
-  infraestrutura real.
+> Seção limpa em 2026-08-15 (tarde) — a maioria dos itens listados
+> aqui em versões anteriores deste documento (incidente do GitHub
+> Actions de 06/ago, mismatch de paginação em `GET /orders`, app
+> Lavador sem escolha de perfil, `admin-web` "quase vazio", deploy só
+> documentado sem infra real) foi resolvida em rodadas posteriores e
+> ficou desatualizada no arquivo. O que segue é o que **realmente**
+> continua em aberto:
+
+- **Testes e2e automatizados**: nenhum configurado em nenhum pacote.
+  `docs/E2E_CHECKLIST.md` cobre o fluxo crítico manualmente (curl/`.http`
+  contra o Docker real), e esta sessão criou vários scripts Node
+  ad-hoc de verificação ao vivo (não versionados, ficam no scratchpad),
+  mas não há suite automatizada rodando em CI.
+- **`GET /orders/available` e outras rotas em array puro**: convivem
+  três convenções de paginação diferentes no backend (cursor
+  `{items,nextCursor}`, array puro, admin `{data,total,page,limit,totalPages}`)
+  — funciona porque cada repositório Dart foi checado contra o shape
+  real, mas é uma inconsistência de API que vale unificar se o backend
+  crescer mais.
+- **Fly Postgres é "Unmanaged"**: o próprio `flyctl` avisa nesse modo
+  ("users are responsible for operations, management, and disaster
+  recovery") — sem backup automático configurado. Existe `flyctl mpg`
+  (Managed Postgres) como alternativa paga, não usada aqui.
+- **`docs/DEPLOY.md`** documenta o deploy real no Fly.io (ver item 19
+  da lista de rodadas abaixo) — o documento de arquitetura AWS antigo,
+  se ainda existir em algum lugar do repo, está desatualizado frente a
+  essa decisão real de infra.
 
 ## Fluxo completo de pedido (backend) — status real
 

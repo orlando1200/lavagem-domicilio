@@ -1,5 +1,12 @@
 # Fase 9 - Arquitetura de Producao AWS (Lavagem a Domicilio / GIUCAR)
 
+> **Desatualizado (2026-08-15)**: este documento descreve um plano de
+> arquitetura AWS que nunca chegou a ser implementado. A infraestrutura
+> de produção real está no Fly.io — ver `docs/DEPLOY.md` (apps
+> `giucar-api`, `giucar-admin`, `giucar-db`, deployadas e verificadas
+> ao vivo). Mantido aqui só como referência histórica de decisões de
+> arquitetura consideradas na época.
+
 ## Visao geral
 
 Arquitetura serverless-containers, otimizada para custo previsivel e baixa
