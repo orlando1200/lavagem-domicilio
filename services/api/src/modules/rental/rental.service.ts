@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, RentalStatus } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 import {
@@ -83,11 +83,60 @@ export class RentalService {
       where: { id },
       data: {
         driverId: dto.driverId,
+        ...(dto.weeklyRate !== undefined ? { weeklyRate: dto.weeklyRate } : {}),
         ...(rental.status === RentalStatus.requested
           ? { status: RentalStatus.active, startedAt: new Date() }
           : {}),
       },
       include: RENTAL_INCLUDE,
+    });
+  }
+
+  /**
+   * Autoservico do lavador: solicita um aluguel de moto sem definir o
+   * valor (nao existe tabela de planos/precos no schema — o admin
+   * confirma o weeklyRate real ao atribuir um veiculo/lavador via
+   * `assignDriverAsAdmin`). Um lavador so pode ter uma solicitacao
+   * ativa por vez.
+   */
+  async requestRental(userId: string) {
+    const existing = await this.prisma.rental.findFirst({
+      where: { userId, status: { in: [RentalStatus.requested, RentalStatus.active] } },
+    });
+    if (existing) {
+      throw new ConflictException(
+        'Voce ja tem uma locacao de moto em andamento (solicitada ou ativa)',
+      );
+    }
+
+    return this.prisma.rental.create({
+      data: {
+        userId,
+        weeklyRate: 0,
+        status: RentalStatus.requested,
+      },
+      include: RENTAL_INCLUDE,
+    });
+  }
+
+  /**
+   * Retorna a locacao mais relevante do lavador: prioriza uma em
+   * andamento (requested/active) e cai para a mais recente (encerrada
+   * ou cancelada) quando nao ha nenhuma em andamento. `null` quando o
+   * lavador nunca solicitou nenhuma.
+   */
+  async getMyRental(userId: string) {
+    const ongoing = await this.prisma.rental.findFirst({
+      where: { userId, status: { in: [RentalStatus.requested, RentalStatus.active] } },
+      include: RENTAL_INCLUDE,
+      orderBy: { createdAt: 'desc' },
+    });
+    if (ongoing) return ongoing;
+
+    return this.prisma.rental.findFirst({
+      where: { userId },
+      include: RENTAL_INCLUDE,
+      orderBy: { createdAt: 'desc' },
     });
   }
 

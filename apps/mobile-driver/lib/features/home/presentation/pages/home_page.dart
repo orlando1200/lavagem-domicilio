@@ -676,7 +676,7 @@ class _ToolsSection extends StatelessWidget {
                 icon: Icons.two_wheeler_rounded,
                 label: 'Aluguel de moto',
                 sub: 'Mobilidade pro dia',
-                onTap: () {},
+                onTap: () => context.push('/rental'),
               ),
             ),
           ],

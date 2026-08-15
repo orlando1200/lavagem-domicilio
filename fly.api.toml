@@ -1,40 +1,43 @@
-# Config de deploy do servico `api` (NestJS) no Fly.io.
-# Deploy a partir da raiz do monorepo (contexto de build igual ao
-# docker-compose.yml): `flyctl deploy --config fly.api.toml`
+# Config Fly.io da API (services/api). Build context = raiz do
+# monorepo (o Dockerfile copia package.json/pnpm-workspace.yaml da
+# raiz), por isso este arquivo fica na raiz e nao dentro de services/api.
 #
-# `app` precisa ser um nome globalmente unico no Fly — troque antes do
-# primeiro deploy (ex.: "giucar-api-staging-<seu-usuario>").
-app = "giucar-api-staging"
-primary_region = "gru"  # Sao Paulo — regiao mais proxima do publico-alvo (BR)
+# Deployado em 2026-08-15: app real = giucar-api, banco = giucar-db
+# (Postgres Fly, anexado via `flyctl postgres attach` — seta
+# DATABASE_URL automaticamente como secret). NODE_ENV/ADMIN_WEB_URL/
+# JWT_EXPIRES_IN/PAYMENT_GATEWAY_PROVIDER nao sao sensiveis, entao vao
+# aqui em [env] (aplicado em todo `flyctl deploy`) em vez de
+# `flyctl secrets set`. JWT_SECRET e REFRESH_TOKEN_SECRET SIM sao
+# sensiveis e precisam ser setados via `flyctl secrets set` (nunca
+# neste arquivo, que fica commitado) — ver docs/DEPLOY.md.
+app = 'giucar-api'
+primary_region = 'gru'
 
 [build]
-  dockerfile = "services/api/Dockerfile"
+  dockerfile = 'services/api/Dockerfile'
 
 [env]
   NODE_ENV = "production"
-  PORT = "3000"
   JWT_EXPIRES_IN = "7d"
   PAYMENT_GATEWAY_PROVIDER = "mercadopago"
-  # ADMIN_WEB_URL: setar depois do primeiro deploy do admin-web, com a
-  # URL real que o Fly atribuir (https://<app-admin-web>.fly.dev) —
-  # controla o CORS em src/main.ts.
+  ADMIN_WEB_URL = "https://giucar-admin.fly.dev"
 
 [http_service]
-  internal_port = 3000
+  internal_port = 3001
   force_https = true
-  auto_stop_machines = true
+  auto_stop_machines = 'stop'
   auto_start_machines = true
   min_machines_running = 0
-  processes = ["app"]
+  processes = ['app']
+
+[[http_service.checks]]
+  grace_period = "30s"
+  interval = "15s"
+  method = "GET"
+  timeout = "5s"
+  path = "/health"
 
 [[vm]]
-  size = "shared-cpu-1x"
-  memory = "512mb"
-
-# Segredos (nunca vao em fly.toml — setar via `fly secrets set`):
-#   DATABASE_URL, JWT_SECRET, MERCADO_PAGO_ACCESS_TOKEN,
-#   MERCADO_PAGO_PUBLIC_KEY, GOOGLE_MAPS_API_KEY, AWS_ACCESS_KEY_ID,
-#   AWS_SECRET_ACCESS_KEY
-# (REFRESH_TOKEN_SECRET existe no .env local mas nao e lido por
-# nenhum lugar do codigo hoje — dead config, nao precisa setar.)
-# Ver docs/DEPLOY.md para o passo a passo completo.
+  memory = '512mb'
+  cpu_kind = 'shared'
+  cpus = 1

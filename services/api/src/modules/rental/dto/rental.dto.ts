@@ -19,6 +19,18 @@ export class AssignRentalDriverDto {
   @ApiProperty({ description: 'userId do DriverProfile a atribuir' })
   @IsUUID()
   driverId: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Confirma/renegocia o valor semanal no momento da aprovacao. ' +
+      'Solicitacoes de autoservico (POST /rentals/me/request) nascem ' +
+      'com weeklyRate = 0 ate o admin definir o valor real aqui.',
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @IsPositive()
+  weeklyRate?: number;
 }
 
 export class UpdateRentalStatusDto {

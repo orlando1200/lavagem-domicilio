@@ -1,25 +1,20 @@
 # Config de deploy do `admin-web` (Next.js) no Fly.io.
 # Deploy a partir da raiz do monorepo: `flyctl deploy --config fly.admin-web.toml`
 #
-# `app` precisa ser globalmente unico — troque antes do primeiro deploy.
-app = "giucar-admin-web-staging"
+# Deployado em 2026-08-15: app real = giucar-admin, api real = giucar-api.
+app = "giucar-admin"
 primary_region = "gru"
 
 [build]
   dockerfile = "apps/admin-web/Dockerfile"
 
-  # API_URL e um build ARG (embutido no bundle do client em build time
-  # pelo Next.js `env` config, nao um env var de runtime) — precisa da
-  # URL real e publica da api ja deployada. Rode o deploy do fly.api.toml
-  # primeiro, pegue a URL (https://<app-api>.fly.dev/api/v1) e troque
-  # aqui antes do primeiro deploy do admin-web.
   [build.args]
-    API_URL = "https://giucar-api-staging.fly.dev/api/v1"
+    API_URL = "https://giucar-api.fly.dev/api/v1"
 
 [env]
   NODE_ENV = "production"
   PORT = "3003"
-  API_URL = "https://giucar-api-staging.fly.dev/api/v1"
+  API_URL = "https://giucar-api.fly.dev/api/v1"
 
 [http_service]
   internal_port = 3003

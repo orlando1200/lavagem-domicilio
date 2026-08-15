@@ -272,6 +272,16 @@ para onde o arquivo já está hospedado.
 - `POST /document-verification/me` — `{ docType, fileUrl }`
 - `GET /document-verification/me` — lista os próprios documentos enviados
 
+## Rental (`/rentals/me`) — LAVADOR
+
+Autoservico de aluguel de moto. Sem tabela de planos/precos no schema
+— a solicitacao nasce sem valor definido (`weeklyRate = 0`, que
+significa "a definir", nunca gratuito de fato); o admin confirma o
+valor real ao aprovar via `PATCH /admin/rentals/:id/assign-driver`.
+
+- `POST /rentals/me/request` — solicita um aluguel (status `requested`, `weeklyRate: 0`). 409 se já houver uma locação `requested`/`active` em andamento.
+- `GET /rentals/me` — locação atual/mais recente do lavador logado. Corpo vazio (200, sem conteúdo) quando nunca solicitou nenhuma — mesma convenção de `GET /orders/mine/active`.
+
 **Importante**: aprovar documentos não ativa o lavador automaticamente
 — isso é uma ação manual e separada do admin (`PATCH
 /admin/driver-profiles/:userId/status {status:"active"}`). Um perfil
@@ -332,7 +342,7 @@ Todos protegidos por `JwtAuthGuard` + `RolesGuard` +
 | Zonas | `POST /admin/zones`, `GET /admin/zones`, `GET /admin/zones/:id`, `PATCH /admin/zones/:id`, `DELETE /admin/zones/:id` (desativa) |
 | Suporte | `GET /admin/support/tickets`, `GET /admin/support/tickets/:id`, `PATCH /admin/support/tickets/:id/status` |
 | Kit Inicial | `POST /admin/starter-kits`, `GET /admin/starter-kits`, `GET /admin/starter-kits/:washerId`, `PATCH /admin/starter-kits/:washerId/status` |
-| Aluguel de Moto | `POST /admin/rentals`, `GET /admin/rentals`, `GET /admin/rentals/:id`, `PATCH /admin/rentals/:id/assign-driver`, `PATCH /admin/rentals/:id/status` |
+| Aluguel de Moto | `POST /admin/rentals`, `GET /admin/rentals`, `GET /admin/rentals/:id`, `PATCH /admin/rentals/:id/assign-driver` (aceita `weeklyRate` opcional pra confirmar o valor de solicitações de autoserviço, ver `/rentals/me` acima), `PATCH /admin/rentals/:id/status` |
 | Fidelidade | `GET /admin/loyalty/report` (agregado: concedido/resgatado/em aberto/expirado + top usuários por saldo), `POST /admin/loyalty/orders/:orderId/grant`, `POST /admin/loyalty/expire-overdue` |
 | Leilões | `GET /admin/auctions`, `GET /admin/auctions/:id`, `PATCH /admin/auctions/:id/cancel`, `POST /admin/auctions/expire-overdue` |
 | Entregas | `POST /admin/deliveries`, `GET /admin/deliveries` |

@@ -1,107 +1,63 @@
-# Deploy de Staging — Fly.io
+# Deploy — Fly.io
 
-Passo a passo pra colocar `api` + `admin-web` + Postgres no ar num
-ambiente de staging real. `flyctl` já está instalado nesta máquina
-(`winget install Fly-io.flyctl`) — os passos abaixo com `[VOCÊ]`
-precisam ser feitos por você (criação de conta, login, e qualquer
-coisa que crie recurso cobrável); os demais podem ser rodados comigo.
+Estado real em 2026-08-15: `api` + `admin-web` + Postgres já estão no
+ar. `flyctl` autenticado nesta máquina como `orlando.narcizo.07@gmail.com`.
 
-## 0. Pré-requisitos — `[VOCÊ]`
+| App Fly | Serviço | URL |
+|---|---|---|
+| `giucar-db` | Postgres (1 nó, shared-cpu-1x, 1GB) | interno (`giucar-db.flycast`) |
+| `giucar-api` | `services/api` (`fly.api.toml`) | https://giucar-api.fly.dev |
+| `giucar-admin` | `apps/admin-web` (`fly.admin-web.toml`) | https://giucar-admin.fly.dev |
 
-1. Crie uma conta em <https://fly.io> (pede cartão de crédito mesmo no
-   free tier — Fly cobra por uso além de uma cota grátis pequena).
-2. Autentique o CLI local:
-   ```bash
-   flyctl auth login
-   ```
-   Abre o browser pra login/signup. Depois disso o token fica salvo
-   localmente (`~/.fly/config.yml`) e todos os comandos `flyctl`
-   seguintes funcionam sem pedir login de novo.
+(Existe também um app `lavagem-domicilio`, criado à parte durante um
+teste manual, sem uso — pode ser removido com `flyctl apps destroy
+lavagem-domicilio` quando quiser.)
 
-## 1. Banco de dados (Postgres)
+## O que já está feito
 
-Fly Postgres roda como uma VM Fly normal (não é totalmente gerenciado
-tipo RDS, mas funciona bem pra staging):
+1. **Postgres criado e anexado** — `flyctl postgres attach giucar-db
+   --app giucar-api` já setou `DATABASE_URL` como secret automaticamente.
+2. **`api` deployada** — `flyctl deploy --config fly.api.toml`.
+   Migrations rodam sozinhas no boot (`CMD` do Dockerfile já faz
+   `prisma migrate deploy && node dist/main.js`). `/health` responde
+   200.
+3. **`admin-web` deployada** — `flyctl deploy --config
+   fly.admin-web.toml`. `/login` responde 200.
+4. **Admin de bootstrap criado** — `admin@giucar.com.br` /
+   `Senha123!` (via `flyctl ssh console -a giucar-api` + Prisma direto
+   na máquina — mesmo padrão de reset de senha usado localmente nesta
+   sessão). **Troque essa senha depois do passo 5 abaixo.**
+5. **Configs não-sensíveis** (`NODE_ENV`, `JWT_EXPIRES_IN`,
+   `PAYMENT_GATEWAY_PROVIDER`, `ADMIN_WEB_URL`) já estão em `[env]`
+   dentro de `fly.api.toml` — aplicadas a cada `flyctl deploy`, sem
+   precisar de `flyctl secrets set`.
 
-```bash
-flyctl postgres create --name giucar-db-staging --region gru --vm-size shared-cpu-1x --volume-size 1
-```
+## Pendente — `[VOCÊ]`
 
-Guarda a `DATABASE_URL` que o comando imprime no final — vai precisar
-dela no passo 3.
-
-## 2. Ajustar nomes únicos nos `fly.toml`
-
-`fly.api.toml` e `fly.admin-web.toml` (raiz do repo) têm `app =
-"giucar-api-staging"` / `"giucar-admin-web-staging"` — nomes de app são
-globalmente únicos no Fly. Se já estiverem em uso por outra conta,
-troque pra algo tipo `giucar-api-staging-<seu-usuario>` nos dois
-arquivos (e no `API_URL`/`build.args.API_URL` de
-`fly.admin-web.toml`, que referencia o nome do app da api).
-
-## 3. Deploy da `api`
+**`flyctl secrets set` é uma ação que o modo automático desta sessão
+bloqueia pra mim** (mesmo pra valores não sensíveis) — os itens abaixo
+só podem ser feitos rodando o comando vocë mesmo:
 
 ```bash
-flyctl launch --config fly.api.toml --no-deploy   # cria o app no Fly sem deployar ainda
-flyctl secrets set --config fly.api.toml \
-  DATABASE_URL="<url do passo 1>" \
-  JWT_SECRET="$(openssl rand -hex 32)" \
-  MERCADO_PAGO_ACCESS_TOKEN="" \
-  MERCADO_PAGO_PUBLIC_KEY="" \
-  GOOGLE_MAPS_API_KEY=""
-flyctl deploy --config fly.api.toml
+JWT_SECRET=$(node -e "console.log(require('crypto').randomBytes(48).toString('hex'))")
+REFRESH_SECRET=$(node -e "console.log(require('crypto').randomBytes(48).toString('hex'))")
+flyctl secrets set --app giucar-api \
+  JWT_SECRET="$JWT_SECRET" \
+  REFRESH_TOKEN_SECRET="$REFRESH_SECRET"
 ```
 
-Sem as chaves do Mercado Pago/Google Maps, a API sobe em modo mock
-(mesmo comportamento do Docker Compose local) — dá pra testar tudo
-antes de ter as chaves reais (ver `docs/PROGRESSO.md`, seções 6 e a
-tarefa de sandbox do Mercado Pago/Google Maps).
+**Isso é urgente, não só "pendente"**: sem `JWT_SECRET` setado, a API
+cai no fallback hardcoded do código-fonte
+(`local-jwt-secret-change-me`, público no repo) — qualquer um que leia
+o código pode forjar um token de ADMIN válido contra a API em
+produção. Depois de rodar o comando acima (dispara redeploy
+automático), troque também a senha do admin de bootstrap.
 
-Depois do deploy, aplique as migrations (o `Dockerfile` já roda
-`prisma migrate deploy` automaticamente no boot do container — não
-precisa de passo manual, mas dá pra confirmar com):
-```bash
-flyctl logs --config fly.api.toml
-```
+Chaves de sandbox reais (Mercado Pago, Google Maps) continuam opcionais
+— sem elas a API roda em modo mock, igual ao Docker Compose local (ver
+`docs/PROGRESSO.md`).
 
-Anote a URL pública: `https://<app-da-api>.fly.dev`.
-
-## 4. Deploy do `admin-web`
-
-Antes de deployar, edite `fly.admin-web.toml`: troque
-`build.args.API_URL` e `env.API_URL` pra
-`https://<app-da-api-do-passo-3>.fly.dev/api/v1` (a URL real, não o
-placeholder).
-
-```bash
-flyctl launch --config fly.admin-web.toml --no-deploy
-flyctl deploy --config fly.admin-web.toml
-```
-
-## 5. Fechar o CORS
-
-Volta na `api` e seta `ADMIN_WEB_URL` com a URL real do admin-web pra
-travar o CORS (hoje só libera `localhost:3003` por padrão):
-```bash
-flyctl secrets set --config fly.api.toml ADMIN_WEB_URL="https://<app-do-admin-web>.fly.dev"
-```
-Isso reinicia a `api` automaticamente com a env var nova.
-
-## 6. Criar o primeiro admin
-
-Igual foi feito localmente nesta sessão: `POST /auth/register` só
-aceita `CLIENTE`/`LAVADOR` (correção de segurança de 2026-08-10 —
-antes disso dava pra virar admin sem autenticação). Pra criar o
-primeiro admin em staging, conecte no Postgres do Fly e rode um
-`UPDATE users SET role = 'ADMIN' WHERE email = '...'` depois de
-registrar um usuário normal, ou promova via `PATCH
-/admin/users/:id/role` se já existir outro admin.
-
-```bash
-flyctl postgres connect -a giucar-db-staging
-```
-
-## 7. Deploy automático (CI/CD)
+## Deploy automático (CI/CD)
 
 `.github/workflows/deploy-staging.yml` já está pronto — dispara em
 todo push a `main`, faz `flyctl deploy` da api e do admin-web. **Só
@@ -116,10 +72,17 @@ funciona depois que você criar o secret no GitHub**:
 Sem esse secret, o workflow existe mas falha logo no primeiro passo —
 não deploya nada sozinho até você criar o secret de propósito.
 
+## Redeploy manual (mudou código ou `fly.*.toml`)
+
+```bash
+flyctl deploy --config fly.api.toml
+flyctl deploy --config fly.admin-web.toml
+```
+
 ## Custos
 
 Fly cobra por VM ativa (mesmo `shared-cpu-1x`/512MB tem custo pequeno
-por hora) + Postgres (outra VM). `auto_stop_machines = true` nos
-`fly.toml` ajuda (para as máquinas quando sem tráfego), mas confira o
-dashboard Fly (<https://fly.io/dashboard>) periodicamente pra não levar
-susto na fatura — não há free tier ilimitado.
+por hora) + Postgres (outra VM). `auto_stop_machines` nos `fly.toml`
+ajuda (para as máquinas quando sem tráfego), mas confira o dashboard
+Fly (<https://fly.io/dashboard>) periodicamente pra não levar susto na
+fatura — não há free tier ilimitado.
