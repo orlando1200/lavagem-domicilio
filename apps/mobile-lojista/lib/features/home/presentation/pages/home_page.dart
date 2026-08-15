@@ -11,7 +11,6 @@ import '../../../orders/data/models/store_order_model.dart';
 import '../../../orders/orders_provider.dart';
 import '../../../payouts/data/models/store_payout_model.dart';
 import '../../../payouts/payouts_provider.dart';
-import '../../../products/data/models/store_product.dart';
 import '../../../products/products_provider.dart';
 
 /// Home do Portal do Lojista: saldo a receber, metricas da loja e
