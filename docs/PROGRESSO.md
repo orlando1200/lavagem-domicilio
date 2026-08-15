@@ -773,3 +773,20 @@ Ordem sugerida, por dependência e impacto (não por facilidade):
     `storeOrdersProvider`/`GET /stores/:id/orders` já existente e já
     validado ao vivo nesta sessão — sem necessidade de novo endpoint
     nem nova verificação ao vivo.
+16. **mobile-client — tela real de "GIUCAR Points" (Engajamento)**. Os
+    3 pontos de entrada já existentes na home (card de destaque com
+    saldo/sequência/economia reais, ação rápida "GIUCAR Points", menu
+    do perfil "Engajamento e recompensas") todos levavam pra
+    `/engagement`, que continuava sendo `PlaceholderPage` ("Em breve")
+    — um link quebrado escondido atrás de uma feature que já mostrava
+    dado real. `EngagementPage` nova: saldo detalhado (reaproveita
+    `engagementProvider`/`GET /loyalty/balance`, já existente) +
+    histórico cronológico unificado de concessões e resgates (`GET
+    /loyalty/history`, endpoint que já existia no backend mas nunca
+    tinha consumidor no client — novo `fetchHistory()` em
+    `LoyaltyRepository` + `LoyaltyHistoryEntry` model).
+
+    Verificação: `flutter analyze` limpo, e ao vivo
+    (`engagement-check.mjs`, 13 asserções: paga um pedido → confirma
+    saldo/concessão → resgata pontos → confirma resgate aparece no
+    histórico) contra o backend real.

@@ -17,6 +17,7 @@ import 'features/shop/presentation/pages/checkout_page.dart';
 import 'features/auctions/presentation/pages/auctions_list_page.dart';
 import 'features/auctions/presentation/pages/create_auction_page.dart';
 import 'features/auctions/presentation/pages/auction_detail_page.dart';
+import 'features/engagement/presentation/pages/engagement_page.dart';
 import 'features/vehicles/presentation/pages/add_vehicle_page.dart';
 import 'features/vehicles/presentation/pages/vehicles_page.dart';
 
@@ -133,7 +134,7 @@ final GoRouter _router = GoRouter(
     ),
     GoRoute(
       path: '/engagement',
-      builder: (context, state) => const PlaceholderPage(title: 'Engajamento'),
+      builder: (context, state) => const EngagementPage(),
     ),
     GoRoute(
       path: '/quote',
