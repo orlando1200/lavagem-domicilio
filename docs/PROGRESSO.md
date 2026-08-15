@@ -851,3 +851,49 @@ Ordem sugerida, por dependência e impacto (não por facilidade):
     bloco `[env]` do `fly.api.toml` (aplicado a cada `flyctl deploy`,
     sem precisar de secret) e já re-deployados por mim mesmo,
     fechando o CORS do admin-web sem depender do usuário.
+20. **Suite de testes e2e reais do backend + CI**. Até aqui os 78
+    testes existentes mockavam o Prisma inteiro — nenhum subia a
+    aplicação Nest real nem batia num Postgres de verdade; a única
+    validação HTTP real era manual (`docs/E2E_CHECKLIST.md`, scripts
+    Node ad-hoc do scratchpad da sessão, nunca versionados). Novo
+    `test/e2e/` (infra em `setup.ts`: `createTestApp()` sobe a app
+    real com os mesmos guards/pipes do `main.ts`, `resetDatabase()`
+    trunca todas as tabelas dinamicamente entre specs,
+    `registerAndLogin`/`createAdminAndLogin` reaproveitados por todos
+    os arquivos) com 11 testes em 4 specs: `auth`, `order-lifecycle`
+    (porta o roteiro completo do `E2E_CHECKLIST.md`, já provado ao
+    vivo em 2026-08-13), `marketplace` (porta `driver-shop-check.mjs`)
+    e `rental` (porta `rental-check.mjs`). Novo script
+    `pnpm --filter api test:e2e`; `jest.config.js` limpo (removidas 11
+    entradas mortas em `testPathIgnorePatterns`, apontando pra
+    diretórios que não existem mais desde a limpeza de módulos
+    corrompidos). CI (`ci.yml`) ganhou service container Postgres +
+    steps de migration/e2e no job `api`.
+
+    **Bug real de backend encontrado escrevendo o spec de
+    marketplace** (motivo pelo qual escrever e2e de verdade vale mais
+    que scripts manuais contra dado já semeado): `Store` nasce sempre
+    `status: pending` (default do schema), mas **nunca existiu
+    nenhum endpoint pra aprovar uma loja** — só `Product` e
+    `DriverProfile` tinham esse fluxo de aprovação. O catálogo só
+    lista produtos de lojas `active`
+    (`getCatalogForTarget`), e o checkout rejeita com 400 se a loja
+    não estiver `active` — ou seja, uma loja criada via `POST /stores`
+    de verdade **nunca conseguia vender nada**, mesmo com todos os
+    produtos aprovados pelo admin. Isso nunca apareceu antes porque
+    todo teste/verificação desta sessão usava a loja do seed
+    (`prisma/seed.ts`), que contorna o problema criando a loja já
+    `active` direto via Prisma, sem passar pelo endpoint real.
+    Corrigido: `PATCH /admin/marketplace/stores/:id/status` novo,
+    espelhando exatamente o padrão já existente de
+    `updateProductStatus`. **admin-web ainda não tem botão pra usar
+    esse endpoint novo** (só tem "Aprovar" na aba de produtos) —
+    marcado como tarefa separada, fora do escopo de "escrever testes".
+
+    Verificação: `pnpm --filter api lint/type-check/test/build`
+    continuam verdes (78 unitários). `pnpm --filter api test:e2e`
+    rodando contra uma base separada (`lavagem_domicilio_test`) no
+    Postgres local do `docker-compose.yml`: 11/11 passando, incluindo
+    o fluxo crítico completo de ponta a ponta (registro → veículo →
+    endereço → pedido → matching → aceite → máquina de estados →
+    pagamento mock → webhook → saldo de pontos GIUCAR).

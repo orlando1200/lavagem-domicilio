@@ -5,7 +5,11 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { MarketplaceService } from './marketplace.service';
-import { AdminListProductsDto, UpdateProductStatusDto } from './dto/marketplace.dto';
+import {
+  AdminListProductsDto,
+  UpdateProductStatusDto,
+  UpdateStoreStatusDto,
+} from './dto/marketplace.dto';
 
 @ApiTags('admin-marketplace')
 @ApiBearerAuth()
@@ -18,6 +22,11 @@ export class MarketplaceAdminController {
   @Get('stores')
   listStores() {
     return this.marketplaceService.listStoresForAdmin();
+  }
+
+  @Patch('stores/:id/status')
+  updateStoreStatus(@Param('id') id: string, @Body() dto: UpdateStoreStatusDto) {
+    return this.marketplaceService.updateStoreStatus(id, dto);
   }
 
   @Get('products')

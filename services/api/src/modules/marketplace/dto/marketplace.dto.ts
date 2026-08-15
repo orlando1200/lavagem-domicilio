@@ -14,7 +14,7 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
-import { CatalogTarget, ProductStatus } from '@prisma/client';
+import { CatalogTarget, ProductStatus, StoreStatus } from '@prisma/client';
 import { CursorPaginationDto } from '../../../common/dto/pagination.dto';
 
 export class CatalogQueryDto extends CursorPaginationDto {
@@ -40,6 +40,19 @@ export class UpdateProductStatusDto {
   @IsOptional()
   @IsString()
   rejectionReason?: string;
+}
+
+/**
+ * Store nasce sempre `pending` (`Store.status`, schema.prisma) — sem
+ * este endpoint nenhuma loja criada via `POST /stores` conseguia
+ * vender de verdade, mesmo com produtos ja aprovados (o catalogo so
+ * lista produtos de lojas `active`, ver `getCatalogForTarget`). So o
+ * seed contornava isso, criando a loja `active` direto via Prisma.
+ */
+export class UpdateStoreStatusDto {
+  @ApiProperty({ enum: StoreStatus })
+  @IsEnum(StoreStatus)
+  status!: StoreStatus;
 }
 
 export class AdminListProductsDto {

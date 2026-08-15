@@ -335,7 +335,7 @@ Todos protegidos por `JwtAuthGuard` + `RolesGuard` +
 | Pedidos | `GET /admin/orders`, `GET /admin/orders/:id`, `PATCH /admin/orders/:id/assign-driver`, `PATCH /admin/orders/:id/status` |
 | Lavadores | `GET /admin/driver-profiles`, `GET /admin/driver-profiles/:userId`, `PATCH /admin/driver-profiles/:userId/status` |
 | Documentos | `GET /admin/document-verification`, `GET /admin/document-verification/:id`, `PATCH /admin/document-verification/:id/review` — aprova/rejeita; ativação do lavador é ação separada via `PATCH /admin/driver-profiles/:userId/status` |
-| Marketplace | `GET /admin/marketplace/stores`, `GET /admin/marketplace/products`, `PATCH /admin/marketplace/products/:id/status` |
+| Marketplace | `GET /admin/marketplace/stores`, `PATCH /admin/marketplace/stores/:id/status` (loja nasce `pending` — sem isso ela nunca vende, mesmo com produtos aprovados), `GET /admin/marketplace/products`, `PATCH /admin/marketplace/products/:id/status` |
 | Repasses | `POST /admin/payouts/washers`, `POST /admin/payouts/stores`, `GET /admin/payouts`, `GET /admin/payouts/:id`, `PATCH /admin/payouts/:id/status` |
 | Relatórios financeiros | `GET /admin/payments` (lista paginada), `GET /admin/payments/report` (agregado por status/método), `GET /admin/payments/export` (até 5000 linhas, sem paginação — base do CSV) |
 | Cupons | `POST /admin/coupons/campaigns`, `GET /admin/coupons/campaigns`, `PATCH /admin/coupons/campaigns/:id`, `POST /admin/coupons`, `GET /admin/coupons`, `GET /admin/coupons/:id`, `PATCH /admin/coupons/:id`, `DELETE /admin/coupons/:id` |

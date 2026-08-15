@@ -11,6 +11,7 @@ import {
   CatalogQueryDto,
   CheckoutDto,
   UpdateProductStatusDto,
+  UpdateStoreStatusDto,
 } from './dto/marketplace.dto';
 
 const CHECKOUT_ORDER_INCLUDE = {
@@ -271,6 +272,18 @@ export class MarketplaceService {
         _count: { select: { products: true } },
       },
       orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async updateStoreStatus(storeId: string, dto: UpdateStoreStatusDto) {
+    const store = await this.prisma.store.findUnique({ where: { id: storeId } });
+    if (!store) {
+      throw new NotFoundException('Loja nao encontrada');
+    }
+
+    return this.prisma.store.update({
+      where: { id: storeId },
+      data: { status: dto.status },
     });
   }
 

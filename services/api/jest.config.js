@@ -28,17 +28,9 @@ module.exports = {
   coverageDirectory: '../coverage',
   testPathIgnorePatterns: [
     '/node_modules/',
-    // Modulos com codigo-fonte corrompido/truncado. Ver docs/FASE9_CORRUPTED_MODULES.md
-    '<rootDir>/test/modules/analytics',
-    '<rootDir>/test/modules/compliance',
-    '<rootDir>/test/modules/dispatch',
-    '<rootDir>/test/modules/document-verification',
-    '<rootDir>/test/modules/face-check',
-    '<rootDir>/test/modules/rental',
-    '<rootDir>/test/modules/services-catalog',
-    '<rootDir>/test/modules/starter-kit',
-    '<rootDir>/test/modules/support',
-    '<rootDir>/test/modules/tracking',
-    '<rootDir>/test/modules/zones',
+    // Specs e2e (test/e2e/*.e2e-spec.ts) rodam via `test:e2e`
+    // (test/jest-e2e.json), contra um Postgres real — nao aqui, que
+    // roda os unitarios com Prisma mockado.
+    '<rootDir>/test/e2e',
   ],
 };

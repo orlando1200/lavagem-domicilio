@@ -251,7 +251,10 @@ curl -s -X POST "$BASE/payments/webhook" \
   -d "{\"externalRef\":\"$EXTERNAL_REF\",\"status\":\"approved\"}" | jq '.status'
 ```
 
-**Esperado**: `200`, `status: "paid"`. Dispara, best-effort, a
+**Esperado**: `201` (Nest usa 201 como default de `@Post` sem
+`@HttpCode` — o `curl -s` sem `-w` não mostra o status, então essa
+imprecisão só foi pega ao automatizar este passo em
+`test/e2e/order-lifecycle.e2e-spec.ts`), `status: "paid"`. Dispara, best-effort, a
 concessão de pontos GIUCAR (5% do valor pago).
 
 ## 13. `GET /loyalty/balance`
