@@ -7,6 +7,7 @@ import 'features/auth/presentation/pages/register_page.dart';
 import 'features/auth/presentation/providers/auth_provider.dart';
 import 'features/auth/presentation/providers/auth_state.dart';
 import 'features/home/presentation/pages/home_page.dart';
+import 'features/orders/presentation/pages/orders_list_page.dart';
 import 'features/plans/presentation/pages/plan_page.dart';
 import 'features/products/data/models/store_product.dart';
 import 'features/products/presentation/pages/product_edit_page.dart';
@@ -81,6 +82,10 @@ final _routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => ProductEditPage(
           product: state.extra as StoreProduct,
         ),
+      ),
+      GoRoute(
+        path: '/orders',
+        builder: (context, state) => const OrdersListPage(),
       ),
       GoRoute(
         path: '/plan',

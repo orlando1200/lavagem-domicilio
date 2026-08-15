@@ -35,8 +35,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         context.push('/products');
         break;
       case 2:
-        // Pedidos: sem tela dedicada no escopo atual; mantem na home.
-        setState(() => _currentIndex = 0);
+        context.push('/orders');
         break;
       case 3:
         setState(() => _currentIndex = 3);

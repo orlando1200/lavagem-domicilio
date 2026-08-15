@@ -766,3 +766,10 @@ Ordem sugerida, por dependência e impacto (não por facilidade):
     → confirma que aparece `pending` em `GET /orders` → `POST
     /auctions` com esse pedido → 201) confirmando o loop de ponta a
     ponta contra o backend real.
+15. **mobile-lojista — tela dedicada de Pedidos**. A aba "Pedidos" da
+    navegação inferior caía de volta pra home (comentário no código:
+    "sem tela dedicada no escopo atual"). `OrdersListPage` nova
+    (mesmo padrão de `products_list_page.dart`), reaproveitando
+    `storeOrdersProvider`/`GET /stores/:id/orders` já existente e já
+    validado ao vivo nesta sessão — sem necessidade de novo endpoint
+    nem nova verificação ao vivo.
