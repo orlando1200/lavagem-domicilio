@@ -1,5 +1,11 @@
 import '../../../../core/constants/app_constants.dart';
 
+double _parseDouble(dynamic value, [double fallback = 0]) {
+  if (value == null) return fallback;
+  if (value is num) return value.toDouble();
+  return double.tryParse(value.toString()) ?? fallback;
+}
+
 /// Modelo de produto do lojista, espelhando o retorno do backend
 /// (GET/POST /stores/:id/products).
 class StoreProduct {
@@ -28,7 +34,7 @@ class StoreProduct {
       id: json['id'] as String,
       name: json['name'] as String? ?? '',
       description: json['description'] as String?,
-      price: (json['price'] as num?)?.toDouble() ?? 0,
+      price: _parseDouble(json['price']),
       stockQuantity: (json['stockQuantity'] as num?)?.toInt() ?? 0,
       catalogTarget:
           _catalogTargetFromBackend(json['catalogTarget'] as String?),

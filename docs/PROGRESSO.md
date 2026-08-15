@@ -896,4 +896,36 @@ Ordem sugerida, por dependência e impacto (não por facilidade):
     Postgres local do `docker-compose.yml`: 11/11 passando, incluindo
     o fluxo crítico completo de ponta a ponta (registro → veículo →
     endereço → pedido → matching → aceite → máquina de estados →
-    pagamento mock → webhook → saldo de pontos GIUCAR).
+    pagamento mock → webhook → saldo de pontos GIUCAR). Confirmado ao
+    vivo no GitHub Actions também (run do commit `284bac0`, job `api`
+    verde de ponta a ponta com o service container novo).
+21. **Testes de modelo nos 3 apps Flutter — e 2 bugs reais de produção
+    encontrados e corrigidos**. Nenhum dos 3 apps tinha `test/` até
+    aqui. Adicionados testes de parsing (`fromJson`) pros models mais
+    expostos a dinheiro/Decimal em cada app (`OrderModel`/`ProductModel`
+    no `mobile-client`; `RentalModel`/`ProductModel` no `mobile-driver`;
+    `StoreProduct`/`StoreOrderModel` no `mobile-lojista`) — 21 testes
+    no total, todos passando (`flutter test test/` em cada app).
+
+    Escrever o teste de `OrderModel` revelou um bug real e severo:
+    `totalAmount: (json['totalAmount'] as num?)?.toDouble() ?? 0` —
+    mas `Order.totalAmount` é `Decimal` no schema, que o Prisma
+    serializa como **string** (`"80"`, não `80`). O cast direto
+    lançava `TypeError` em runtime pra **qualquer pedido real**
+    (`GET /orders`, `GET /orders/:id`, `POST /orders`) — o fluxo
+    "crítico" da sessão inteira, nunca pego porque nenhuma verificação
+    anterior rodou o parsing de verdade dentro do Flutter (só
+    `flutter analyze`, que não executa código, e scripts Node que
+    inspecionavam a resposta HTTP crua, sem passar pelo model). Mesmo
+    bug encontrado em `StoreProduct.price` (mobile-lojista) — mesma
+    causa raiz. Ambos corrigidos com o helper `_parseDouble` já usado
+    (corretamente) em todos os outros models money-sensitive do
+    projeto (`ProductModel`, `AuctionModel`, `StoreOrderModel` etc. já
+    tratavam isso certo — só esses dois passaram despercebidos).
+    Auditoria completa: todo uso de `as num` nos 3 apps foi conferido
+    contra o tipo real do campo no `schema.prisma` — os demais
+    (`stockQuantity`, `weightGrams`, `deadlineHours`, `LoyaltyPoint.amount`
+    etc.) são `Int` de verdade no schema, `as num?` neles está correto.
+
+    Verificação: `flutter test test/` limpo nos 3 apps (21/21),
+    `flutter analyze` sem novos erros/warnings em nenhum dos 3.

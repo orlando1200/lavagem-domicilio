@@ -1,3 +1,9 @@
+double _parseDouble(dynamic value, [double fallback = 0]) {
+  if (value == null) return fallback;
+  if (value is num) return value.toDouble();
+  return double.tryParse(value.toString()) ?? fallback;
+}
+
 /// Modelo de pedido (Order) espelhando o OrderResponseDto do backend
 /// (GET /orders, GET /orders/:id).
 class OrderModel {
@@ -23,7 +29,7 @@ class OrderModel {
     return OrderModel(
       id: json['id'] as String,
       status: json['status'] as String? ?? 'pending',
-      totalAmount: (json['totalAmount'] as num?)?.toDouble() ?? 0,
+      totalAmount: _parseDouble(json['totalAmount']),
       scheduledAt: json['scheduledAt'] != null
           ? DateTime.tryParse(json['scheduledAt'] as String)
           : null,
