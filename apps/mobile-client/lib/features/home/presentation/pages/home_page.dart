@@ -902,7 +902,7 @@ class _ProfileView extends StatelessWidget {
           _ProfileMenuItem(
             icon: Icons.edit,
             title: 'Editar Perfil',
-            onTap: () {},
+            onTap: () => context.push('/profile/edit'),
           ),
           _ProfileMenuItem(
             icon: Icons.security,

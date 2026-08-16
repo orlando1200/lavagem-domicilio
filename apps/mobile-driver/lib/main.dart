@@ -15,6 +15,7 @@ import 'features/shop/presentation/pages/product_detail_page.dart';
 import 'features/shop/presentation/pages/cart_page.dart';
 import 'features/shop/presentation/pages/checkout_page.dart';
 import 'features/rental/presentation/pages/rental_page.dart';
+import 'features/zones/presentation/pages/service_area_page.dart';
 
 void main() {
   runApp(const ProviderScope(child: GiucarDriverApp()));
@@ -101,6 +102,10 @@ final GoRouter _router = GoRouter(
     GoRoute(
       path: '/rental',
       builder: (context, state) => const RentalPage(),
+    ),
+    GoRoute(
+      path: '/service-area',
+      builder: (context, state) => const ServiceAreaPage(),
     ),
   ],
 );

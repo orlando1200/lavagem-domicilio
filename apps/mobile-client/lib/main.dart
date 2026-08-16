@@ -20,6 +20,7 @@ import 'features/auctions/presentation/pages/auction_detail_page.dart';
 import 'features/engagement/presentation/pages/engagement_page.dart';
 import 'features/vehicles/presentation/pages/add_vehicle_page.dart';
 import 'features/vehicles/presentation/pages/vehicles_page.dart';
+import 'features/profile/presentation/pages/edit_profile_page.dart';
 
 void main() {
   runApp(const ProviderScope(child: GiucarApp()));
@@ -139,6 +140,10 @@ final GoRouter _router = GoRouter(
     GoRoute(
       path: '/quote',
       builder: (context, state) => const NewOrderPage(),
+    ),
+    GoRoute(
+      path: '/profile/edit',
+      builder: (context, state) => const EditProfilePage(),
     ),
   ],
 );

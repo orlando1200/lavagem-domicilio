@@ -929,3 +929,36 @@ Ordem sugerida, por dependência e impacto (não por facilidade):
 
     Verificação: `flutter test test/` limpo nos 3 apps (21/21),
     `flutter analyze` sem novos erros/warnings em nenhum dos 3.
+22. **Últimos itens de "Ferramentas"/"Perfil" sem uso nas 3 apps**.
+    Auditoria de todo `onTap: () {}` remanescente nas 3 apps achou 6
+    itens. Dois eram construíveis com o que já existe no backend, sem
+    inventar dado novo: "Editar Perfil" no `mobile-client` (`PATCH
+    /users/me`, mesmo padrão já usado no `mobile-lojista` — página e
+    repositório novos, `refreshProfile()` novo no `authProvider`) e
+    "Área de atuação" no `mobile-driver` (zona de cobertura + raio de
+    atendimento — `DriverProfile.currentZoneId`/`serviceRadiusKm` já
+    existiam e já eram aceitos por `PATCH /driver-profiles/me`, só
+    nunca tinham tela; backend ganhou `GET /zones` novo — array puro
+    de zonas ativas, enxuto, pro lavador escolher por nome em vez de
+    colar um UUID).
+
+    Os outros 4 ("Alterar Senha" no `mobile-client` e no
+    `mobile-lojista`, "Minhas contas bancárias" e "Notificações" no
+    `mobile-driver`) ficaram deliberadamente de fora — não são "só
+    conectar", são decisões reais: não existe endpoint de troca de
+    senha em lugar nenhum do backend (precisa de design de verificação
+    de senha atual); não existe campo de dados bancários em
+    `DriverProfile`/`User` no schema (só `Store.bankInfo`, pra lojista
+    — adicionar exigiria migration + captura de dado financeiro
+    sensível, uma decisão que vale confirmar antes); não existe nenhum
+    sistema de notificação no backend (nem modelo, nem infra de push).
+
+    Verificação: backend `pnpm --filter api lint/type-check/test/
+    test:e2e/build` (78 unitários + 11 e2e, todos verdes — `GET /zones`
+    não quebrou nada). `flutter analyze --no-fatal-infos` limpo nos 2
+    apps tocados. Ao vivo (`docker compose up -d --build api`, script
+    `other-tasks-check.mjs`): `PATCH /users/me` reflete nome atualizado;
+    `GET /zones` retorna array puro incluindo zona recém-criada pelo
+    admin; `PATCH /driver-profiles/me` com `currentZoneId`+
+    `serviceRadiusKm` reflete corretamente em `GET /driver-profiles/me`
+    logo em seguida.

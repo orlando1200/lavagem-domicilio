@@ -263,6 +263,10 @@ carwash.
 - `PATCH /driver-profiles/me`
 - `PATCH /driver-profiles/me/availability` — `{ status: "active"|"inactive" }`, único par que o próprio lavador altera (demais status exigem admin)
 
+## Zones (`/zones`) — LAVADOR
+
+- `GET /zones` — array puro de zonas ativas (`{id,name,city,state}`, sem os dados administrativos de `GET /admin/zones`) — pro lavador escolher a própria "área de atuação" (`currentZoneId` em `PATCH /driver-profiles/me`).
+
 ## Document Verification (`/document-verification/me`) — LAVADOR
 
 Envio de documentos (CNH, CRLV, foto do veículo, etc) para aprovação

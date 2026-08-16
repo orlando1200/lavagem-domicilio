@@ -4,7 +4,8 @@ import '../../../core/api/api_client.dart';
 import '../../../core/api/api_exception.dart';
 import 'models/driver_profile_model.dart';
 
-final driverProfileRepositoryProvider = Provider<DriverProfileRepository>((ref) {
+final driverProfileRepositoryProvider =
+    Provider<DriverProfileRepository>((ref) {
   return DriverProfileRepository(ref.watch(dioProvider));
 });
 
@@ -19,7 +20,8 @@ class DriverProfileRepository {
   /// (404 — onboarding nunca feito), em vez de lancar excecao.
   Future<DriverProfileModel?> fetchMyProfile() async {
     try {
-      final response = await _dio.get<Map<String, dynamic>>('/driver-profiles/me');
+      final response =
+          await _dio.get<Map<String, dynamic>>('/driver-profiles/me');
       return DriverProfileModel.fromJson(response.data!);
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) return null;
@@ -50,7 +52,8 @@ class DriverProfileRepository {
   /// Ativa o modo "Loja de Carwash" (elegivel a leiloes de servico
   /// pesado): cria o perfil se ainda nao existir, ou atualiza um perfil
   /// existente (ex.: motorista de moto/carro que quer tambem virar loja).
-  Future<DriverProfileModel> activateCarwashShop({bool hasExistingProfile = false}) async {
+  Future<DriverProfileModel> activateCarwashShop(
+      {bool hasExistingProfile = false}) async {
     try {
       final response = hasExistingProfile
           ? await _dio.patch<Map<String, dynamic>>(
@@ -67,6 +70,26 @@ class DriverProfileRepository {
                 'allowedServices': ['HEAVY_SERVICE'],
               },
             );
+      return DriverProfileModel.fromJson(response.data!);
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// Atualiza a area de atuacao (zona de cobertura + raio de
+  /// atendimento em km).
+  Future<DriverProfileModel> updateArea({
+    String? currentZoneId,
+    double? serviceRadiusKm,
+  }) async {
+    try {
+      final response = await _dio.patch<Map<String, dynamic>>(
+        '/driver-profiles/me',
+        data: {
+          if (currentZoneId != null) 'currentZoneId': currentZoneId,
+          if (serviceRadiusKm != null) 'serviceRadiusKm': serviceRadiusKm,
+        },
+      );
       return DriverProfileModel.fromJson(response.data!);
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);

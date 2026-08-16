@@ -964,7 +964,7 @@ class _ProfileView extends StatelessWidget {
           _ProfileMenuItem(
             icon: Icons.location_on_outlined,
             title: 'Área de atuação',
-            onTap: () {},
+            onTap: () => context.push('/service-area'),
           ),
           _ProfileMenuItem(
             icon: Icons.notifications_outlined,

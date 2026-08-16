@@ -65,6 +65,20 @@ export class ZonesService {
     return this.findZoneOrThrow(id);
   }
 
+  /**
+   * Listagem enxuta pro lavador escolher a propria "area de atuacao"
+   * (`PATCH /driver-profiles/me` com `currentZoneId`) — so zonas
+   * ativas, sem os dados administrativos (`_count` etc.) da listagem
+   * do admin.
+   */
+  async listActiveZonesForDriver() {
+    return this.prisma.zone.findMany({
+      where: { isActive: true },
+      select: { id: true, name: true, city: true, state: true },
+      orderBy: [{ state: 'asc' }, { name: 'asc' }],
+    });
+  }
+
   async updateZone(id: string, dto: UpdateZoneDto) {
     await this.findZoneOrThrow(id);
 

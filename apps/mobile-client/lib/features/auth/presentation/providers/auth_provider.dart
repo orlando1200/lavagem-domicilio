@@ -41,4 +41,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
     await _repository.logout();
     state = const AuthState.unauthenticated();
   }
+
+  /// Recarrega os dados do usuario logado (ex.: apos editar o perfil).
+  Future<void> refreshProfile() async {
+    try {
+      final user = await _repository.fetchCurrentUser();
+      if (user != null) {
+        state = AuthState.authenticated(user);
+      }
+    } catch (_) {
+      // mantem o estado atual em caso de falha
+    }
+  }
 }
