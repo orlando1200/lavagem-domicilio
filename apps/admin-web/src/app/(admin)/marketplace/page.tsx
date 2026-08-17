@@ -27,7 +27,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { PaginationControls } from '@/components/admin/pagination-controls';
-import { listProducts, listStores, updateProductStatus } from '@/lib/api/marketplace';
+import { listProducts, listStores, updateProductStatus, updateStoreStatus } from '@/lib/api/marketplace';
 import { formatCurrencyBRL, formatDate } from '@/lib/format';
 import {
   productStatusLabel,
@@ -35,8 +35,9 @@ import {
   storeStatusLabel,
   storeStatusVariant,
   PRODUCT_STATUS_OPTIONS,
+  STORE_STATUS_OPTIONS,
 } from '@/lib/status-badge';
-import type { Product, ProductStatus } from '@/lib/types';
+import type { Product, ProductStatus, Store, StoreStatus } from '@/lib/types';
 
 export default function MarketplacePage() {
   return (
@@ -63,6 +64,7 @@ export default function MarketplacePage() {
 }
 
 function StoresTab() {
+  const [selectedStore, setSelectedStore] = useState<Store | null>(null);
   const { data, isLoading, isError } = useQuery({
     queryKey: ['admin', 'marketplace', 'stores'],
     queryFn: listStores,
@@ -91,7 +93,11 @@ function StoresTab() {
             </TableRow>
           ) : data?.length ? (
             data.map((store) => (
-              <TableRow key={store.id}>
+              <TableRow
+                key={store.id}
+                className="cursor-pointer"
+                onClick={() => setSelectedStore(store)}
+              >
                 <TableCell className="font-medium">{store.name}</TableCell>
                 <TableCell>{store.storeType === 'LAVADOR' ? 'Vende p/ lavador' : 'Vende p/ cliente'}</TableCell>
                 <TableCell>{store.logisticsPlan === 'INTEGRATED' ? 'Integrada' : 'Própria'}</TableCell>
@@ -117,7 +123,65 @@ function StoresTab() {
           )}
         </TableBody>
       </Table>
+
+      <StoreStatusDialog store={selectedStore} onClose={() => setSelectedStore(null)} />
     </div>
+  );
+}
+
+function StoreStatusDialog({ store, onClose }: { store: Store | null; onClose: () => void }) {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: (status: StoreStatus) => updateStoreStatus(store!.id, status),
+    onSuccess: () => {
+      toast.success('Status da loja atualizado.');
+      queryClient.invalidateQueries({ queryKey: ['admin', 'marketplace', 'stores'] });
+      onClose();
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message ?? 'Erro ao atualizar loja.');
+    },
+  });
+
+  return (
+    <Dialog open={!!store} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{store?.name}</DialogTitle>
+          <DialogDescription>
+            {store ? (store.storeType === 'LAVADOR' ? 'Vende p/ lavador' : 'Vende p/ cliente') : ''} · Status
+            atual:{' '}
+            {store && (
+              <Badge variant={storeStatusVariant(store.status)}>{storeStatusLabel(store.status)}</Badge>
+            )}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-2">
+          <Label>Novo status</Label>
+          <div className="flex flex-wrap gap-2">
+            {STORE_STATUS_OPTIONS.map((s) => (
+              <Button
+                key={s}
+                size="sm"
+                variant={store?.status === s ? 'default' : 'outline'}
+                disabled={mutation.isPending || store?.status === s}
+                onClick={() => mutation.mutate(s)}
+              >
+                {storeStatusLabel(s)}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Fechar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 

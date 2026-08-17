@@ -2,6 +2,13 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "admin-web-dev",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "admin-web", "dev"],
+      "port": 3003,
+      "cwd": "."
+    },
+    {
       "name": "mobile-client-web",
       "runtimeExecutable": "flutter",
       "runtimeArgs": [

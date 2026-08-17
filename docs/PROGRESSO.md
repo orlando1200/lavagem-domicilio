@@ -1022,3 +1022,57 @@ Ordem sugerida, por dependência e impacto (não por facilidade):
     pedido (`order_detail_page.dart`, id longo + preço sem `Expanded`).
     Verificação em dispositivo Android/iOS de verdade fica pendente do
     lado do usuário (sem SDK Android nesta máquina).
+24. **CI/CD de deploy real (Fly.io) + secrets de produção + botão de
+    aprovação de loja no admin-web**. O job "Deploy Staging (Fly.io)"
+    falhava (vermelho) em todo push desde sempre — não por bug de
+    código, e sim porque o secret `FLY_API_TOKEN` nunca tinha sido
+    criado no GitHub (os apps reais já estavam no ar, mas só por deploy
+    manual do usuário via `flyctl` local). `deploy-staging.yml` ganhou
+    um step "Check FLY_API_TOKEN" que detecta a ausência do secret e
+    pula o resto do job de propósito (skipped, não failure) via `if:`
+    nos steps seguintes — deploy automático continua funcionando
+    normalmente assim que o secret existir.
+
+    Configurar o secret revelou dois problemas reais, um atrás do
+    outro: o primeiro token colado pelo usuário estava **truncado**
+    (`flyctl tokens create deploy` imprime 600+ caracteres numa linha
+    só, fácil de cortar arrastando com o mouse no terminal — `flyctl
+    deploy` falhava em 8s com "token validation error", rápido demais
+    pra ser uma tentativa real de build). O segundo token, gerado certo
+    dessa vez, só tinha escopo pro app `giucar-api`
+    (`flyctl tokens create deploy --config fly.api.toml` limita a um
+    único app) — `Deploy api` passou mas `Deploy admin-web` falhou,
+    porque os dois jobs reaproveitam o mesmo secret. Resolvido com
+    `flyctl tokens create org`, token de escopo de organização inteira,
+    cobrindo os dois apps de uma vez. Confirmado ao vivo: releases reais
+    novas em `giucar-api` (v6) e `giucar-admin` (v2), ambos respondendo
+    200.
+
+    Aproveitando acesso real ao `flyctl` autenticado nesta máquina,
+    duas pendências de segurança/config documentadas em `docs/DEPLOY.md`
+    foram fechadas: `GOOGLE_MAPS_API_KEY` configurada como secret em
+    `giucar-api` (a chamada real à Distance Matrix API ainda falha,
+    porque o projeto Google Cloud não tem billing habilitado — isso
+    fica pro usuário decidir, é gasto real; o fallback haversine local
+    já cobre esse caso com segurança). `JWT_SECRET`/`REFRESH_TOKEN_SECRET`
+    já estavam configurados de uma rodada anterior (confirmado, não
+    precisou de ação).
+
+    Por fim, o gap documentado no item 20 acima ("admin-web ainda não
+    tem botão pra usar" `PATCH /admin/marketplace/stores/:id/status`)
+    foi fechado: aba "Lojas" do Marketplace ganhou o mesmo padrão de
+    diálogo já usado pra produtos — clicar na linha abre um diálogo com
+    o status atual e botões pros 4 status possíveis (`pending`/`active`/
+    `inactive`/`blocked`).
+
+    Verificação: `pnpm --filter admin-web lint/type-check` limpos (o
+    `build` local falha por um problema conhecido do Windows com
+    symlinks do Next.js standalone, não relacionado à mudança — CI roda
+    em Linux e não tem esse problema). Verificação visual real via
+    `pnpm --filter admin-web dev` + Browser pane, contra o Docker local:
+    criada uma loja nova de verdade via API (`POST /stores` como
+    `LAVADOR`, nasce `pending`, mesmo bug documentado no item 20),
+    aprovada pelo botão "Ativa" no diálogo — `PATCH .../status` 200,
+    lista recarrega sozinha e mostra "Ativa" na hora. CI real (GitHub
+    Actions) confirmado verde nos 6 jobs + os 2 jobs de deploy, todos
+    `success`.

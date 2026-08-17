@@ -165,6 +165,8 @@ export const PRODUCT_STATUS_OPTIONS: ProductStatus[] = [
 
 export const PAYOUT_STATUS_OPTIONS: PayoutStatus[] = ['pending', 'approved', 'paid', 'rejected'];
 
+export const STORE_STATUS_OPTIONS: StoreStatus[] = ['pending', 'active', 'inactive', 'blocked'];
+
 const COUPON_DISCOUNT_TYPE_LABEL: Record<CouponDiscountType, string> = {
   percent: 'Percentual',
   fixed: 'Valor fixo',
