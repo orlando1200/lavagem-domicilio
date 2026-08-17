@@ -2,9 +2,10 @@ name: Deploy Staging (Fly.io)
 
 # So dispara em push a main, e so faz algo se o secret FLY_API_TOKEN
 # existir no repo (Settings > Secrets and variables > Actions) — sem
-# ele, os jobs de deploy falham cedo e nada e publicado. Nao ligado
-# por padrao: precisa desse secret ser criado manualmente por quem tem
-# acesso a conta Fly.io (ver docs/DEPLOY.md).
+# ele, o step "Check FLY_API_TOKEN" pula o resto do job de proposito
+# (job fica verde/skipped, nao vermelho) e nada e publicado. Nao
+# ligado por padrao: precisa desse secret ser criado manualmente por
+# quem tem acesso a conta Fly.io (ver docs/DEPLOY.md).
 on:
   push:
     branches: [main]
@@ -22,10 +23,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Check FLY_API_TOKEN
+        id: check
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          if [ -z "$FLY_API_TOKEN" ]; then
+            echo "::warning::FLY_API_TOKEN nao configurado — deploy pulado (ver docs/DEPLOY.md)."
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Setup flyctl
+        if: steps.check.outputs.configured == 'true'
         uses: superfly/flyctl-actions/setup-flyctl@master
 
       - name: Deploy api
+        if: steps.check.outputs.configured == 'true'
         run: flyctl deploy --config fly.api.toml --remote-only
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
@@ -38,10 +53,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Check FLY_API_TOKEN
+        id: check
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          if [ -z "$FLY_API_TOKEN" ]; then
+            echo "::warning::FLY_API_TOKEN nao configurado — deploy pulado (ver docs/DEPLOY.md)."
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Setup flyctl
+        if: steps.check.outputs.configured == 'true'
         uses: superfly/flyctl-actions/setup-flyctl@master
 
       - name: Deploy admin-web
+        if: steps.check.outputs.configured == 'true'
         run: flyctl deploy --config fly.admin-web.toml --remote-only
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

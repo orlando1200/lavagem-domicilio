@@ -69,8 +69,10 @@ funciona depois que você criar o secret no GitHub**:
 2. No GitHub: Settings → Secrets and variables → Actions → New
    repository secret → nome `FLY_API_TOKEN`, valor o token gerado.
 
-Sem esse secret, o workflow existe mas falha logo no primeiro passo —
-não deploya nada sozinho até você criar o secret de propósito.
+Sem esse secret, o workflow existe mas pula o deploy de propósito (job
+fica verde/skipped, não vermelho — passo "Check FLY_API_TOKEN" detecta
+a ausência e sai cedo) — não deploya nada sozinho até você criar o
+secret.
 
 ## Redeploy manual (mudou código ou `fly.*.toml`)
 
