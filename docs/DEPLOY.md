@@ -19,10 +19,11 @@ ar. `flyctl` autenticado nesta máquina como `orlando.narcizo.07@gmail.com`.
    200.
 3. **`admin-web` deployada** — `flyctl deploy --config
    fly.admin-web.toml`. `/login` responde 200.
-4. **Admin de bootstrap criado** — `admin@giucar.com.br` /
-   `Senha123!` (via `flyctl ssh console -a giucar-api` + Prisma direto
-   na máquina — mesmo padrão de reset de senha usado localmente nesta
-   sessão). **Troque essa senha depois do passo 5 abaixo.**
+4. **Admin de bootstrap criado** — `admin@giucar.com.br` (via `flyctl
+   ssh console -a giucar-api` + Prisma direto na máquina — mesmo
+   padrão de reset de senha usado localmente nesta sessão). Senha
+   inicial trocada em 2026-08-17 (item 9 abaixo) — nunca fica em texto
+   puro neste documento; peça ao usuário se precisar.
 5. **Configs não-sensíveis** (`NODE_ENV`, `JWT_EXPIRES_IN`,
    `PAYMENT_GATEWAY_PROVIDER`, `ADMIN_WEB_URL`) já estão em `[env]`
    dentro de `fly.api.toml` — aplicadas a cada `flyctl deploy`, sem
@@ -30,9 +31,6 @@ ar. `flyctl` autenticado nesta máquina como `orlando.narcizo.07@gmail.com`.
 6. **`JWT_SECRET`/`REFRESH_TOKEN_SECRET` configurados** — confirmado
    em 2026-08-17 via `flyctl secrets list --app giucar-api` (ambos
    `Deployed`). A API não usa mais o fallback hardcoded do código-fonte.
-   **Ainda pendente `[VOCÊ]`**: trocar a senha do admin de bootstrap
-   (`admin@giucar.com.br` / `Senha123!`), já que ficou em texto puro
-   neste documento.
 7. **`GOOGLE_MAPS_API_KEY` configurada** (2026-08-17) — a chamada real
    à Distance Matrix API ainda retorna `REQUEST_DENIED` porque o
    projeto no Google Cloud não tem billing habilitado (isso envolve
@@ -57,6 +55,32 @@ ar. `flyctl` autenticado nesta máquina como `orlando.narcizo.07@gmail.com`.
    secret. Se o token precisar ser regenerado no futuro, use sempre
    `flyctl tokens create org` (ou copie o valor de um arquivo, nunca
    selecionando manualmente no terminal).
+9. **Senha do admin de bootstrap trocada** (2026-08-17) — a senha
+   inicial (documentada em texto puro numa versão anterior deste
+   arquivo) foi rotacionada via `flyctl ssh console -a giucar-api` +
+   Prisma direto na máquina, confirmado por login real (`POST
+   /auth/login` → 201 com a senha nova, 401 com a antiga). A senha
+   nova só existe com o usuário — não é registrada aqui. Rodar de novo
+   se precisar trocar outra vez:
+
+   ```powershell
+   $script = @'
+   const {PrismaClient}=require("@prisma/client");
+   const bcrypt=require("bcryptjs");
+   const p=new PrismaClient();
+   (async()=>{
+     const hash=await bcrypt.hash("SUA_SENHA_NOVA_AQUI",10);
+     const u=await p.user.update({where:{email:"admin@giucar.com.br"},data:{passwordHash:hash}});
+     console.log("updated:",u.email);
+     await p.$disconnect();
+   })().catch(e=>{console.error(e);process.exit(1);});
+   '@
+   $script | flyctl ssh console -a giucar-api -C "node"
+   ```
+
+   (Usa PowerShell here-string + stdin de propósito — tentar colar o
+   script inline com `-C "node -e ...\"..."` quebra por causa de como
+   PowerShell/SSH lidam com aspas escapadas em cadeia.)
 
 Chaves de sandbox reais (Mercado Pago) continuam opcionais — sem elas
 a API roda em modo mock, igual ao Docker Compose local (ver
