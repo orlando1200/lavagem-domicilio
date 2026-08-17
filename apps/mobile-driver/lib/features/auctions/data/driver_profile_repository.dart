@@ -96,6 +96,19 @@ class DriverProfileRepository {
     }
   }
 
+  /// Reporta a posicao atual do lavador (tracking em tempo real,
+  /// consumido pelo cliente via GET /orders/:id/driver-location).
+  Future<void> updateLocation({required double latitude, required double longitude}) async {
+    try {
+      await _dio.patch<Map<String, dynamic>>(
+        '/driver-profiles/me/location',
+        data: {'latitude': latitude, 'longitude': longitude},
+      );
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
   /// Define disponibilidade pra receber pedidos/leiloes (toggle online/
   /// offline da home). So aceita `active`/`inactive` — demais status
   /// exigem aprovacao do admin (PATCH /driver-profiles/me/availability).

@@ -22,7 +22,6 @@ dependencies:
 
   # Rede
   dio: ^5.4.3+1
-  web_socket_channel: ^2.4.5
 
   # Modelos / serializacao
   freezed_annotation: ^2.4.1
@@ -30,6 +29,9 @@ dependencies:
 
   # Armazenamento seguro
   flutter_secure_storage: ^9.2.2
+
+  # Mapa de acompanhamento do pedido (tracking em tempo real do lavador)
+  google_maps_flutter: ^2.9.0
 
 dev_dependencies:
   flutter_test:

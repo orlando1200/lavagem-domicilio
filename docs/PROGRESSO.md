@@ -962,3 +962,63 @@ Ordem sugerida, por dependência e impacto (não por facilidade):
     admin; `PATCH /driver-profiles/me` com `currentZoneId`+
     `serviceRadiusKm` reflete corretamente em `GET /driver-profiles/me`
     logo em seguida.
+23. **Mapa de rastreamento em tempo real do lavador (`mobile-client`)**.
+    Usuário pediu ajuda pra configurar `GOOGLE_MAPS_API_KEY` no Android
+    seguindo um roteiro genérico — investigação mostrou que isso não se
+    aplicava ao projeto (nenhum app usa `google_maps_flutter`, nenhum
+    tinha pasta `android/`/`ios/` gerada; o único uso de Google Maps era
+    server-side, no `MapsService`). Perguntado o que o usuário queria de
+    fato: confirmou mapa visual real, no `mobile-client`, com a posição
+    do lavador se movendo enquanto o pedido está em andamento.
+
+    Não existe infra de WebSocket real no backend (o único vestígio,
+    `dispatch/driver-notifications.gateway.ts`, é código morto do
+    incidente Fase 9 — `socket.io` nem é dependência instalada), então a
+    escolha foi **polling** (~12s) nos dois lados, não WebSocket. Backend
+    ganhou `DriverProfile.currentLatitude/currentLongitude/
+    locationUpdatedAt`, `PATCH /driver-profiles/me/location` (LAVADOR) e
+    `GET /orders/:id/driver-location` (CLIENTE, guard de posse, `null`
+    fora de `[accepted, en_route, in_progress]` ou sem posição
+    reportada). `mobile-driver` ganhou `geolocator` + `Timer.periodic`
+    em `DriverOrdersNotifier` que só roda com pedido ativo, falha
+    silenciosa se permissão negada. `mobile-client` ganhou
+    `google_maps_flutter`, `OrderTrackingMap` (marker do endereço +
+    marker do lavador atualizado a cada poll) embutido em
+    `order_detail_page.dart` quando `order.isTrackable`.
+
+    Nenhum dos 3 apps tinha pasta nativa gerada até aqui —
+    `flutter create --platforms=android,ios[,web]` preencheu
+    `android/`/`ios/` sem tocar em `lib/` (conferido via `git status`).
+    Máquina sem SDK Android (`flutter doctor -v`) — sem como compilar
+    Android de verdade aqui; suporte **web** foi adicionado só ao
+    `mobile-client` pra viabilizar verificação visual real via Browser
+    pane. Chave client-side do Maps (Android SHA-1/pacote, iOS bundle
+    ID, referrer HTTP na web) fica **fora do escopo** — decisão e
+    criação de responsabilidade do usuário; `build.gradle.kts`/
+    `AndroidManifest.xml`/`Info.plist`/`web/index.html` já preparados
+    pra ler `MAPS_API_KEY` do ambiente.
+
+    Migration nova escrita à mão (`20260817000000_add_driver_location`)
+    em vez de deixar o `prisma migrate dev` gerar — o dev DB local tinha
+    drift pré-existente (`vehicle_plate` órfã em `driver_profiles`, sem
+    nenhuma relação com esta feature) que teria virado uma migration
+    perigosa (dropava coluna + mexia em FKs não relacionadas). Verificado
+    com `prisma migrate reset --force`: histórico limpo de 9 migrations
+    aplica sem depender do drift local.
+
+    Verificação: backend `lint/type-check/test` (78 unitários) verdes;
+    fluxo completo verificado ao vivo contra Docker real (script de
+    12 asserções no scratchpad da sessão) — reporte de posição, poll do
+    cliente, guard de posse (403 pra outro cliente), `null` antes do
+    pedido ser aceito. `flutter analyze`/`flutter test` limpos nos 2 apps
+    (17 testes no `mobile-client`, incluindo parsing de coordenadas e
+    `isTrackable`; 6 no `mobile-driver`, sem novidade). Verificação
+    visual real via `flutter run -d web-server` + Browser pane: `OrderTrackingMap`
+    renderiza na posição certa (endereço com coordenadas → mapa aparece;
+    sem coordenadas → mapa não aparece, como esperado), mostra o erro
+    gracioso do próprio Google Maps por falta da chave client-side (
+    esperado, fora de escopo). Nesse processo, achado e corrigido um
+    `RenderFlex overflow` real e pré-existente no card de resumo do
+    pedido (`order_detail_page.dart`, id longo + preço sem `Expanded`).
+    Verificação em dispositivo Android/iOS de verdade fica pendente do
+    lado do usuário (sem SDK Android nesta máquina).

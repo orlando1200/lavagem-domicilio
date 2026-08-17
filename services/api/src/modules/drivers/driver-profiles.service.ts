@@ -10,6 +10,7 @@ import {
   AdminUpdateDriverProfileStatusDto,
   CreateDriverProfileDto,
   ListDriverProfilesQueryDto,
+  UpdateDriverLocationDto,
   UpdateDriverProfileAvailabilityDto,
   UpdateDriverProfileDto,
 } from './dto/driver-profiles.dto';
@@ -126,6 +127,26 @@ export class DriverProfilesService {
     return this.prisma.driverProfile.update({
       where: { userId },
       data: { status: dto.status },
+      include: DRIVER_PROFILE_INCLUDE,
+    });
+  }
+
+  /**
+   * Reporta a posicao atual do lavador (tracking em tempo real,
+   * consumido pelo cliente via `GET /orders/:id/driver-location`).
+   * Nao exige pedido ativo aqui — o app so chama isso enquanto ha um,
+   * mas o endpoint em si e agnostico a esse contexto.
+   */
+  async updateMyLocation(userId: string, dto: UpdateDriverLocationDto) {
+    await this.findProfileOrThrow(userId);
+
+    return this.prisma.driverProfile.update({
+      where: { userId },
+      data: {
+        currentLatitude: dto.latitude,
+        currentLongitude: dto.longitude,
+        locationUpdatedAt: new Date(),
+      },
       include: DRIVER_PROFILE_INCLUDE,
     });
   }

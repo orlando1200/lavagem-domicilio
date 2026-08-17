@@ -167,6 +167,9 @@ model DriverProfile {
   totalOrders     Int           @default(0) @map("total_orders")
   totalDeliveries Int           @default(0) @map("total_deliveries")
   status          DriverStatus  @default(draft)
+  currentLatitude    Decimal?   @map("current_latitude") @db.Decimal(10, 7)
+  currentLongitude   Decimal?   @map("current_longitude") @db.Decimal(10, 7)
+  locationUpdatedAt  DateTime?  @map("location_updated_at") @db.Timestamptz
   createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz
   updatedAt       DateTime      @updatedAt @map("updated_at") @db.Timestamptz
 

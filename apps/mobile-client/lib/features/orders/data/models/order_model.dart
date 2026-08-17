@@ -15,6 +15,8 @@ class OrderModel {
     this.createdAt,
     this.driverId,
     this.serviceType,
+    this.addressLatitude,
+    this.addressLongitude,
   });
 
   final String id;
@@ -24,8 +26,16 @@ class OrderModel {
   final DateTime? createdAt;
   final String? driverId;
   final String? serviceType;
+  final double? addressLatitude;
+  final double? addressLongitude;
+
+  /// Etapas em que faz sentido mostrar o mapa de acompanhamento (o
+  /// lavador ja foi atribuido e o pedido esta em andamento).
+  bool get isTrackable =>
+      driverId != null && const {'accepted', 'en_route', 'in_progress'}.contains(status);
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
+    final address = json['address'] as Map<String, dynamic>?;
     return OrderModel(
       id: json['id'] as String,
       status: json['status'] as String? ?? 'pending',
@@ -38,6 +48,8 @@ class OrderModel {
           : null,
       driverId: json['driverId'] as String?,
       serviceType: json['serviceType'] as String?,
+      addressLatitude: address?['latitude'] != null ? _parseDouble(address!['latitude']) : null,
+      addressLongitude: address?['longitude'] != null ? _parseDouble(address!['longitude']) : null,
     );
   }
 

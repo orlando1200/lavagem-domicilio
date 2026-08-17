@@ -8,6 +8,7 @@ import '../../../shop/presentation/providers/payment_status_provider.dart';
 import '../../data/models/order_model.dart';
 import '../../data/orders_repository.dart';
 import '../../orders_provider.dart';
+import '../widgets/order_tracking_map.dart';
 
 const _terminalStatuses = {'completed', 'cancelled'};
 
@@ -126,6 +127,16 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
             padding: const EdgeInsets.all(20),
             children: [
               _OrderSummaryCard(order: order),
+              if (order.isTrackable &&
+                  order.addressLatitude != null &&
+                  order.addressLongitude != null) ...[
+                const SizedBox(height: 16),
+                OrderTrackingMap(
+                  orderId: widget.orderId,
+                  addressLatitude: order.addressLatitude!,
+                  addressLongitude: order.addressLongitude!,
+                ),
+              ],
               const SizedBox(height: 16),
               _PaymentSection(
                 orderId: widget.orderId,
@@ -183,14 +194,18 @@ class _OrderSummaryCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Pedido #${order.id.substring(0, order.id.length.clamp(0, 8))}',
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 16,
+              Expanded(
+                child: Text(
+                  'Pedido #${order.id.substring(0, order.id.length.clamp(0, 8))}',
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16,
+                  ),
                 ),
               ),
+              const SizedBox(width: 8),
               Text(
                 'R\$ ${order.totalAmount.toStringAsFixed(2)}',
                 style: const TextStyle(

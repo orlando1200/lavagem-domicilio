@@ -136,6 +136,54 @@ export class OrdersService {
   }
 
   /**
+   * Posicao atual do lavador atribuido a este pedido — pro mapa de
+   * acompanhamento do cliente (polling). `null` (nunca erro) quando
+   * nao ha lavador atribuido, o pedido nao esta numa etapa
+   * rastreavel, ou o lavador ainda nao reportou nenhuma posicao —
+   * mesma convencao de `GET /rentals/me`/`GET /orders/mine/active`.
+   */
+  async getDriverLocationForOrder(customerId: string, orderId: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      select: {
+        customerId: true,
+        driverId: true,
+        status: true,
+        driver: {
+          select: { currentLatitude: true, currentLongitude: true, locationUpdatedAt: true },
+        },
+      },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Pedido nao encontrado');
+    }
+    if (order.customerId !== customerId) {
+      throw new ForbiddenException('Este pedido nao pertence ao usuario autenticado');
+    }
+
+    const trackableStatuses: OrderStatus[] = [
+      OrderStatus.accepted,
+      OrderStatus.en_route,
+      OrderStatus.in_progress,
+    ];
+    if (
+      !order.driverId ||
+      !trackableStatuses.includes(order.status) ||
+      order.driver?.currentLatitude == null ||
+      order.driver?.currentLongitude == null
+    ) {
+      return null;
+    }
+
+    return {
+      latitude: order.driver.currentLatitude,
+      longitude: order.driver.currentLongitude,
+      updatedAt: order.driver.locationUpdatedAt,
+    };
+  }
+
+  /**
    * Cancela um pedido — cliente dono ou lavador atribuido podem cancelar
    * (antes so o cliente podia; o lavador nao tinha nenhum jeito de
    * cancelar um pedido que aceitou, mesmo em casos legitimos como

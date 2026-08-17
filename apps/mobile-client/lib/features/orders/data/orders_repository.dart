@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/api/api_client.dart';
 import '../../../../core/api/api_exception.dart';
+import 'models/driver_location_model.dart';
 import 'models/order_model.dart';
 
 final ordersRepositoryProvider = Provider<OrdersRepository>((ref) {
@@ -57,6 +58,18 @@ class OrdersRepository {
     try {
       final response = await _dio.get<Map<String, dynamic>>('/orders/$id');
       return OrderModel.fromJson(response.data!);
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// Posicao atual do lavador atribuido (tracking, polling) — `null`
+  /// quando o pedido nao esta numa etapa rastreavel ou o lavador ainda
+  /// nao reportou nenhuma posicao.
+  Future<DriverLocation?> fetchDriverLocation(String orderId) async {
+    try {
+      final response = await _dio.get<Map<String, dynamic>>('/orders/$orderId/driver-location');
+      return response.data != null ? DriverLocation.fromJson(response.data!) : null;
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);
     }

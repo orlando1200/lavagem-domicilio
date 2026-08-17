@@ -22,7 +22,6 @@ dependencies:
 
   # Rede
   dio: ^5.4.3+1
-  web_socket_channel: ^2.4.5
 
   # Modelos / serializacao
   freezed_annotation: ^2.4.1
@@ -30,6 +29,9 @@ dependencies:
 
   # Armazenamento seguro
   flutter_secure_storage: ^9.2.2
+
+  # Localizacao (tracking em tempo real enquanto ha pedido ativo)
+  geolocator: ^13.0.1
 
 dev_dependencies:
   flutter_test:

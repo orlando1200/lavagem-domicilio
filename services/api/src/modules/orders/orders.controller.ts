@@ -79,6 +79,22 @@ export class OrdersController {
     return this.ordersService.getMyOrderById(user.id, id);
   }
 
+  @Get(':id/driver-location')
+  @Roles(UserRole.CLIENTE)
+  @UseGuards(RolesGuard)
+  @ApiOperation({
+    summary:
+      'Posicao atual do lavador atribuido (tracking, polling) — null ' +
+      'se nao ha lavador, pedido fora de etapa rastreavel, ou sem ' +
+      'posicao reportada ainda',
+  })
+  getDriverLocation(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.ordersService.getDriverLocationForOrder(user.id, id);
+  }
+
   @Patch(':id/cancel')
   @Roles(UserRole.CLIENTE, UserRole.LAVADOR)
   @UseGuards(RolesGuard)

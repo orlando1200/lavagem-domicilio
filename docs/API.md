@@ -129,6 +129,13 @@ Adicionado em 2026-08-10, mesmo motivo do módulo de veículos.
 - `GET /orders/:id` — detalhe de um pedido próprio
 - `PATCH /orders/:id/cancel` — cliente **ou** lavador atribuído podem
   cancelar (`{ "reason"?: string }`)
+- `GET /orders/:id/driver-location` — posição atual do lavador
+  atribuído (tracking em tempo real, cliente consome via polling).
+  Corpo vazio (200, `null`) quando não há lavador atribuído, o pedido
+  não está em `accepted`/`en_route`/`in_progress`, ou o lavador ainda
+  não reportou nenhuma posição — mesma convenção de `GET
+  /orders/mine/active`. Quando há posição: `{ latitude, longitude,
+  updatedAt }`.
 
 ### Lavador
 - `GET /orders/available` — fila de pedidos `searching_washer` na
@@ -262,6 +269,7 @@ carwash.
 - `GET /driver-profiles/me`
 - `PATCH /driver-profiles/me`
 - `PATCH /driver-profiles/me/availability` — `{ status: "active"|"inactive" }`, único par que o próprio lavador altera (demais status exigem admin)
+- `PATCH /driver-profiles/me/location` — `{ latitude, longitude }`, reporta a posição atual (tracking em tempo real, polling — ver `GET /orders/:id/driver-location` abaixo)
 
 ## Zones (`/zones`) — LAVADOR
 

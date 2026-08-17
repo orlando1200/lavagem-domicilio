@@ -1,5 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsArray, IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
+import {
+  IsArray,
+  IsEnum,
+  IsLatitude,
+  IsLongitude,
+  IsNumber,
+  IsOptional,
+  IsString,
+  MaxLength,
+} from 'class-validator';
 import { DriverStatus, DriverType, ServiceType } from '@prisma/client';
 
 /**
@@ -72,6 +81,23 @@ export class UpdateDriverProfileAvailabilityDto {
   })
   @IsEnum(DriverStatus)
   status: DriverStatus;
+}
+
+/**
+ * Reporta a posicao atual do lavador enquanto ha um pedido em
+ * andamento (tracking em tempo real no mapa do cliente, via polling —
+ * ver `GET /orders/:id/driver-location`).
+ */
+export class UpdateDriverLocationDto {
+  @ApiProperty()
+  @IsNumber()
+  @IsLatitude()
+  latitude: number;
+
+  @ApiProperty()
+  @IsNumber()
+  @IsLongitude()
+  longitude: number;
 }
 
 export class AdminUpdateDriverProfileStatusDto {

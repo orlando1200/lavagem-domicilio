@@ -11,6 +11,7 @@ import {
 import { DriverProfilesService } from './driver-profiles.service';
 import {
   CreateDriverProfileDto,
+  UpdateDriverLocationDto,
   UpdateDriverProfileAvailabilityDto,
   UpdateDriverProfileDto,
 } from './dto/driver-profiles.dto';
@@ -56,5 +57,18 @@ export class DriverProfilesController {
     @Body() dto: UpdateDriverProfileAvailabilityDto,
   ) {
     return this.driverProfilesService.updateMyAvailability(user.id, dto);
+  }
+
+  @Patch('location')
+  @ApiOperation({
+    summary:
+      'Reporta a posicao atual do lavador (tracking em tempo real, ' +
+      'consumido pelo cliente via GET /orders/:id/driver-location)',
+  })
+  updateLocation(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: UpdateDriverLocationDto,
+  ) {
+    return this.driverProfilesService.updateMyLocation(user.id, dto);
   }
 }

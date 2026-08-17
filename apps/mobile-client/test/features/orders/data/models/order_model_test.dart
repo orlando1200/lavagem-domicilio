@@ -68,5 +68,64 @@ void main() {
         expect(order.statusLabel, entry.value, reason: 'status: ${entry.key}');
       }
     });
+
+    test('faz parse das coordenadas do endereco aninhado', () {
+      final order = OrderModel.fromJson({
+        'id': 'order-1',
+        'status': 'accepted',
+        'totalAmount': '80',
+        'driverId': 'driver-1',
+        'address': {'latitude': '-23.5505', 'longitude': '-46.6333'},
+      });
+
+      expect(order.addressLatitude, -23.5505);
+      expect(order.addressLongitude, -46.6333);
+    });
+
+    test('addressLatitude/Longitude ficam null sem endereco no JSON', () {
+      final order = OrderModel.fromJson({
+        'id': 'order-1',
+        'status': 'pending',
+        'totalAmount': '0',
+      });
+
+      expect(order.addressLatitude, isNull);
+      expect(order.addressLongitude, isNull);
+    });
+
+    group('isTrackable', () {
+      test('true quando ha driverId e status em etapa rastreavel', () {
+        for (final status in ['accepted', 'en_route', 'in_progress']) {
+          final order = OrderModel.fromJson({
+            'id': 'x',
+            'status': status,
+            'totalAmount': '0',
+            'driverId': 'driver-1',
+          });
+          expect(order.isTrackable, isTrue, reason: 'status: $status');
+        }
+      });
+
+      test('false sem driverId mesmo com status rastreavel', () {
+        final order = OrderModel.fromJson({
+          'id': 'x',
+          'status': 'accepted',
+          'totalAmount': '0',
+        });
+        expect(order.isTrackable, isFalse);
+      });
+
+      test('false em etapas nao rastreaveis mesmo com driverId', () {
+        for (final status in ['pending', 'searching_washer', 'completed', 'cancelled']) {
+          final order = OrderModel.fromJson({
+            'id': 'x',
+            'status': status,
+            'totalAmount': '0',
+            'driverId': 'driver-1',
+          });
+          expect(order.isTrackable, isFalse, reason: 'status: $status');
+        }
+      });
+    });
   });
 }

@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../../../core/api/api_exception.dart';
 import '../../../auctions/data/driver_profile_repository.dart';
 import '../../data/driver_orders_repository.dart';
@@ -71,6 +73,53 @@ class DriverOrdersNotifier extends StateNotifier<DriverOrdersState> {
 
   final DriverOrdersRepository _repository;
   final DriverProfileRepository _profileRepository;
+  Timer? _locationTimer;
+
+  @override
+  void dispose() {
+    _locationTimer?.cancel();
+    super.dispose();
+  }
+
+  /// Liga/desliga o envio periodico de posicao (tracking em tempo
+  /// real) conforme ha ou nao um pedido ativo — chamado apos toda
+  /// mudanca de `state.activeOrder`. Falha de permissao/GPS e
+  /// silenciosa: nunca deve travar o fluxo de pedido do lavador.
+  void _syncLocationTracking() {
+    final hasActiveOrder = state.activeOrder != null;
+    if (hasActiveOrder && _locationTimer == null) {
+      _reportLocation();
+      _locationTimer = Timer.periodic(const Duration(seconds: 12), (_) => _reportLocation());
+    } else if (!hasActiveOrder && _locationTimer != null) {
+      _locationTimer?.cancel();
+      _locationTimer = null;
+    }
+  }
+
+  Future<void> _reportLocation() async {
+    try {
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        return;
+      }
+      if (!await Geolocator.isLocationServiceEnabled()) return;
+
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+      );
+      await _profileRepository.updateLocation(
+        latitude: position.latitude,
+        longitude: position.longitude,
+      );
+    } catch (_) {
+      // Sem GPS/permissao/rede: tenta de novo no proximo tick, nao
+      // interrompe o fluxo do pedido.
+    }
+  }
 
   /// Carrega o estado inicial ao abrir o app: status online/offline real
   /// do perfil, pedido ativo (se houver) e, se online, a fila de
@@ -93,6 +142,7 @@ class DriverOrdersNotifier extends StateNotifier<DriverOrdersState> {
     try {
       final order = await _repository.fetchActiveOrder();
       state = state.copyWith(activeOrder: () => order);
+      _syncLocationTracking();
     } catch (_) {
       // Mantem o pedido ativo atual: falha de rede aqui nao deve travar a tela.
     }
@@ -145,6 +195,7 @@ class DriverOrdersNotifier extends StateNotifier<DriverOrdersState> {
     try {
       final updated = await _repository.acceptOrder(orderId);
       state = state.copyWith(activeOrder: () => updated);
+      _syncLocationTracking();
     } on ApiException catch (e) {
       state = state.copyWith(errorMessage: () => e.message);
       await _refreshAvailableOrders();
@@ -202,6 +253,7 @@ class DriverOrdersNotifier extends StateNotifier<DriverOrdersState> {
             onlineHours: state.stats.onlineHours,
           ),
         );
+        _syncLocationTracking();
       } else {
         state = state.copyWith(activeOrder: () => updated);
       }
@@ -217,6 +269,7 @@ class DriverOrdersNotifier extends StateNotifier<DriverOrdersState> {
     try {
       await _repository.cancel(active.id);
       state = state.copyWith(activeOrder: () => null);
+      _syncLocationTracking();
     } on ApiException catch (e) {
       state = state.copyWith(errorMessage: () => e.message);
     }
