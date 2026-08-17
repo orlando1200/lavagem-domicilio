@@ -27,7 +27,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { PaginationControls } from '@/components/admin/pagination-controls';
-import { listProducts, listStores, updateProductStatus } from '@/lib/api/marketplace';
+import { listProducts, listStores, updateProductStatus, updateStoreStatus } from '@/lib/api/marketplace';
 import { formatCurrencyBRL, formatDate } from '@/lib/format';
 import {
   productStatusLabel,
@@ -63,9 +63,21 @@ export default function MarketplacePage() {
 }
 
 function StoresTab() {
+  const queryClient = useQueryClient();
   const { data, isLoading, isError } = useQuery({
     queryKey: ['admin', 'marketplace', 'stores'],
     queryFn: listStores,
+  });
+
+  const approveMutation = useMutation({
+    mutationFn: (storeId: string) => updateStoreStatus(storeId, { status: 'active' }),
+    onSuccess: () => {
+      toast.success('Loja aprovada.');
+      queryClient.invalidateQueries({ queryKey: ['admin', 'marketplace', 'stores'] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message ?? 'Erro ao aprovar loja.');
+    },
   });
 
   return (
@@ -80,12 +92,13 @@ function StoresTab() {
             <TableHead>Status</TableHead>
             <TableHead>Comissão</TableHead>
             <TableHead>Produtos</TableHead>
+            <TableHead></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+              <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
                 Carregando...
               </TableCell>
             </TableRow>
@@ -106,11 +119,22 @@ function StoresTab() {
                     : '—'}
                 </TableCell>
                 <TableCell>{store._count.products}</TableCell>
+                <TableCell>
+                  {store.status === 'pending' && (
+                    <Button
+                      size="sm"
+                      disabled={approveMutation.isPending}
+                      onClick={() => approveMutation.mutate(store.id)}
+                    >
+                      Aprovar
+                    </Button>
+                  )}
+                </TableCell>
               </TableRow>
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+              <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
                 Nenhuma loja encontrada.
               </TableCell>
             </TableRow>

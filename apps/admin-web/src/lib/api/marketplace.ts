@@ -1,8 +1,14 @@
 import { apiClient } from '../api-client';
-import type { Paginated, Product, ProductStatus, Store } from '../types';
+import type { Paginated, Product, ProductStatus, Store, StoreStatus } from '../types';
 
 export function listStores() {
   return apiClient.get<Store[]>('/admin/marketplace/stores').then((r) => r.data);
+}
+
+export function updateStoreStatus(id: string, body: { status: StoreStatus }) {
+  return apiClient
+    .patch<Store>(`/admin/marketplace/stores/${id}/status`, body)
+    .then((r) => r.data);
 }
 
 export interface AdminListProductsParams {
