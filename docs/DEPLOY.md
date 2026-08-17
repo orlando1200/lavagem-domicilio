@@ -9,10 +9,6 @@ ar. `flyctl` autenticado nesta máquina como `orlando.narcizo.07@gmail.com`.
 | `giucar-api` | `services/api` (`fly.api.toml`) | https://giucar-api.fly.dev |
 | `giucar-admin` | `apps/admin-web` (`fly.admin-web.toml`) | https://giucar-admin.fly.dev |
 
-(Existe também um app `lavagem-domicilio`, criado à parte durante um
-teste manual, sem uso — pode ser removido com `flyctl apps destroy
-lavagem-domicilio` quando quiser.)
-
 ## O que já está feito
 
 1. **Postgres criado e anexado** — `flyctl postgres attach giucar-db
