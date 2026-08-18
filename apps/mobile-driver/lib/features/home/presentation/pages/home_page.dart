@@ -957,6 +957,11 @@ class _ProfileView extends StatelessWidget {
             onTap: () => context.push('/documents'),
           ),
           _ProfileMenuItem(
+            icon: Icons.security_outlined,
+            title: 'Alterar Senha',
+            onTap: () => context.push('/profile/change-password'),
+          ),
+          _ProfileMenuItem(
             icon: Icons.account_balance_wallet_outlined,
             title: 'Minhas contas bancárias',
             onTap: () {},

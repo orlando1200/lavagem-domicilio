@@ -13,9 +13,9 @@ import {
 } from './dto/deliveries.dto';
 
 const DELIVERY_INCLUDE = {
-  buyer: true,
+  buyer: { select: { id: true, name: true, email: true, phone: true } },
   buyerWasher: true,
-  store: true,
+  store: { select: { id: true, name: true, storeType: true, logisticsPlan: true } },
   deliveryDriver: true,
   items: { include: { product: true } },
 } satisfies Prisma.ProductOrderInclude;

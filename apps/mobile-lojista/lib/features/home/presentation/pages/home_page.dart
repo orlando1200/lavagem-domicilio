@@ -652,7 +652,7 @@ class _ProfileTab extends ConsumerWidget {
             _ProfileMenuItem(
               icon: Icons.security_outlined,
               title: 'Alterar Senha',
-              onTap: () {},
+              onTap: () => context.push('/profile/change-password'),
             ),
             const SizedBox(height: 8),
             NeonSurface(

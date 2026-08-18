@@ -26,16 +26,14 @@ class DeliveryOrdersState {
 
 /// Provider de entregas de produtos da Loja do Lavador.
 ///
-/// A lista de entregas pendentes (`pendingDeliveries`) inicia com dados
-/// mock (fallback de UI) e e populada com o backend real assim que
-/// [DeliveryOrdersNotifier.loadAvailableDeliveries] roda com sucesso
-/// (GET /driver/deliveries). As acoes de aceitar/avancar status chamam
-/// o backend real (PATCH /driver/deliveries/:id/accept, /status) via
-/// [DeliveryOrdersRepository]; falhas de rede sao silenciadas com o
-/// estado local preservado, mesma logica de UI otimista usada em
-/// [driverOrdersProvider]. Mantido isolado da area de pedidos de lavagem,
-/// pois sao dominios diferentes (servico de lavagem x entrega de produto
-/// comprado na loja).
+/// A lista de entregas pendentes (`pendingDeliveries`) e carregada do
+/// backend real assim que o notifier e criado (GET /driver/deliveries).
+/// As acoes de aceitar/avancar status chamam o backend real (PATCH
+/// /driver/deliveries/:id/accept, /status) via [DeliveryOrdersRepository];
+/// falhas de rede sao silenciadas com o estado local preservado, mesma
+/// logica de UI otimista usada em [driverOrdersProvider]. Mantido isolado
+/// da area de pedidos de lavagem, pois sao dominios diferentes (servico
+/// de lavagem x entrega de produto comprado na loja).
 final deliveryOrdersProvider =
     StateNotifierProvider<DeliveryOrdersNotifier, DeliveryOrdersState>((ref) {
   return DeliveryOrdersNotifier(ref.watch(deliveryOrdersRepositoryProvider));
@@ -43,49 +41,21 @@ final deliveryOrdersProvider =
 
 class DeliveryOrdersNotifier extends StateNotifier<DeliveryOrdersState> {
   DeliveryOrdersNotifier(this._repository)
-      : super(
-          const DeliveryOrdersState(
-            pendingDeliveries: _mockPendingDeliveries,
-          ),
-        );
+      : super(const DeliveryOrdersState(pendingDeliveries: [])) {
+    loadAvailableDeliveries();
+  }
 
   final DeliveryOrdersRepository _repository;
 
-  static const List<DeliveryOrder> _mockPendingDeliveries = [
-    DeliveryOrder(
-      id: 'delivery-1',
-      status: DeliveryOrderStatus.pending,
-      productName: 'Aspirador GT 3000 12V',
-      storeName: 'AutoLimpeza SP',
-      buyerName: 'João Souza',
-      pickupAddress: 'AutoLimpeza SP · Rua da Loja, 45',
-      deliveryAddress: 'Rua Vergueiro, 900',
-      distanceKm: 3.2,
-      fee: 12.00,
-    ),
-    DeliveryOrder(
-      id: 'delivery-2',
-      status: DeliveryOrderStatus.pending,
-      productName: 'Cera Líquida Premium 1L',
-      storeName: 'Distribuidora CarClean',
-      buyerName: 'Marcos Andrade',
-      pickupAddress: 'Distribuidora CarClean · Av. Industrial, 320',
-      deliveryAddress: 'Rua Tabapuã, 210',
-      distanceKm: 5.6,
-      fee: 15.50,
-    ),
-  ];
-
   /// Carrega as entregas pendentes disponiveis a partir do backend real
   /// (GET /driver/deliveries). Em caso de falha de rede, mantem a lista
-  /// mock atual como fallback de UI.
+  /// atual como fallback de UI.
   Future<void> loadAvailableDeliveries() async {
     try {
-      await _repository.listAvailable();
-      // TODO: mapear o payload real (items[]) para List<DeliveryOrder>
-      // quando o backend estiver disponivel em ambiente de desenvolvimento.
+      final deliveries = await _repository.listAvailable();
+      state = state.copyWith(pendingDeliveries: deliveries);
     } catch (_) {
-      // Mantem os dados mock como fallback.
+      // Mantem a lista atual em caso de falha.
     }
   }
 

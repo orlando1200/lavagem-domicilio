@@ -32,6 +32,32 @@ class AuthRepository {
     }
   }
 
+  Future<AppUser> register({
+    required String name,
+    required String email,
+    required String password,
+    String? phone,
+  }) async {
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/auth/register',
+        data: {
+          'name': name,
+          'email': email,
+          'password': password,
+          if (phone != null && phone.isNotEmpty) 'phone': phone,
+          'role': 'CLIENTE',
+        },
+      );
+      final data = response.data!;
+      final token = data['accessToken'] as String;
+      await _tokenStorage.saveToken(token);
+      return AppUser.fromJson(data['user'] as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
   Future<AppUser?> fetchCurrentUser() async {
     try {
       final response = await _dio.get<Map<String, dynamic>>('/users/me');

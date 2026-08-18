@@ -907,7 +907,7 @@ class _ProfileView extends StatelessWidget {
           _ProfileMenuItem(
             icon: Icons.security,
             title: 'Alterar Senha',
-            onTap: () {},
+            onTap: () => context.push('/profile/change-password'),
           ),
           const SizedBox(height: 8),
           NeonSurface(

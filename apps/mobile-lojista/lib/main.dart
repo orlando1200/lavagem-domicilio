@@ -14,6 +14,7 @@ import 'features/products/presentation/pages/product_edit_page.dart';
 import 'features/products/presentation/pages/product_form_page.dart';
 import 'features/products/presentation/pages/products_list_page.dart';
 import 'features/profile/presentation/pages/edit_profile_page.dart';
+import 'features/profile/presentation/pages/change_password_page.dart';
 
 void main() {
   runApp(const ProviderScope(child: GiucarLojistaApp()));
@@ -94,6 +95,10 @@ final _routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/profile/edit',
         builder: (context, state) => const EditProfilePage(),
+      ),
+      GoRoute(
+        path: '/profile/change-password',
+        builder: (context, state) => const ChangePasswordPage(),
       ),
     ],
   );

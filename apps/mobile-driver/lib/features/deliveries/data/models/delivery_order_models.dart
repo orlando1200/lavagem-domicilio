@@ -6,6 +6,28 @@ enum DeliveryOrderStatus {
   delivered,
 }
 
+/// Decimal do Prisma serializa como string no JSON (ex.: "49.90"), nao
+/// como numero — parse defensivo que aceita os dois formatos.
+double _parseDouble(dynamic value, [double fallback = 0]) {
+  if (value == null) return fallback;
+  if (value is num) return value.toDouble();
+  return double.tryParse(value.toString()) ?? fallback;
+}
+
+DeliveryOrderStatus _statusFromBackend(String? value) {
+  switch (value) {
+    case 'ACCEPTED':
+      return DeliveryOrderStatus.accepted;
+    case 'ON_THE_WAY':
+      return DeliveryOrderStatus.onTheWay;
+    case 'DELIVERED':
+      return DeliveryOrderStatus.delivered;
+    case 'PENDING':
+    default:
+      return DeliveryOrderStatus.pending;
+  }
+}
+
 extension DeliveryOrderStatusX on DeliveryOrderStatus {
   String get label {
     switch (this) {
@@ -41,10 +63,9 @@ extension DeliveryOrderStatusX on DeliveryOrderStatus {
 ///
 /// Fluxo: o lavador recebe a solicitacao de entrega de um produto
 /// comprado por outro lavador na Loja do Lavador, aceita, faz a rota de
-/// coleta na loja/parceiro e entrega ao comprador. A lista disponivel e
-/// mockada localmente como fallback, mas as acoes (aceitar/avancar
-/// status) chamam o backend real (`DeliveryOrdersRepository`) quando o
-/// id da entrega existir de fato no servidor.
+/// coleta na loja/parceiro e entrega ao comprador. A lista disponivel
+/// (`GET /driver/deliveries`) e as acoes (aceitar/avancar status) sao
+/// todas conectadas ao backend real via `DeliveryOrdersRepository`.
 class DeliveryOrder {
   const DeliveryOrder({
     required this.id,
@@ -67,6 +88,33 @@ class DeliveryOrder {
   final String deliveryAddress;
   final double distanceKm;
   final double fee;
+
+  /// Faz o parse do `ProductOrder` real devolvido por
+  /// `GET /driver/deliveries` (`{ items: ProductOrder[] }`). Nao ha campo
+  /// de distancia no backend hoje — fica fixo em 0.0, so decorativo.
+  factory DeliveryOrder.fromJson(Map<String, dynamic> json) {
+    final items = json['items'] as List<dynamic>? ?? const [];
+    final firstProduct = items.isNotEmpty
+        ? (items.first as Map<String, dynamic>)['product'] as Map<String, dynamic>?
+        : null;
+    final store = json['store'] as Map<String, dynamic>?;
+    final buyer = json['buyer'] as Map<String, dynamic>?;
+    final shippingAddress = json['shippingAddress'] as Map<String, dynamic>?;
+
+    return DeliveryOrder(
+      id: json['id'] as String,
+      status: _statusFromBackend(json['deliveryStatus'] as String?),
+      productName: firstProduct?['name'] as String? ?? 'Produto',
+      storeName: store?['name'] as String? ?? 'Loja',
+      buyerName: buyer?['name'] as String? ?? 'Cliente',
+      pickupAddress: store?['name'] as String? ?? '',
+      deliveryAddress: shippingAddress == null
+          ? ''
+          : '${shippingAddress['street'] ?? ''}, ${shippingAddress['number'] ?? ''}',
+      distanceKm: 0.0,
+      fee: _parseDouble(json['shippingAmount']),
+    );
+  }
 
   DeliveryOrder copyWith({DeliveryOrderStatus? status}) {
     return DeliveryOrder(

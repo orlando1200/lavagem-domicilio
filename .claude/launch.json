@@ -22,6 +22,90 @@
       ],
       "port": 5000,
       "cwd": "apps/mobile-client"
+    },
+    {
+      "name": "mobile-client-web-lan",
+      "runtimeExecutable": "flutter",
+      "runtimeArgs": [
+        "run",
+        "-d",
+        "web-server",
+        "--web-port",
+        "5000",
+        "--web-hostname",
+        "0.0.0.0",
+        "--dart-define",
+        "API_BASE_URL=http://192.168.15.9:3000/api/v1"
+      ],
+      "port": 5000,
+      "cwd": "apps/mobile-client"
+    },
+    {
+      "name": "mobile-client-web-static",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["--yes", "serve", "-l", "tcp://0.0.0.0:5000", "build/web"],
+      "port": 5000,
+      "cwd": "apps/mobile-client"
+    },
+    {
+      "name": "mobile-client-web-static-https",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "--yes", "serve",
+        "-l", "tcp://0.0.0.0:5000",
+        "--ssl-cert", "C:/Users/orlan/AppData/Local/Temp/claude/C--Users-orlan-Projects-lavagem-domicilio/4fd3809e-b2c0-47e6-b5ad-ca546e7087e4/scratchpad/lan-cert.pem",
+        "--ssl-key", "C:/Users/orlan/AppData/Local/Temp/claude/C--Users-orlan-Projects-lavagem-domicilio/4fd3809e-b2c0-47e6-b5ad-ca546e7087e4/scratchpad/lan-key.pem",
+        "build/web"
+      ],
+      "port": 5000,
+      "cwd": "apps/mobile-client"
+    },
+    {
+      "name": "mobile-driver-web-static-https",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "--yes", "serve",
+        "-l", "tcp://0.0.0.0:5001",
+        "--ssl-cert", "C:/Users/orlan/AppData/Local/Temp/claude/C--Users-orlan-Projects-lavagem-domicilio/4fd3809e-b2c0-47e6-b5ad-ca546e7087e4/scratchpad/lan-cert.pem",
+        "--ssl-key", "C:/Users/orlan/AppData/Local/Temp/claude/C--Users-orlan-Projects-lavagem-domicilio/4fd3809e-b2c0-47e6-b5ad-ca546e7087e4/scratchpad/lan-key.pem",
+        "build/web"
+      ],
+      "port": 5001,
+      "cwd": "apps/mobile-driver"
+    },
+    {
+      "name": "mobile-lojista-web-static-https",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "--yes", "serve",
+        "-l", "tcp://0.0.0.0:5002",
+        "--ssl-cert", "C:/Users/orlan/AppData/Local/Temp/claude/C--Users-orlan-Projects-lavagem-domicilio/4fd3809e-b2c0-47e6-b5ad-ca546e7087e4/scratchpad/lan-cert.pem",
+        "--ssl-key", "C:/Users/orlan/AppData/Local/Temp/claude/C--Users-orlan-Projects-lavagem-domicilio/4fd3809e-b2c0-47e6-b5ad-ca546e7087e4/scratchpad/lan-key.pem",
+        "build/web"
+      ],
+      "port": 5002,
+      "cwd": "apps/mobile-lojista"
+    },
+    {
+      "name": "api-dev-native",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "api", "start:dev"],
+      "port": 3000,
+      "cwd": "."
+    },
+    {
+      "name": "api-https-proxy",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "--yes", "local-ssl-proxy",
+        "--source", "3443",
+        "--target", "3000",
+        "--hostname", "0.0.0.0",
+        "--cert", "C:/Users/orlan/AppData/Local/Temp/claude/C--Users-orlan-Projects-lavagem-domicilio/4fd3809e-b2c0-47e6-b5ad-ca546e7087e4/scratchpad/lan-cert.pem",
+        "--key", "C:/Users/orlan/AppData/Local/Temp/claude/C--Users-orlan-Projects-lavagem-domicilio/4fd3809e-b2c0-47e6-b5ad-ca546e7087e4/scratchpad/lan-key.pem"
+      ],
+      "port": 3443,
+      "cwd": "."
     }
   ]
 }

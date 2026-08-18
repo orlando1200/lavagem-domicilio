@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/api/api_client.dart';
 import '../../../../core/api/api_exception.dart';
+import 'models/delivery_order_models.dart';
 
 final deliveryOrdersRepositoryProvider = Provider<DeliveryOrdersRepository>((ref) {
   return DeliveryOrdersRepository(ref.watch(dioProvider));
@@ -18,10 +19,13 @@ class DeliveryOrdersRepository {
 
   final Dio _dio;
 
-  Future<List<dynamic>> listAvailable() async {
+  Future<List<DeliveryOrder>> listAvailable() async {
     try {
       final response = await _dio.get('/driver/deliveries');
-      return (response.data['items'] as List<dynamic>?) ?? const [];
+      final items = (response.data['items'] as List<dynamic>?) ?? const [];
+      return items
+          .map((item) => DeliveryOrder.fromJson(item as Map<String, dynamic>))
+          .toList();
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);
     }

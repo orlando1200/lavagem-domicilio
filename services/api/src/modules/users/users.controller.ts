@@ -13,6 +13,7 @@ import {
   CurrentUser,
 } from '../../common/decorators/current-user.decorator';
 import { UsersService } from './users.service';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 @ApiTags('users')
@@ -35,6 +36,15 @@ export class UsersController {
     @Body() dto: UpdateUserDto,
   ) {
     return this.usersService.updateProfile(user.id, dto);
+  }
+
+  @Patch('me/password')
+  @ApiOperation({ summary: 'Change authenticated user password (requires current password)' })
+  changeMyPassword(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: ChangePasswordDto,
+  ) {
+    return this.usersService.changePassword(user.id, dto);
   }
 
   @Delete('me')

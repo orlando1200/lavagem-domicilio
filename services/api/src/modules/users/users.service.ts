@@ -3,10 +3,12 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { Prisma, UserRole, UserStatus } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import {
   ListUsersQueryDto,
@@ -92,6 +94,32 @@ export class UsersService {
     });
 
     return sanitizeUser(user);
+  }
+
+  /**
+   * Troca a senha do proprio usuario logado, exigindo confirmacao da
+   * senha atual (diferente de `updateProfile`, que aceita `password`
+   * direto sem essa checagem — usado hoje só pelo fluxo de edicao de
+   * perfil administrativo).
+   */
+  async changePassword(userId: string, dto: ChangePasswordDto) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('Usuario nao encontrado');
+    }
+
+    const passwordMatches = await bcrypt.compare(dto.currentPassword, user.passwordHash);
+    if (!passwordMatches) {
+      throw new UnauthorizedException('Senha atual incorreta');
+    }
+
+    const passwordHash = await bcrypt.hash(dto.newPassword, SALT_ROUNDS);
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash },
+    });
+
+    return sanitizeUser(updated);
   }
 
   async deleteOwnAccount(userId: string) {
