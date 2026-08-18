@@ -70,4 +70,28 @@ class DriverAuthRepository {
   }
 
   Future<void> logout() => _tokenStorage.clearToken();
+
+  Future<String> forgotPassword(String email) async {
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/auth/forgot-password',
+        data: {'email': email},
+      );
+      return response.data!['message'] as String;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  Future<String> resetPassword({required String token, required String newPassword}) async {
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/auth/reset-password',
+        data: {'token': token, 'newPassword': newPassword},
+      );
+      return response.data!['message'] as String;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
 }
