@@ -1,7 +1,7 @@
 # Progresso do Projeto — GIUCAR
 
 ## Última atualização
-2026-08-15 (tarde)
+2026-08-18
 
 > Nota: a versão anterior deste arquivo (17/jul) descrevia uma rodada
 > anterior à recuperação do backend (Fase 9 — ver
@@ -1163,3 +1163,121 @@ Ordem sugerida, por dependência e impacto (não por facilidade):
     "Loja GIUCAR Insumos" / "Diego Moto") sem `passwordHash` no payload;
     login com a senha antiga falha (401) e com a nova funciona (201)
     depois de `PATCH /users/me/password`.
+26. **As 9 lacunas restantes fechadas (itens 7 a 15 da lista de
+    operacionalidade apresentada ao usuário) + 2 itens de higiene de
+    código.** Depois do item 25 fechar as 4 lacunas mais críticas, o
+    usuário pediu a lista completa do que faltava — 15 itens no total,
+    6 bloqueados por ele (dinheiro/credenciais/hardware, deixados de
+    fora) e 9 construíveis. Luz verde dada pra todos os 9, com duas
+    decisões explícitas: e-mail e upload de arquivo em **modo simulado**
+    (mesmo padrão do Mercado Pago mock — adapter atrás de interface,
+    trocar por provedor real depois é config, não reescrita); e
+    construir também a página de Categorias/Serviços no admin, mesmo
+    sendo o item de menor impacto visível.
+
+    **Limpeza de código morto**: removidos os 6 módulos de backend
+    nunca alcançados por `app.module.ts` (`analytics`, `compliance`,
+    `dispatch`, `face-check`, `services-catalog`, `tracking`),
+    confirmados via análise do grafo de imports — reduz o `tsconfig.json`/
+    `.eslintrc.js` a excludes desnecessários que só existiam por causa
+    desses diretórios.
+
+    **Segredo JWT sem fallback público**: o `JWT_SECRET` hardcoded
+    (`'local-jwt-secret-change-me'`) — uma string pública no
+    código-fonte, publicamente lida por qualquer um com acesso ao
+    repositório e suficiente pra forjar um token de ADMIN válido contra
+    qualquer instância rodando sem a env var real setada — foi trocado
+    por um segredo aleatório gerado em memória uma única vez por boot
+    (`crypto.randomBytes(48)`) quando a env var não existe. Sessões não
+    sobrevivem a um restart do processo nesse modo — comportamento
+    esperado, não bug.
+
+    **"Esqueci minha senha"**: novo módulo `email/` (interface +
+    `LogEmailAdapter` que só loga, mesmo padrão do Mercado Pago) +
+    `AuthService.forgotPassword`/`resetPassword` — token JWT de 15min
+    com claim `purpose: password_reset`, nunca aceito como sessão normal
+    pelo `JwtAuthGuard`; resposta de `forgotPassword` sempre genérica
+    (não revela se o e-mail existe). Telas novas nos 3 apps
+    (`ForgotPasswordPage`/`ResetPasswordPage` — o token é colado
+    manualmente, já que não existe e-mail real pra clicar num link).
+
+    **Dados bancários do lavador**: `DriverProfile` ganhou campos
+    tipados (`pixKeyType`/`pixKey`/`bankName`/`agency`/`accountNumber`,
+    todos opcionais) — diferente do `Store.bankInfo`, que é `Json?` sem
+    validação nenhuma (não copiado de propósito). Novo
+    `PATCH /driver-profiles/me/bank-info`, tela nova no `mobile-driver`,
+    fecha o botão "Minhas contas bancárias" que não fazia nada.
+
+    **Notificações in-app**: novo model `Notification` + módulo CRUD
+    (`GET /notifications/me`, `.../unread-count`, `PATCH .../read`,
+    `PATCH .../read-all`). Disparo inline best-effort (mesmo padrão de
+    `grantLoyaltyPointsBestEffort`, nunca quebra o fluxo principal) em 3
+    pontos: pedido aceito (notifica o cliente), pagamento confirmado no
+    webhook (notifica quem pagou), documento revisado (notifica o
+    lavador, com o motivo quando rejeitado). Telas novas nos 3 apps;
+    fecha o botão "Notificações" morto do `mobile-driver` e adiciona o
+    item de menu (não existia) em `mobile-client`/`mobile-lojista`.
+
+    **Histórico de pagamentos**: novo `GET /payments/mine`. O item de
+    menu já era real desde sempre — só a tela de destino
+    (`PlaceholderPage`) era falsa. Achado ao vivo: os valores de
+    `method` do backend são minúsculos (`pix`/`credit_card`), não
+    maiúsculos como a primeira versão da tela assumia — corrigido antes
+    do commit, exemplo real de por que a verificação ao vivo (não só
+    `flutter analyze`) importa pra esse tipo de bug silencioso.
+
+    **Upload real de documento (disco local, modo simulado)**: até
+    aqui não existia nenhuma infra de upload binário — o lavador só
+    colava um link de arquivo já hospedado em algum lugar externo. Novo
+    `StorageAdapter` (interface + `LocalDiskAdapter`, mesmo padrão dos
+    outros adapters mockados) atrás de `POST
+    /document-verification/me/upload` (multipart, até 10MB), servido
+    publicamente em `/uploads` via `app.useStaticAssets`. `mobile-driver`
+    ganhou `image_picker` (novo, nenhuma lib de arquivo existia antes) —
+    a tela de envio de documento troca o campo de colar link por um
+    seletor de arquivo de verdade.
+
+    **Motivo de rejeição de documento**: `DocumentVerification` ganhou
+    `rejectionReason`, obrigatório na regra de negócio quando o admin
+    rejeita (mesmo padrão de `PayoutsService.updatePayoutStatus`,
+    copiado de propósito). `documentos/page.tsx` ganhou o `Textarea` +
+    botão desabilitado até preencher, mesmo padrão do
+    `ProductStatusDialog` do Marketplace.
+
+    **Categorias/Serviços com preço real no admin**: até aqui os preços
+    de `DRY_WASH`/`EXPRESS_WASH` eram um array hardcoded dentro do
+    `mobile-client` (`new_order_page.dart`) — o backend nunca olhava
+    preço nenhum, só somava o que o app mandasse. Novo model
+    `ServiceCategory` (só cobre esses 2 tipos — `HEAVY_SERVICE` não tem
+    preço fixo, continua indo a leilão, tratado como caso especial
+    hardcoded) + módulo com catálogo público (`GET /service-categories`)
+    e CRUD admin. Nova página `categorias/page.tsx` no admin (tabela +
+    diálogo criar/editar/remover). `new_order_page.dart` busca os
+    preços reais da API, com fallback pros valores antigos enquanto o
+    admin não cadastrar nenhuma categoria — evita quebrar o fluxo de
+    pedido pra quem ainda não configurou nada.
+
+    Verificação: backend `lint/type-check` limpos; 146 testes unitários
+    (todos os módulos, incluindo os 6 specs novos desta rodada:
+    `notifications`, `service-categories`, mais os ajustes de
+    `orders`/`payments`/`document-verification` pro novo parâmetro
+    `NotificationsService` no construtor) verdes; `test:e2e` (15 testes,
+    incluindo 4 novos cobrindo o loop completo
+    forgot→reset→login) verde; `build` limpo. `flutter analyze`/
+    `flutter test` limpos nos 3 apps a cada fase. `admin-web`
+    `lint/type-check` limpos (`build` local falha por symlink do
+    Windows, mesmo problema conhecido do item 24, não relacionado à
+    mudança — compilação e geração das 19 páginas estáticas, incluindo
+    `/categorias`, terminam com sucesso antes da falha; CI roda em Linux
+    e não tem esse problema). Verificação ao vivo contra o backend real
+    (API nativa + proxy HTTPS) em cada item: loop completo
+    forgot-password→reset-password→login com senha nova; dados
+    bancários salvos e lidos de volta; notificação real criada e
+    marcada como lida via `GET`/`PATCH /notifications/*`; histórico de
+    pagamento mostrando status `paid` depois do webhook mock; upload de
+    arquivo de verdade indo pro disco e sendo servido de volta em
+    `/uploads`; rejeição de documento sem motivo barrada com 400 e com
+    motivo salva corretamente; categoria de serviço criada no admin
+    aparecendo no catálogo (`GET /service-categories`) com o preço
+    exato configurado. Nove commits separados (um por item + 2 de
+    higiene de código), todos com push confirmado.
