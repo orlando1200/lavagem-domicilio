@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { DocumentVerificationStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -88,13 +88,22 @@ export class DocumentVerificationService {
   async reviewDocument(id: string, adminUserId: string, dto: ReviewDocumentVerificationDto) {
     const document = await this.findDocumentOrThrow(id);
 
+    if (dto.status === DocumentVerificationStatus.rejected && !dto.rejectionReason) {
+      throw new BadRequestException('Informe o motivo da rejeicao');
+    }
+
     const updated = await this.prisma.documentVerification.update({
       where: { id },
-      data: { status: dto.status, reviewedByUserId: adminUserId },
+      data: {
+        status: dto.status,
+        reviewedByUserId: adminUserId,
+        rejectionReason:
+          dto.status === DocumentVerificationStatus.rejected ? dto.rejectionReason : null,
+      },
       include: DOCUMENT_VERIFICATION_INCLUDE,
     });
 
-    await this.notifyReviewBestEffort(document.userId, updated.id, dto.status);
+    await this.notifyReviewBestEffort(document.userId, updated.id, dto.status, dto.rejectionReason);
 
     return updated;
   }
@@ -103,6 +112,7 @@ export class DocumentVerificationService {
     userId: string,
     documentId: string,
     status: DocumentVerificationStatus,
+    rejectionReason?: string,
   ) {
     try {
       const approved = status === DocumentVerificationStatus.approved;
@@ -111,7 +121,7 @@ export class DocumentVerificationService {
         title: approved ? 'Documento aprovado' : 'Documento rejeitado',
         body: approved
           ? 'Seu documento foi aprovado.'
-          : 'Seu documento foi rejeitado. Envie um novo documento.',
+          : `Seu documento foi rejeitado. Motivo: ${rejectionReason}`,
         relatedEntityId: documentId,
       });
     } catch (error) {

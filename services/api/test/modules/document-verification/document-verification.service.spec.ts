@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { DocumentVerificationStatus } from '@prisma/client';
 import { DocumentVerificationService } from '../../../src/modules/document-verification/document-verification.service';
 import { PrismaService } from '../../../src/database/prisma.service';
@@ -97,7 +97,7 @@ describe('DocumentVerificationService', () => {
     });
 
     it('reviewDocument sets status and reviewedByUserId on success', async () => {
-      prisma.documentVerification.findUnique.mockResolvedValue({ id: DOCUMENT_ID });
+      prisma.documentVerification.findUnique.mockResolvedValue({ id: DOCUMENT_ID, userId: 'user-1' });
       prisma.documentVerification.update.mockResolvedValue({
         id: DOCUMENT_ID,
         status: DocumentVerificationStatus.approved,
@@ -111,10 +111,49 @@ describe('DocumentVerificationService', () => {
       expect(prisma.documentVerification.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: DOCUMENT_ID },
-          data: { status: DocumentVerificationStatus.approved, reviewedByUserId: ADMIN_ID },
+          data: {
+            status: DocumentVerificationStatus.approved,
+            reviewedByUserId: ADMIN_ID,
+            rejectionReason: null,
+          },
         }),
       );
       expect(result.status).toBe(DocumentVerificationStatus.approved);
+    });
+
+    it('reviewDocument throws BadRequestException when rejecting without a reason', async () => {
+      prisma.documentVerification.findUnique.mockResolvedValue({ id: DOCUMENT_ID, userId: 'user-1' });
+
+      await expect(
+        service.reviewDocument(DOCUMENT_ID, ADMIN_ID, {
+          status: DocumentVerificationStatus.rejected,
+        } as any),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(prisma.documentVerification.update).not.toHaveBeenCalled();
+    });
+
+    it('reviewDocument saves the rejectionReason when rejecting with a reason', async () => {
+      prisma.documentVerification.findUnique.mockResolvedValue({ id: DOCUMENT_ID, userId: 'user-1' });
+      prisma.documentVerification.update.mockResolvedValue({
+        id: DOCUMENT_ID,
+        status: DocumentVerificationStatus.rejected,
+        rejectionReason: 'Foto ilegivel',
+      });
+
+      const result = await service.reviewDocument(DOCUMENT_ID, ADMIN_ID, {
+        status: DocumentVerificationStatus.rejected,
+        rejectionReason: 'Foto ilegivel',
+      } as any);
+
+      expect(prisma.documentVerification.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            status: DocumentVerificationStatus.rejected,
+            rejectionReason: 'Foto ilegivel',
+          }),
+        }),
+      );
+      expect(result.rejectionReason).toBe('Foto ilegivel');
     });
   });
 

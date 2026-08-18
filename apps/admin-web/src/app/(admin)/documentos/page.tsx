@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -168,6 +169,7 @@ function DocumentDetailSheet({
   onClose: () => void;
 }) {
   const queryClient = useQueryClient();
+  const [rejectionReason, setRejectionReason] = useState('');
 
   const { data: doc, isLoading } = useQuery({
     queryKey: ['admin', 'document-verification', 'detail', documentId],
@@ -177,9 +179,10 @@ function DocumentDetailSheet({
 
   const reviewMutation = useMutation({
     mutationFn: (newStatus: 'approved' | 'rejected') =>
-      reviewDocumentVerification(documentId!, newStatus),
+      reviewDocumentVerification(documentId!, newStatus, rejectionReason),
     onSuccess: () => {
       toast.success('Documento revisado.');
+      setRejectionReason('');
       queryClient.invalidateQueries({ queryKey: ['admin', 'document-verification'] });
     },
     onError: (err: any) => {
@@ -245,6 +248,19 @@ function DocumentDetailSheet({
 
             <div className="space-y-3 border-t pt-4">
               <p className="text-sm font-medium">Revisar documento</p>
+              {doc.status === 'rejected' && doc.rejectionReason && (
+                <p className="rounded-md bg-destructive/10 p-2 text-xs text-destructive">
+                  Motivo da rejeição: {doc.rejectionReason}
+                </p>
+              )}
+              <div className="space-y-1.5">
+                <Label>Motivo da rejeição (obrigatório para rejeitar)</Label>
+                <Textarea
+                  value={rejectionReason}
+                  onChange={(e) => setRejectionReason(e.target.value)}
+                  placeholder="Ex.: foto ilegível, documento vencido..."
+                />
+              </div>
               <div className="flex gap-2">
                 <Button
                   className="flex-1"
@@ -256,7 +272,7 @@ function DocumentDetailSheet({
                 <Button
                   variant="destructive"
                   className="flex-1"
-                  disabled={doc.status === 'rejected' || reviewMutation.isPending}
+                  disabled={doc.status === 'rejected' || !rejectionReason || reviewMutation.isPending}
                   onClick={() => reviewMutation.mutate('rejected')}
                 >
                   Rejeitar

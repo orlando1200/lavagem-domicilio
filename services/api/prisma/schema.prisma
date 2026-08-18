@@ -782,6 +782,7 @@ model DocumentVerification {
   fileUrl          String                     @map("file_url") @db.VarChar(500)
   status           DocumentVerificationStatus @default(pending)
   reviewedByUserId String?                    @map("reviewed_by_user_id") @db.Uuid
+  rejectionReason  String?                    @map("rejection_reason") @db.Text
   createdAt        DateTime                   @default(now()) @map("created_at") @db.Timestamptz
   updatedAt        DateTime                   @updatedAt @map("updated_at") @db.Timestamptz
 

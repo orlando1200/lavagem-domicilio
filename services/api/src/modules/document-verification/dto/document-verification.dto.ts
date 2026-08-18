@@ -33,6 +33,12 @@ export class ReviewDocumentVerificationDto {
   @IsEnum(DocumentVerificationStatus)
   @IsIn([DocumentVerificationStatus.approved, DocumentVerificationStatus.rejected])
   status: DocumentVerificationStatus;
+
+  @ApiPropertyOptional({ maxLength: 500, description: 'Obrigatorio quando status = rejected' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  rejectionReason?: string;
 }
 
 export class ListDocumentVerificationsQueryDto {

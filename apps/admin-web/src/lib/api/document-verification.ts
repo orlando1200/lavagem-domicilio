@@ -21,8 +21,15 @@ export function getDocumentVerification(id: string) {
     .then((r) => r.data);
 }
 
-export function reviewDocumentVerification(id: string, status: 'approved' | 'rejected') {
+export function reviewDocumentVerification(
+  id: string,
+  status: 'approved' | 'rejected',
+  rejectionReason?: string,
+) {
   return apiClient
-    .patch<DocumentVerification>(`/admin/document-verification/${id}/review`, { status })
+    .patch<DocumentVerification>(`/admin/document-verification/${id}/review`, {
+      status,
+      rejectionReason: status === 'rejected' ? rejectionReason : undefined,
+    })
     .then((r) => r.data);
 }
