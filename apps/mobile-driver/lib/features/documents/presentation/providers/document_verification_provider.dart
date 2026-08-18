@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/document_verification_repository.dart';
 import '../../data/models/document_verification_model.dart';
@@ -51,10 +52,14 @@ class DocumentVerificationNotifier extends StateNotifier<DocumentVerificationSta
     }
   }
 
-  Future<bool> submit({required String docType, required String fileUrl}) async {
+  Future<bool> uploadFile({
+    required String docType,
+    required Uint8List bytes,
+    required String fileName,
+  }) async {
     state = state.copyWith(isSubmitting: true, errorMessage: () => null);
     try {
-      final document = await _repository.submit(docType: docType, fileUrl: fileUrl);
+      final document = await _repository.upload(docType: docType, bytes: bytes, fileName: fileName);
       state = state.copyWith(
         documents: [document, ...state.documents],
         isSubmitting: false,

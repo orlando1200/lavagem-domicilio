@@ -1,5 +1,7 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/neon_surface.dart';
 import '../../data/models/document_verification_model.dart';
@@ -15,10 +17,9 @@ const Map<String, String> _docTypeLabels = {
 };
 
 /// Tela de "Perfil de atuação": envio e acompanhamento dos documentos do
-/// lavador (CNH, CRLV, foto do veiculo, etc). Sem upload binario de
-/// arquivo — o lavador cola o link de onde o documento ja esta hospedado,
-/// mesma pragmatica usada em outros pontos do backend (sem infra de
-/// arquivo/S3 implementada ainda).
+/// lavador (CNH, CRLV, foto do veiculo, etc), com upload binario real
+/// (modo simulado — salvo em disco local no backend, ver
+/// `storage/local-disk.adapter.ts`).
 class DocumentsPage extends ConsumerStatefulWidget {
   const DocumentsPage({super.key});
 
@@ -28,7 +29,8 @@ class DocumentsPage extends ConsumerStatefulWidget {
 
 class _DocumentsPageState extends ConsumerState<DocumentsPage> {
   String _docType = _docTypeOptions.first;
-  final _fileUrlController = TextEditingController();
+  XFile? _pickedFile;
+  Uint8List? _pickedBytes;
 
   @override
   void initState() {
@@ -36,23 +38,33 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
     Future.microtask(() => ref.read(documentVerificationProvider.notifier).loadMine());
   }
 
-  @override
-  void dispose() {
-    _fileUrlController.dispose();
-    super.dispose();
+  Future<void> _pickFile() async {
+    final file = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 85);
+    if (file == null) return;
+    final bytes = await file.readAsBytes();
+    setState(() {
+      _pickedFile = file;
+      _pickedBytes = bytes;
+    });
   }
 
   Future<void> _submit() async {
-    final fileUrl = _fileUrlController.text.trim();
-    if (fileUrl.isEmpty) return;
+    final file = _pickedFile;
+    final bytes = _pickedBytes;
+    if (file == null || bytes == null) return;
 
-    final success = await ref
-        .read(documentVerificationProvider.notifier)
-        .submit(docType: _docType, fileUrl: fileUrl);
+    final success = await ref.read(documentVerificationProvider.notifier).uploadFile(
+          docType: _docType,
+          bytes: bytes,
+          fileName: file.name,
+        );
 
     if (!mounted) return;
     if (success) {
-      _fileUrlController.clear();
+      setState(() {
+        _pickedFile = null;
+        _pickedBytes = null;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Documento enviado para análise.')),
       );
@@ -86,7 +98,8 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
           _SubmitDocumentCard(
             docType: _docType,
             onDocTypeChanged: (value) => setState(() => _docType = value),
-            fileUrlController: _fileUrlController,
+            pickedFileName: _pickedFile?.name,
+            onPickFile: _pickFile,
             isSubmitting: state.isSubmitting,
             onSubmit: _submit,
           ),
@@ -125,14 +138,16 @@ class _SubmitDocumentCard extends StatelessWidget {
   const _SubmitDocumentCard({
     required this.docType,
     required this.onDocTypeChanged,
-    required this.fileUrlController,
+    required this.pickedFileName,
+    required this.onPickFile,
     required this.isSubmitting,
     required this.onSubmit,
   });
 
   final String docType;
   final ValueChanged<String> onDocTypeChanged;
-  final TextEditingController fileUrlController;
+  final String? pickedFileName;
+  final VoidCallback onPickFile;
   final bool isSubmitting;
   final VoidCallback onSubmit;
 
@@ -164,19 +179,16 @@ class _SubmitDocumentCard extends StatelessWidget {
               },
             ),
             const SizedBox(height: 12),
-            TextField(
-              controller: fileUrlController,
-              decoration: const InputDecoration(
-                labelText: 'Link do arquivo',
-                hintText: 'Cole aqui o link do documento já hospedado',
-              ),
-              keyboardType: TextInputType.url,
+            OutlinedButton.icon(
+              onPressed: onPickFile,
+              icon: const Icon(Icons.attach_file_rounded),
+              label: Text(pickedFileName ?? 'Escolher arquivo'),
             ),
             const SizedBox(height: 14),
             SizedBox(
               width: double.infinity,
               child: FilledButton(
-                onPressed: isSubmitting ? null : onSubmit,
+                onPressed: (isSubmitting || pickedFileName == null) ? null : onSubmit,
                 child: Text(isSubmitting ? 'Enviando...' : 'Enviar documento'),
               ),
             ),

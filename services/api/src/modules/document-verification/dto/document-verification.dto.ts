@@ -20,6 +20,14 @@ export class CreateDocumentVerificationDto {
   fileUrl: string;
 }
 
+export class UploadDocumentDto {
+  @ApiProperty({ maxLength: 60, description: 'Tipo do documento (ex: cnh, crlv, foto_veiculo)' })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(60)
+  docType: string;
+}
+
 export class ReviewDocumentVerificationDto {
   @ApiProperty({ enum: [DocumentVerificationStatus.approved, DocumentVerificationStatus.rejected] })
   @IsEnum(DocumentVerificationStatus)

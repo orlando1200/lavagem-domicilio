@@ -1,7 +1,8 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { DocumentVerificationStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { STORAGE_ADAPTER, StorageAdapter, StoredFileInput } from './storage/storage.interface';
 import {
   CreateDocumentVerificationDto,
   ListDocumentVerificationsQueryDto,
@@ -19,11 +20,25 @@ export class DocumentVerificationService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationsService: NotificationsService,
+    @Inject(STORAGE_ADAPTER) private readonly storage: StorageAdapter,
   ) {}
 
   submitDocument(userId: string, dto: CreateDocumentVerificationDto) {
     return this.prisma.documentVerification.create({
       data: { userId, docType: dto.docType, fileUrl: dto.fileUrl },
+    });
+  }
+
+  /**
+   * Envia o documento com upload binario real (salvo em disco local —
+   * modo simulado, ver `storage/local-disk.adapter.ts`), em vez de exigir
+   * um link ja hospedado como `submitDocument` faz.
+   */
+  async uploadDocument(userId: string, docType: string, file: StoredFileInput, originUrl: string) {
+    const { url } = await this.storage.save(file);
+
+    return this.prisma.documentVerification.create({
+      data: { userId, docType, fileUrl: `${originUrl}${url}` },
     });
   }
 

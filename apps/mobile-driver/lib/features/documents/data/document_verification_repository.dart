@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_client.dart';
@@ -29,12 +30,20 @@ class DocumentVerificationRepository {
     }
   }
 
-  Future<DocumentVerification> submit({required String docType, required String fileUrl}) async {
+  /// Envia o documento com upload binario real (POST
+  /// /document-verification/me/upload, multipart) — modo simulado, o
+  /// arquivo e salvo em disco local no backend.
+  Future<DocumentVerification> upload({
+    required String docType,
+    required Uint8List bytes,
+    required String fileName,
+  }) async {
     try {
-      final response = await _dio.post(
-        '/document-verification/me',
-        data: {'docType': docType, 'fileUrl': fileUrl},
-      );
+      final formData = FormData.fromMap({
+        'docType': docType,
+        'file': MultipartFile.fromBytes(bytes, filename: fileName),
+      });
+      final response = await _dio.post('/document-verification/me/upload', data: formData);
       return DocumentVerification.fromJson(response.data as Map<String, dynamic>);
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);

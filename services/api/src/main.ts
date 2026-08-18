@@ -1,11 +1,18 @@
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { join } from 'path';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.setGlobalPrefix('api/v1', { exclude: ['health'] });
+
+  // Serve os arquivos de `uploads/` (modo simulado de storage — ver
+  // document-verification/storage/local-disk.adapter.ts) publicamente
+  // em /uploads, fora do prefixo /api/v1 (mesmo padrao do health check).
+  app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads' });
   app.enableCors({
     origin: (process.env.ADMIN_WEB_URL ?? 'http://localhost:3003').split(','),
     methods: ['GET', 'POST', 'PATCH', 'DELETE'],

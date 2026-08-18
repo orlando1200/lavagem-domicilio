@@ -4,6 +4,7 @@ import { DocumentVerificationStatus } from '@prisma/client';
 import { DocumentVerificationService } from '../../../src/modules/document-verification/document-verification.service';
 import { PrismaService } from '../../../src/database/prisma.service';
 import { NotificationsService } from '../../../src/modules/notifications/notifications.service';
+import { STORAGE_ADAPTER } from '../../../src/modules/document-verification/storage/storage.interface';
 
 const USER_ID = 'user-1';
 const ADMIN_ID = 'admin-1';
@@ -38,6 +39,7 @@ describe('DocumentVerificationService', () => {
         DocumentVerificationService,
         { provide: PrismaService, useValue: prisma },
         { provide: NotificationsService, useValue: { create: jest.fn() } },
+        { provide: STORAGE_ADAPTER, useValue: { save: jest.fn() } },
       ],
     }).compile();
 

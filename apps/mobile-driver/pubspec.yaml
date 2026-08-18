@@ -33,6 +33,9 @@ dependencies:
   # Localizacao (tracking em tempo real enquanto ha pedido ativo)
   geolocator: ^13.0.1
 
+  # Selecao de arquivo/foto (envio de documentos)
+  image_picker: ^1.1.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
