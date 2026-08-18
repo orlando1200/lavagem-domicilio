@@ -67,4 +67,17 @@ class PaymentsRepository {
       throw ApiException.fromDioException(e);
     }
   }
+
+  /// Historico completo de pagamentos do usuario autenticado
+  /// (GET /payments/mine), mais recente primeiro.
+  Future<List<PaymentModel>> fetchHistory() async {
+    try {
+      final response = await _dio.get<List<dynamic>>('/payments/mine');
+      return response.data!
+          .map((e) => PaymentModel.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
 }

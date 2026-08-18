@@ -14,6 +14,7 @@ import 'features/shop/presentation/pages/shop_page.dart';
 import 'features/shop/presentation/pages/product_detail_page.dart';
 import 'features/shop/presentation/pages/cart_page.dart';
 import 'features/shop/presentation/pages/checkout_page.dart';
+import 'features/shop/presentation/pages/payment_history_page.dart';
 import 'features/auctions/presentation/pages/auctions_list_page.dart';
 import 'features/auctions/presentation/pages/create_auction_page.dart';
 import 'features/auctions/presentation/pages/auction_detail_page.dart';
@@ -143,8 +144,7 @@ final GoRouter _router = GoRouter(
     ),
     GoRoute(
       path: '/payment-history',
-      builder: (context, state) =>
-          const PlaceholderPage(title: 'Histórico de Pagamentos'),
+      builder: (context, state) => const PaymentHistoryPage(),
     ),
     GoRoute(
       path: '/engagement',

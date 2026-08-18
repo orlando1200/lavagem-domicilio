@@ -119,6 +119,13 @@ export class PaymentsService {
     return { payment, gateway: intent };
   }
 
+  listMyPayments(userId: string) {
+    return this.prisma.payment.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async getMyPayment(userId: string, orderId: string) {
     const payment = await this.prisma.payment.findUnique({ where: { orderId } });
     if (!payment || payment.userId !== userId) {

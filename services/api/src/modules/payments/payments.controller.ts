@@ -28,6 +28,15 @@ export class PaymentsController {
     return this.paymentsService.createIntent(user.id, dto);
   }
 
+  @Get('mine')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.CLIENTE)
+  @ApiOperation({ summary: 'Lista o historico de pagamentos do usuario autenticado' })
+  listMine(@CurrentUser() user: AuthenticatedUser) {
+    return this.paymentsService.listMyPayments(user.id);
+  }
+
   @Get('orders/:orderId')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
