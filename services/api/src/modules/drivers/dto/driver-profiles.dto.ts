@@ -100,6 +100,43 @@ export class UpdateDriverLocationDto {
   longitude: number;
 }
 
+/**
+ * Dados bancarios/PIX do lavador, usados para repasses (`Payout`).
+ * Todos os campos sao opcionais — o lavador pode preencher parcialmente
+ * e completar depois.
+ */
+export class UpdateDriverBankInfoDto {
+  @ApiPropertyOptional({ description: 'Tipo da chave PIX (cpf, email, telefone, aleatoria)' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(30)
+  pixKeyType?: string;
+
+  @ApiPropertyOptional({ description: 'Chave PIX' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(140)
+  pixKey?: string;
+
+  @ApiPropertyOptional({ description: 'Nome do banco' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  bankName?: string;
+
+  @ApiPropertyOptional({ description: 'Agencia' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  agency?: string;
+
+  @ApiPropertyOptional({ description: 'Numero da conta' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(30)
+  accountNumber?: string;
+}
+
 export class AdminUpdateDriverProfileStatusDto {
   @ApiProperty({ enum: DriverStatus })
   @IsEnum(DriverStatus)

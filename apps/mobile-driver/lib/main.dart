@@ -11,6 +11,7 @@ import 'features/documents/presentation/pages/documents_page.dart';
 import 'features/home/presentation/pages/home_page.dart';
 import 'features/orders/presentation/pages/active_order_page.dart';
 import 'features/profile/presentation/pages/change_password_page.dart';
+import 'features/profile/presentation/pages/bank_info_page.dart';
 import 'features/auctions/presentation/pages/auctions_page.dart';
 import 'features/auctions/presentation/pages/submit_bid_page.dart';
 import 'features/shop/presentation/pages/shop_page.dart';
@@ -121,6 +122,10 @@ final GoRouter _router = GoRouter(
     GoRoute(
       path: '/profile/change-password',
       builder: (context, state) => const ChangePasswordPage(),
+    ),
+    GoRoute(
+      path: '/profile/bank-info',
+      builder: (context, state) => const BankInfoPage(),
     ),
   ],
 );

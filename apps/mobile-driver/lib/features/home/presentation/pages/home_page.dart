@@ -964,7 +964,7 @@ class _ProfileView extends StatelessWidget {
           _ProfileMenuItem(
             icon: Icons.account_balance_wallet_outlined,
             title: 'Minhas contas bancárias',
-            onTap: () {},
+            onTap: () => context.push('/profile/bank-info'),
           ),
           _ProfileMenuItem(
             icon: Icons.location_on_outlined,

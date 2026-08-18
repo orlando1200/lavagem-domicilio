@@ -10,6 +10,7 @@ import {
   AdminUpdateDriverProfileStatusDto,
   CreateDriverProfileDto,
   ListDriverProfilesQueryDto,
+  UpdateDriverBankInfoDto,
   UpdateDriverLocationDto,
   UpdateDriverProfileAvailabilityDto,
   UpdateDriverProfileDto,
@@ -147,6 +148,28 @@ export class DriverProfilesService {
         currentLongitude: dto.longitude,
         locationUpdatedAt: new Date(),
       },
+      include: DRIVER_PROFILE_INCLUDE,
+    });
+  }
+
+  /**
+   * Atualiza os dados bancarios/PIX do proprio lavador (usados nos
+   * repasses, `Payout`). Preenchimento parcial permitido — so os campos
+   * enviados sao atualizados.
+   */
+  async updateMyBankInfo(userId: string, dto: UpdateDriverBankInfoDto) {
+    await this.findProfileOrThrow(userId);
+
+    const data: Prisma.DriverProfileUpdateInput = {};
+    if (dto.pixKeyType !== undefined) data.pixKeyType = dto.pixKeyType;
+    if (dto.pixKey !== undefined) data.pixKey = dto.pixKey;
+    if (dto.bankName !== undefined) data.bankName = dto.bankName;
+    if (dto.agency !== undefined) data.agency = dto.agency;
+    if (dto.accountNumber !== undefined) data.accountNumber = dto.accountNumber;
+
+    return this.prisma.driverProfile.update({
+      where: { userId },
+      data,
       include: DRIVER_PROFILE_INCLUDE,
     });
   }

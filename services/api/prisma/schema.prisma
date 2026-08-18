@@ -170,6 +170,11 @@ model DriverProfile {
   currentLatitude    Decimal?   @map("current_latitude") @db.Decimal(10, 7)
   currentLongitude   Decimal?   @map("current_longitude") @db.Decimal(10, 7)
   locationUpdatedAt  DateTime?  @map("location_updated_at") @db.Timestamptz
+  pixKeyType      String?       @map("pix_key_type")
+  pixKey          String?       @map("pix_key")
+  bankName        String?       @map("bank_name")
+  agency          String?       @map("agency")
+  accountNumber   String?       @map("account_number")
   createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz
   updatedAt       DateTime      @updatedAt @map("updated_at") @db.Timestamptz
 

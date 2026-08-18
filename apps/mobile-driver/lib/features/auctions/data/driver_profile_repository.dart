@@ -123,4 +123,30 @@ class DriverProfileRepository {
       throw ApiException.fromDioException(e);
     }
   }
+
+  /// Atualiza os dados bancarios/PIX (usados nos repasses). Preenchimento
+  /// parcial permitido — so os campos enviados sao alterados.
+  Future<DriverProfileModel> updateBankInfo({
+    String? pixKeyType,
+    String? pixKey,
+    String? bankName,
+    String? agency,
+    String? accountNumber,
+  }) async {
+    try {
+      final response = await _dio.patch<Map<String, dynamic>>(
+        '/driver-profiles/me/bank-info',
+        data: {
+          if (pixKeyType != null) 'pixKeyType': pixKeyType,
+          if (pixKey != null) 'pixKey': pixKey,
+          if (bankName != null) 'bankName': bankName,
+          if (agency != null) 'agency': agency,
+          if (accountNumber != null) 'accountNumber': accountNumber,
+        },
+      );
+      return DriverProfileModel.fromJson(response.data!);
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
 }

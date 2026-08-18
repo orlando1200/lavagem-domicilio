@@ -45,6 +45,11 @@ class DriverProfileModel {
     required this.status,
     required this.serviceRadiusKm,
     this.zone,
+    this.pixKeyType,
+    this.pixKey,
+    this.bankName,
+    this.agency,
+    this.accountNumber,
   });
 
   final String driverType;
@@ -52,6 +57,11 @@ class DriverProfileModel {
   final String status;
   final double serviceRadiusKm;
   final ZoneSummary? zone;
+  final String? pixKeyType;
+  final String? pixKey;
+  final String? bankName;
+  final String? agency;
+  final String? accountNumber;
 
   bool get isEligibleForAuctions =>
       driverType == 'CARWASH_SHOP' &&
@@ -69,6 +79,11 @@ class DriverProfileModel {
       status: json['status'] as String? ?? 'pending_documents',
       serviceRadiusKm: _parseDouble(json['serviceRadiusKm'], 5),
       zone: zoneJson != null ? ZoneSummary.fromJson(zoneJson) : null,
+      pixKeyType: json['pixKeyType'] as String?,
+      pixKey: json['pixKey'] as String?,
+      bankName: json['bankName'] as String?,
+      agency: json['agency'] as String?,
+      accountNumber: json['accountNumber'] as String?,
     );
   }
 }

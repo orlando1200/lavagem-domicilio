@@ -11,6 +11,7 @@ import {
 import { DriverProfilesService } from './driver-profiles.service';
 import {
   CreateDriverProfileDto,
+  UpdateDriverBankInfoDto,
   UpdateDriverLocationDto,
   UpdateDriverProfileAvailabilityDto,
   UpdateDriverProfileDto,
@@ -70,5 +71,14 @@ export class DriverProfilesController {
     @Body() dto: UpdateDriverLocationDto,
   ) {
     return this.driverProfilesService.updateMyLocation(user.id, dto);
+  }
+
+  @Patch('bank-info')
+  @ApiOperation({ summary: 'Atualiza os dados bancarios/PIX do lavador (usados nos repasses)' })
+  updateBankInfo(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: UpdateDriverBankInfoDto,
+  ) {
+    return this.driverProfilesService.updateMyBankInfo(user.id, dto);
   }
 }
