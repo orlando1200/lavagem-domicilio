@@ -974,7 +974,7 @@ class _ProfileView extends StatelessWidget {
           _ProfileMenuItem(
             icon: Icons.notifications_outlined,
             title: 'Notificações',
-            onTap: () {},
+            onTap: () => context.push('/notifications'),
           ),
           const SizedBox(height: 8),
           NeonSurface(

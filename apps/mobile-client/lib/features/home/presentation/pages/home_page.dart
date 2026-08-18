@@ -900,6 +900,11 @@ class _ProfileView extends StatelessWidget {
             onTap: () => context.push('/engagement'),
           ),
           _ProfileMenuItem(
+            icon: Icons.notifications_outlined,
+            title: 'Notificações',
+            onTap: () => context.push('/notifications'),
+          ),
+          _ProfileMenuItem(
             icon: Icons.edit,
             title: 'Editar Perfil',
             onTap: () => context.push('/profile/edit'),

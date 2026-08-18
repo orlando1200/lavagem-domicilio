@@ -645,6 +645,11 @@ class _ProfileTab extends ConsumerWidget {
               onTap: () => context.push('/plan'),
             ),
             _ProfileMenuItem(
+              icon: Icons.notifications_outlined,
+              title: 'Notificações',
+              onTap: () => context.push('/notifications'),
+            ),
+            _ProfileMenuItem(
               icon: Icons.edit_outlined,
               title: 'Editar Perfil',
               onTap: () => context.push('/profile/edit'),

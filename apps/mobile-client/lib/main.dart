@@ -25,6 +25,7 @@ import 'features/profile/presentation/pages/change_password_page.dart';
 import 'features/auth/presentation/pages/register_page.dart';
 import 'features/auth/presentation/pages/forgot_password_page.dart';
 import 'features/auth/presentation/pages/reset_password_page.dart';
+import 'features/notifications/presentation/pages/notifications_page.dart';
 
 void main() {
   runApp(const ProviderScope(child: GiucarApp()));
@@ -148,6 +149,10 @@ final GoRouter _router = GoRouter(
     GoRoute(
       path: '/engagement',
       builder: (context, state) => const EngagementPage(),
+    ),
+    GoRoute(
+      path: '/notifications',
+      builder: (context, state) => const NotificationsPage(),
     ),
     GoRoute(
       path: '/quote',
