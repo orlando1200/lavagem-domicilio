@@ -1076,3 +1076,90 @@ Ordem sugerida, por dependência e impacto (não por facilidade):
     lista recarrega sozinha e mostra "Ativa" na hora. CI real (GitHub
     Actions) confirmado verde nos 6 jobs + os 2 jobs de deploy, todos
     `success`.
+25. **Auditoria de lacunas reais + 4 fechadas**. Com o deploy/CI/CD
+    finalmente destravado, uma auditoria (grep por `TODO`/stubs vazios/
+    `mock` + leitura completa deste arquivo) achou 7 lacunas reais nunca
+    documentadas antes — bem além do que já era conhecido. Apresentadas
+    ao usuário, 4 foram priorizadas:
+
+    **`mobile-client` não tinha cadastro de cliente de verdade** — a
+    rota `/register` era só `PlaceholderPage(title: 'Cadastro')`,
+    herdada de uma fase muito anterior do projeto e nunca revisitada.
+    Um cliente novo **não conseguia criar conta pelo app**, só via
+    `POST /auth/register` direto — a lacuna mais grave das 7, porque
+    bloqueava qualquer uso real do app por alguém fora do seed. Nova
+    `RegisterPage` (single-step, sem escolha de tipo de perfil — isso é
+    só do `mobile-driver`) + `AuthRepository.register()`, mesmo padrão
+    já usado lá.
+
+    **`mobile-driver` mostrava entregas falsas pra sempre** —
+    `DeliveryOrdersNotifier.loadAvailableDeliveries()` já chamava
+    `GET /driver/deliveries` de verdade, mas descartava a resposta
+    (`// TODO: mapear o payload real...`, nunca implementado) e a
+    lista mock hardcoded (`delivery-1`/`delivery-2`, nomes/produtos
+    fictícios) nunca era substituída — pior, o método nem era chamado
+    de lugar nenhum na UI, então nem o load acontecia. Corrigido:
+    `DeliveryOrder.fromJson` real (produto/loja/comprador extraídos do
+    `ProductOrder` aninhado, endereço do `shippingAddress`), repository
+    tipado, provider carrega no construtor. Nessa investigação, achado
+    um vazamento real de `passwordHash`: `DELIVERY_INCLUDE.buyer` em
+    `deliveries.service.ts` usava `include: true` (traz o `User`
+    inteiro) em vez de `select`, diferente do padrão já usado em
+    `payouts`/`document-verification` — corrigido junto (`buyer` e
+    `store` agora com `select` explícito).
+
+    **"Alterar Senha" era botão morto em `mobile-client` e
+    `mobile-lojista`** (documentado desde o item 22 como lacuna real —
+    "não é só conectar") — não existia endpoint de troca de senha
+    exigindo confirmação da senha atual (`PATCH /users/me` já aceitava
+    um `password` novo direto, sem checar o atual — usado hoje só pelo
+    fluxo de edição de perfil, mantido como está). Novo
+    `PATCH /users/me/password` (`UsersService.changePassword`:
+    `bcrypt.compare` da senha atual antes de trocar, `UnauthorizedException`
+    se não bater) + tela nova nos 2 apps. "Esqueci minha senha" (tela de
+    login, deslogado) ficou de fora — precisaria de envio de e-mail, e
+    não existe nenhuma infra de e-mail configurada (`AWS_ACCESS_KEY_ID`
+    vazio).
+
+    **16 de 22 módulos do backend sem teste nenhum.** Cobertos os 3 com
+    histórico real de bug nesta sessão (`deliveries`, `payouts`,
+    `document-verification`), specs novos seguindo exatamente o padrão
+    de `store.service.spec.ts` (Prisma mockado via objeto plano de
+    `jest.fn()`). De brinde, um `users.service.spec.ts` completo
+    (14 testes, cobrindo inclusive o `changePassword` novo) apareceu já
+    pronto no working tree, nunca commitado — provavelmente escrito
+    numa parte anterior desta mesma sessão longa e perdido de vista
+    entre a compactação de contexto e um reboot da máquina no meio do
+    caminho. Rodado e confirmado passando antes de incluir no commit;
+    fecha mais um dos 16 módulos sem cobertura.
+
+    As outras 3 lacunas achadas ficaram de fora por decisão do usuário:
+    Mercado Pago 100% mock (já documentado, precisa de credenciais de
+    sandbox reais que ele não tem à mão); rota `/payment-history`
+    ainda placeholder; 6 módulos de backend mortos/quarentenados
+    (`analytics`, `compliance`, `dispatch`, `face-check`,
+    `services-catalog`, `tracking`) — cosméticos/limpeza, não bloqueiam
+    uso real.
+
+    No meio da verificação visual (link HTTPS + celular real, mesmo
+    esquema desta sessão), a máquina reiniciou sozinha e derrubou Docker
+    Desktop, Postgres e todos os servidores locais de uma vez —
+    diagnosticado via `docker ps` falhando e `(Get-CimInstance
+    Win32_OperatingSystem).LastBootUpTime` batendo com o horário do
+    problema. Sem acesso pra religar o Docker Desktop programaticamente
+    (não achado em nenhum caminho padrão), pedido pro usuário religar
+    manualmente — depois disso, tudo voltou limpo (Postgres recuperou
+    via WAL replay automático, sem perda de dado).
+
+    Verificação: backend `lint/type-check` limpos; 78+35 = 113 testes
+    unitários (todos os módulos, incluindo os 4 specs novos) verdes;
+    `test:e2e` (11 testes, contra `lavagem_domicilio_test` dedicado, não
+    o banco de dev usado pelos links do celular) verde; `build` limpo.
+    `flutter analyze`/`flutter test` limpos nos 3 apps. Ao vivo contra o
+    backend real (API nativa + proxy HTTPS `local-ssl-proxy`, mesmo
+    esquema do item 24): criada uma entrega real via
+    `POST /admin/deliveries`, confirmado que `GET /driver/deliveries`
+    devolve produto/loja/comprador reais ("Kit Microfibra (3un)" /
+    "Loja GIUCAR Insumos" / "Diego Moto") sem `passwordHash` no payload;
+    login com a senha antiga falha (401) e com a nova funciona (201)
+    depois de `PATCH /users/me/password`.
