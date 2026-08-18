@@ -9,7 +9,9 @@ import '../../../vehicles/data/models/vehicle_model.dart';
 import '../../../vehicles/presentation/providers/vehicles_provider.dart';
 import '../../../shop/data/payments_repository.dart';
 import '../../data/models/order_model.dart';
+import '../../data/models/service_category_model.dart';
 import '../../data/orders_repository.dart';
+import '../../data/service_categories_repository.dart';
 import '../../orders_provider.dart';
 
 typedef _WashService = ({
@@ -20,29 +22,51 @@ typedef _WashService = ({
   bool isAuction,
 });
 
-const _services = <_WashService>[
-  (
-    serviceType: 'DRY_WASH',
-    name: 'Lavagem a Seco',
-    price: 59.90,
-    icon: Icons.eco,
-    isAuction: false,
-  ),
-  (
-    serviceType: 'EXPRESS_WASH',
-    name: 'Lavagem Express',
-    price: 89.90,
-    icon: Icons.local_car_wash,
-    isAuction: false,
-  ),
-  (
-    serviceType: 'HEAVY_SERVICE',
-    name: 'Serviço Pesado (Leilão)',
-    price: 0,
-    icon: Icons.gavel_rounded,
-    isAuction: true,
-  ),
-];
+const Map<String, IconData> _serviceIcons = {
+  'DRY_WASH': Icons.eco,
+  'EXPRESS_WASH': Icons.local_car_wash,
+};
+
+/// Precos de fallback usados apenas enquanto o admin nao cadastrou uma
+/// categoria (`ServiceCategory`) para o tipo — evita que o wizard fique
+/// sem opcao alguma antes da migracao de dados existente ser feita.
+const Map<String, ({String name, double price})> _serviceFallbacks = {
+  'DRY_WASH': (name: 'Lavagem a Seco', price: 59.90),
+  'EXPRESS_WASH': (name: 'Lavagem Express', price: 89.90),
+};
+
+const _heavyService = (
+  serviceType: 'HEAVY_SERVICE',
+  name: 'Serviço Pesado (Leilão)',
+  price: 0.0,
+  icon: Icons.gavel_rounded,
+  isAuction: true,
+);
+
+final _servicesProvider = FutureProvider<List<_WashService>>((ref) async {
+  final repository = ref.watch(serviceCategoriesRepositoryProvider);
+  Map<String, ServiceCategoryModel> byType = {};
+  try {
+    final categories = await repository.fetchActive();
+    byType = {for (final c in categories) c.serviceType: c};
+  } catch (_) {
+    // Falha ao buscar categorias: segue com os precos de fallback.
+  }
+
+  final services = <_WashService>[
+    for (final type in ['DRY_WASH', 'EXPRESS_WASH'])
+      (
+        serviceType: type,
+        name: byType[type]?.name ?? _serviceFallbacks[type]!.name,
+        price: byType[type]?.price ?? _serviceFallbacks[type]!.price,
+        icon: _serviceIcons[type]!,
+        isAuction: false,
+      ),
+    _heavyService,
+  ];
+
+  return services;
+});
 
 typedef _PaymentMethod = ({IconData icon, String label, String value});
 
@@ -199,11 +223,30 @@ class _NewOrderPageState extends ConsumerState<NewOrderPage> {
               ),
               const SizedBox(height: 16),
               if (_step == 0)
-                _ServiceStep(
-                  onSelect: (service) => setState(() {
-                    _selectedService = service;
-                    _step = 1;
-                  }),
+                Consumer(
+                  builder: (context, ref, _) {
+                    final servicesAsync = ref.watch(_servicesProvider);
+                    return servicesAsync.when(
+                      loading: () => const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 40),
+                        child: Center(
+                          child: CircularProgressIndicator(color: AppColors.primary),
+                        ),
+                      ),
+                      error: (error, _) => const Text(
+                        'Não foi possível carregar os serviços.',
+                        style: TextStyle(color: AppColors.error),
+                        textAlign: TextAlign.center,
+                      ),
+                      data: (services) => _ServiceStep(
+                        services: services,
+                        onSelect: (service) => setState(() {
+                          _selectedService = service;
+                          _step = 1;
+                        }),
+                      ),
+                    );
+                  },
                 )
               else if (_step == 1)
                 _VehicleStep(
@@ -259,8 +302,9 @@ class _NewOrderPageState extends ConsumerState<NewOrderPage> {
 }
 
 class _ServiceStep extends StatelessWidget {
-  const _ServiceStep({required this.onSelect});
+  const _ServiceStep({required this.services, required this.onSelect});
 
+  final List<_WashService> services;
   final ValueChanged<_WashService> onSelect;
 
   @override
@@ -268,7 +312,7 @@ class _ServiceStep extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (final service in _services)
+        for (final service in services)
           Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: NeonSurface(

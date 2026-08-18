@@ -16,6 +16,7 @@ import {
   Gift,
   Receipt,
   FileCheck,
+  Tag,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -26,6 +27,7 @@ const NAV_ITEMS = [
   { href: '/lavadores', label: 'Aprovação de Lavadores', icon: UserCheck },
   { href: '/documentos', label: 'Documentos', icon: FileCheck },
   { href: '/marketplace', label: 'Marketplace', icon: Store },
+  { href: '/categorias', label: 'Categorias / Serviços', icon: Tag },
   { href: '/repasses', label: 'Repasses', icon: Wallet },
   { href: '/relatorios-financeiros', label: 'Relatórios Financeiros', icon: Receipt },
   { href: '/cupons', label: 'Cupons', icon: Ticket },

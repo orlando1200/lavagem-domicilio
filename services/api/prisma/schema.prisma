@@ -159,6 +159,19 @@ enum ServiceType {
   HEAVY_SERVICE
 }
 
+model ServiceCategory {
+  id          String      @id @default(uuid()) @db.Uuid
+  serviceType ServiceType @unique @map("service_type")
+  name        String      @db.VarChar(120)
+  description String?     @db.Text
+  price       Decimal     @db.Decimal(10, 2)
+  active      Boolean     @default(true)
+  createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime    @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("service_categories")
+}
+
 enum AuctionStatus {
   open
   closed
