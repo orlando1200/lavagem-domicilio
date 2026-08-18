@@ -4,6 +4,7 @@ import { PaymentMethod, PaymentStatus, ProductOrderStatus } from '@prisma/client
 import { PaymentsService } from '../../../src/modules/payments/payments.service';
 import { PrismaService } from '../../../src/database/prisma.service';
 import { LoyaltyService } from '../../../src/modules/loyalty/loyalty.service';
+import { NotificationsService } from '../../../src/modules/notifications/notifications.service';
 import { PAYMENT_GATEWAY_ADAPTER } from '../../../src/modules/payments/adapters/payment-gateway.interface';
 
 const ORDER_ID = 'order-1';
@@ -19,6 +20,7 @@ describe('PaymentsService', () => {
     payment: { findUnique: jest.Mock; findFirst: jest.Mock; create: jest.Mock; update: jest.Mock };
   };
   let loyaltyService: { grantForPaidOrder: jest.Mock };
+  let notificationsService: { create: jest.Mock };
   let gateway: { createIntent: jest.Mock };
 
   beforeEach(async () => {
@@ -33,6 +35,7 @@ describe('PaymentsService', () => {
       },
     };
     loyaltyService = { grantForPaidOrder: jest.fn() };
+    notificationsService = { create: jest.fn() };
     gateway = { createIntent: jest.fn() };
 
     module = await Test.createTestingModule({
@@ -40,6 +43,7 @@ describe('PaymentsService', () => {
         PaymentsService,
         { provide: PrismaService, useValue: prisma },
         { provide: LoyaltyService, useValue: loyaltyService },
+        { provide: NotificationsService, useValue: notificationsService },
         { provide: PAYMENT_GATEWAY_ADAPTER, useValue: gateway },
       ],
     }).compile();

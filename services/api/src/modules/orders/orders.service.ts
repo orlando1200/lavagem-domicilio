@@ -2,11 +2,13 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { DriverStatus, DriverType, Order, OrderStatus, Prisma, ServiceType, UserRole } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 import { MapsService } from '../maps/maps.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { AdminListOrdersDto, ListOrdersDto } from './dto/list-orders.dto';
 import { CancelOrderDto, UpdateOrderStatusDto } from './dto/update-order-status.dto';
@@ -32,9 +34,12 @@ const ALLOWED_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
 
 @Injectable()
 export class OrdersService {
+  private readonly logger = new Logger(OrdersService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly mapsService: MapsService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   // ────────────────────────────────────────────────────────────────────
@@ -266,7 +271,24 @@ export class OrdersService {
       include: ORDER_INCLUDE,
     });
 
+    await this.notifyOrderAcceptedBestEffort(updated.customerId, updated.id);
+
     return updated;
+  }
+
+  private async notifyOrderAcceptedBestEffort(customerId: string, orderId: string) {
+    try {
+      await this.notificationsService.create(customerId, {
+        type: 'order_accepted',
+        title: 'Seu pedido foi aceito!',
+        body: 'Um lavador aceitou seu pedido e ja esta a caminho.',
+        relatedEntityId: orderId,
+      });
+    } catch (error) {
+      this.logger.warn(
+        `Nao foi possivel notificar o cliente sobre o aceite do pedido ${orderId}: ${(error as Error).message}`,
+      );
+    }
   }
 
   async updateOrderStatusAsDriver(

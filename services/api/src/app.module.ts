@@ -24,6 +24,7 @@ import { SupportModule } from './modules/support/support.module';
 import { RentalModule } from './modules/rental/rental.module';
 import { DocumentVerificationModule } from './modules/document-verification/document-verification.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
     RentalModule,
     DocumentVerificationModule,
     DashboardModule,
+    NotificationsModule,
   ],
 })
 export class AppModule {}

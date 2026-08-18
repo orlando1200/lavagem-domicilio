@@ -3,6 +3,7 @@ import { NotFoundException } from '@nestjs/common';
 import { DocumentVerificationStatus } from '@prisma/client';
 import { DocumentVerificationService } from '../../../src/modules/document-verification/document-verification.service';
 import { PrismaService } from '../../../src/database/prisma.service';
+import { NotificationsService } from '../../../src/modules/notifications/notifications.service';
 
 const USER_ID = 'user-1';
 const ADMIN_ID = 'admin-1';
@@ -36,6 +37,7 @@ describe('DocumentVerificationService', () => {
       providers: [
         DocumentVerificationService,
         { provide: PrismaService, useValue: prisma },
+        { provide: NotificationsService, useValue: { create: jest.fn() } },
       ],
     }).compile();
 

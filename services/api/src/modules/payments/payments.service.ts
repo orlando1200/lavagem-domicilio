@@ -9,6 +9,7 @@ import {
 import { PaymentMethod, PaymentStatus, Prisma, ProductOrderStatus } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 import { LoyaltyService } from '../loyalty/loyalty.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { PAYMENT_GATEWAY_ADAPTER, PaymentGatewayAdapter } from './adapters/payment-gateway.interface';
 import {
   AdminListPaymentsQueryDto,
@@ -34,6 +35,7 @@ export class PaymentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly loyaltyService: LoyaltyService,
+    private readonly notificationsService: NotificationsService,
     @Inject(PAYMENT_GATEWAY_ADAPTER) private readonly gateway: PaymentGatewayAdapter,
   ) {}
 
@@ -162,9 +164,25 @@ export class PaymentsService {
       } else if (payment.productOrderId) {
         await this.confirmProductOrderPaymentBestEffort(payment.productOrderId);
       }
+      await this.notifyPaymentConfirmedBestEffort(payment.userId, payment.id);
     }
 
     return updated;
+  }
+
+  private async notifyPaymentConfirmedBestEffort(userId: string, paymentId: string) {
+    try {
+      await this.notificationsService.create(userId, {
+        type: 'payment_confirmed',
+        title: 'Pagamento confirmado',
+        body: 'Recebemos a confirmacao do seu pagamento.',
+        relatedEntityId: paymentId,
+      });
+    } catch (error) {
+      this.logger.warn(
+        `Nao foi possivel notificar o pagamento confirmado ${paymentId}: ${(error as Error).message}`,
+      );
+    }
   }
 
   private async grantLoyaltyPointsBestEffort(orderId: string) {

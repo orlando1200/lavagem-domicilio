@@ -5,6 +5,7 @@ import { DriverStatus, DriverType, OrderStatus, ServiceType, UserRole } from '@p
 import { OrdersService } from '../../../src/modules/orders/orders.service';
 import { PrismaService } from '../../../src/database/prisma.service';
 import { MapsService } from '../../../src/modules/maps/maps.service';
+import { NotificationsService } from '../../../src/modules/notifications/notifications.service';
 
 const CUSTOMER_ID = 'customer-1';
 const ORDER_ID = 'order-1';
@@ -64,6 +65,7 @@ describe('OrdersService', () => {
         MapsService,
         { provide: PrismaService, useValue: prisma },
         { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue(undefined) } },
+        { provide: NotificationsService, useValue: { create: jest.fn() } },
       ],
     }).compile();
 

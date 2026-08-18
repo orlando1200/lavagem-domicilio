@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { DocumentVerificationStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import {
   CreateDocumentVerificationDto,
   ListDocumentVerificationsQueryDto,
@@ -13,7 +14,12 @@ const DOCUMENT_VERIFICATION_INCLUDE = {
 
 @Injectable()
 export class DocumentVerificationService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(DocumentVerificationService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   submitDocument(userId: string, dto: CreateDocumentVerificationDto) {
     return this.prisma.documentVerification.create({
@@ -65,13 +71,39 @@ export class DocumentVerificationService {
   }
 
   async reviewDocument(id: string, adminUserId: string, dto: ReviewDocumentVerificationDto) {
-    await this.findDocumentOrThrow(id);
+    const document = await this.findDocumentOrThrow(id);
 
-    return this.prisma.documentVerification.update({
+    const updated = await this.prisma.documentVerification.update({
       where: { id },
       data: { status: dto.status, reviewedByUserId: adminUserId },
       include: DOCUMENT_VERIFICATION_INCLUDE,
     });
+
+    await this.notifyReviewBestEffort(document.userId, updated.id, dto.status);
+
+    return updated;
+  }
+
+  private async notifyReviewBestEffort(
+    userId: string,
+    documentId: string,
+    status: DocumentVerificationStatus,
+  ) {
+    try {
+      const approved = status === DocumentVerificationStatus.approved;
+      await this.notificationsService.create(userId, {
+        type: 'document_reviewed',
+        title: approved ? 'Documento aprovado' : 'Documento rejeitado',
+        body: approved
+          ? 'Seu documento foi aprovado.'
+          : 'Seu documento foi rejeitado. Envie um novo documento.',
+        relatedEntityId: documentId,
+      });
+    } catch (error) {
+      this.logger.warn(
+        `Nao foi possivel notificar a revisao do documento ${documentId}: ${(error as Error).message}`,
+      );
+    }
   }
 
   private async findDocumentOrThrow(id: string) {
