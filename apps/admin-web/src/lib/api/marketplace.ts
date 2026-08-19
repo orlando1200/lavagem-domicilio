@@ -53,3 +53,26 @@ export function replaceProductFitments(productId: string, fitments: FitmentRuleB
     .post<ProductFitment[]>(`/admin/marketplace/products/${productId}/fitments`, { fitments })
     .then((r) => r.data);
 }
+
+export interface FitmentImportError {
+  row: number;
+  sku: string;
+  message: string;
+}
+
+export interface FitmentImportResult {
+  totalRows: number;
+  successCount: number;
+  errorCount: number;
+  errors: FitmentImportError[];
+}
+
+export function importFitmentsCsv(file: File) {
+  const formData = new FormData();
+  formData.append('file', file);
+  return apiClient
+    .post<FitmentImportResult>('/admin/marketplace/fitments/import', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    .then((r) => r.data);
+}

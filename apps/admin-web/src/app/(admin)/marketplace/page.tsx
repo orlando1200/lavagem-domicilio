@@ -28,12 +28,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { PaginationControls } from '@/components/admin/pagination-controls';
 import {
+  importFitmentsCsv,
   listProductFitments,
   listProducts,
   listStores,
   replaceProductFitments,
   updateProductStatus,
   updateStoreStatus,
+  type FitmentImportResult,
   type FitmentRuleBody,
 } from '@/lib/api/marketplace';
 import { listVehicleBrands, listVehicleCatalogModels } from '@/lib/api/vehicle-catalog';
@@ -200,6 +202,7 @@ function ProductsTab() {
   const [page, setPage] = useState(1);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [fitmentProduct, setFitmentProduct] = useState<Product | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['admin', 'marketplace', 'products', { status, search, page }],
@@ -214,7 +217,8 @@ function ProductsTab() {
 
   return (
     <div className="mt-4 space-y-4">
-      <div className="flex flex-wrap items-end gap-3">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="flex flex-wrap items-end gap-3">
         <div className="flex flex-col gap-1.5">
           <Label>Buscar</Label>
           <Input
@@ -249,6 +253,10 @@ function ProductsTab() {
             </SelectContent>
           </Select>
         </div>
+        </div>
+        <Button variant="outline" onClick={() => setImportOpen(true)}>
+          Importar compatibilidade (CSV)
+        </Button>
       </div>
 
       {isError && <p className="text-sm text-destructive">Não foi possível carregar os produtos.</p>}
@@ -319,6 +327,7 @@ function ProductsTab() {
 
       <ProductStatusDialog product={selectedProduct} onClose={() => setSelectedProduct(null)} />
       <FitmentDialog product={fitmentProduct} onClose={() => setFitmentProduct(null)} />
+      <ImportFitmentsDialog open={importOpen} onOpenChange={setImportOpen} />
     </div>
   );
 }
@@ -566,6 +575,94 @@ function FitmentDialog({ product, onClose }: { product: Product | null; onClose:
           <Button disabled={!canSave || saveMutation.isPending} onClick={() => saveMutation.mutate()}>
             {saveMutation.isPending ? 'Salvando...' : 'Salvar'}
           </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ImportFitmentsDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+  const queryClient = useQueryClient();
+  const [file, setFile] = useState<File | null>(null);
+  const [result, setResult] = useState<FitmentImportResult | null>(null);
+
+  const mutation = useMutation({
+    mutationFn: () => importFitmentsCsv(file!),
+    onSuccess: (data) => {
+      setResult(data);
+      if (data.successCount > 0) {
+        queryClient.invalidateQueries({ queryKey: ['admin', 'marketplace', 'products'] });
+      }
+    },
+    onError: (err: any) => toast.error(err?.response?.data?.message ?? 'Erro ao importar o arquivo.'),
+  });
+
+  const close = () => {
+    setFile(null);
+    setResult(null);
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && close()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Importar compatibilidade (CSV)</DialogTitle>
+          <DialogDescription>
+            Colunas esperadas: <code>sku</code>, <code>marca</code>, <code>modelo</code>,{' '}
+            <code>ano_de</code>, <code>ano_ate</code>, <code>universal</code> (true/false). As regras
+            são adicionadas às já existentes de cada produto — não substituem.
+          </DialogDescription>
+        </DialogHeader>
+
+        {!result ? (
+          <div className="space-y-3">
+            <Input
+              type="file"
+              accept=".csv,text/csv"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            />
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-sm">
+              {result.totalRows} linha(s) processada(s) · {result.successCount} regra(s) importada(s) ·{' '}
+              {result.errorCount} erro(s).
+            </p>
+            {result.errors.length > 0 && (
+              <div className="max-h-64 overflow-y-auto rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Linha</TableHead>
+                      <TableHead>SKU</TableHead>
+                      <TableHead>Erro</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {result.errors.map((err, i) => (
+                      <TableRow key={i}>
+                        <TableCell>{err.row || '—'}</TableCell>
+                        <TableCell>{err.sku || '—'}</TableCell>
+                        <TableCell className="text-destructive">{err.message}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
+        )}
+
+        <DialogFooter>
+          <Button variant="outline" onClick={close}>
+            {result ? 'Fechar' : 'Cancelar'}
+          </Button>
+          {!result && (
+            <Button disabled={!file || mutation.isPending} onClick={() => mutation.mutate()}>
+              {mutation.isPending ? 'Importando...' : 'Importar'}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

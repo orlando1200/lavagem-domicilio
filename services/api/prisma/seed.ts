@@ -212,18 +212,19 @@ async function main() {
   console.log(`Lojista: ${lojistaUser.email} / Loja: ${store.name}`);
 
   const produtosData = [
-    { name: 'Shampoo Automotivo 500ml', slug: 'shampoo-automotivo-500ml', price: 29.9, stock: 50, category: 'Limpeza' },
-    { name: 'Cera Automotiva Premium', slug: 'cera-automotiva-premium', price: 49.9, stock: 30, category: 'Proteção' },
-    { name: 'Kit Microfibra (3un)', slug: 'kit-microfibra-3un', price: 19.9, stock: 100, category: 'Acessórios' },
+    { name: 'Shampoo Automotivo 500ml', slug: 'shampoo-automotivo-500ml', sku: 'GIU-SHP-500', price: 29.9, stock: 50, category: 'Limpeza' },
+    { name: 'Cera Automotiva Premium', slug: 'cera-automotiva-premium', sku: 'GIU-CERA-PREM', price: 49.9, stock: 30, category: 'Proteção' },
+    { name: 'Kit Microfibra (3un)', slug: 'kit-microfibra-3un', sku: 'GIU-MICROFIBRA-3', price: 19.9, stock: 100, category: 'Acessórios' },
   ];
   for (const p of produtosData) {
     await prisma.product.upsert({
       where: { slug: p.slug },
-      update: {},
+      update: { sku: p.sku },
       create: {
         storeId: store.id,
         name: p.name,
         slug: p.slug,
+        sku: p.sku,
         description: p.name,
         category: p.category,
         price: p.price,

@@ -1415,3 +1415,46 @@ Ordem sugerida, por dependência e impacto (não por facilidade):
     catálogo do cliente fechado.
 
     Fases C (import CSV) e D (mobile-client) seguem pendentes.
+
+30. **Garage Vehicular — Fase C: import CSV de compatibilidade em massa.**
+    Nova dependência leve `csv-parse` (sem XLSX por enquanto — fica como
+    fast-follow explícito). `FitmentImportService` isolado do
+    `marketplace.service.ts` pra ser testável sozinho: parseia o CSV
+    (colunas `sku,marca,modelo,ano_de,ano_ate,universal`), valida linha
+    por linha sem abortar no primeiro erro (SKU vazio, marca/modelo
+    desconhecidos, `ano_de > ano_ate`, SKU sem produto correspondente,
+    SKU ambíguo quando mais de um produto usa o mesmo SKU), agrupa as
+    linhas válidas por produto (SKU repetido no arquivo = mais uma
+    regra pro mesmo produto, não substitui) e importa em lote por
+    produto — erro num produto não derruba os demais. Import é
+    **aditivo**: soma às regras já cadastradas, ao contrário do dialog
+    manual (que substitui o conjunto inteiro). 11 testes unitários
+    cobrindo cada caso de erro + arquivo vazio + linha universal + SKU
+    repetido.
+
+    `POST /admin/marketplace/fitments/import` — multipart, mesmo padrão
+    de `document-verification.controller.ts` (`FileInterceptor`, limite
+    de 2MB, `@ApiConsumes`). Achado ao vivo: `Product.sku` já existia no
+    schema mas nenhum produto do seed tinha valor — sem isso o import
+    não tinha nenhum SKU real pra casar. Seed atualizado com SKUs reais
+    nos 3 produtos de exemplo.
+
+    admin-web: botão "Importar compatibilidade (CSV)" no topo da aba
+    Produtos do Marketplace, abre diálogo com input de arquivo,
+    documentando as colunas esperadas, e mostra o resumo (linhas
+    processadas/importadas/erros) + tabela de erros por linha após o
+    upload.
+
+    Verificação: backend `lint/type-check/test (171 testes)/build`
+    limpos; admin-web `lint/type-check` limpos, `build` gera as 20
+    páginas com sucesso. Verificação ao vivo contra Postgres real:
+    upload multipart de verdade via `curl -F` com 5 linhas (1 universal,
+    2 válidas pro mesmo SKU, 1 marca inexistente, 1 SKU inexistente) —
+    resposta exata `{totalRows:5, successCount:3, errorCount:2}` com as
+    mensagens de erro corretas por linha; regras conferidas de volta via
+    `GET .../fitments`; diálogo de import aberto no admin-web real
+    mostrando o texto/colunas esperados.
+
+    Falta só a Fase D (mobile-client: seletor de veículo no
+    cadastro + badge de compatibilidade no catálogo + confirmação
+    pré-checkout) pra fechar o módulo inteiro.
