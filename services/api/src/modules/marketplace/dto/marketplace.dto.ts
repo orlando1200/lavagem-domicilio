@@ -3,6 +3,7 @@ import { Type } from 'class-transformer';
 import {
   ArrayMinSize,
   IsArray,
+  IsBoolean,
   IsEnum,
   IsInt,
   IsNotEmpty,
@@ -10,6 +11,7 @@ import {
   IsString,
   IsUUID,
   Length,
+  Max,
   MaxLength,
   Min,
   ValidateNested,
@@ -27,6 +29,13 @@ export class CatalogQueryDto extends CursorPaginationDto {
   @IsOptional()
   @IsString()
   search?: string;
+
+  @ApiPropertyOptional({
+    description: 'Veiculo do comprador — quando informado, cada produto ganha um campo compatibility',
+  })
+  @IsOptional()
+  @IsUUID()
+  vehicleId?: string;
 }
 
 export class UpdateProductStatusDto {
@@ -153,6 +162,47 @@ export class CheckoutDto {
   @ValidateNested()
   @Type(() => ShippingAddressDto)
   shippingAddress: ShippingAddressDto;
+}
+
+const CURRENT_YEAR = new Date().getFullYear();
+
+export class FitmentRuleDto {
+  @ApiPropertyOptional({ default: false, description: 'Compatível com qualquer veículo' })
+  @IsOptional()
+  @IsBoolean()
+  universal?: boolean;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsUUID()
+  brandId?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsUUID()
+  modelId?: string;
+
+  @ApiPropertyOptional({ minimum: 1990 })
+  @IsOptional()
+  @IsInt()
+  @Min(1990)
+  @Max(CURRENT_YEAR + 1)
+  yearFrom?: number;
+
+  @ApiPropertyOptional({ minimum: 1990 })
+  @IsOptional()
+  @IsInt()
+  @Min(1990)
+  @Max(CURRENT_YEAR + 1)
+  yearTo?: number;
+}
+
+export class ReplaceFitmentsDto {
+  @ApiProperty({ type: [FitmentRuleDto] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => FitmentRuleDto)
+  fitments: FitmentRuleDto[];
 }
 
 export { CatalogTarget };

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
@@ -27,7 +27,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { PaginationControls } from '@/components/admin/pagination-controls';
-import { listProducts, listStores, updateProductStatus, updateStoreStatus } from '@/lib/api/marketplace';
+import {
+  listProductFitments,
+  listProducts,
+  listStores,
+  replaceProductFitments,
+  updateProductStatus,
+  updateStoreStatus,
+  type FitmentRuleBody,
+} from '@/lib/api/marketplace';
+import { listVehicleBrands, listVehicleCatalogModels } from '@/lib/api/vehicle-catalog';
 import { formatCurrencyBRL, formatDate } from '@/lib/format';
 import {
   productStatusLabel,
@@ -190,6 +199,7 @@ function ProductsTab() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [fitmentProduct, setFitmentProduct] = useState<Product | null>(null);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['admin', 'marketplace', 'products', { status, search, page }],
@@ -252,12 +262,13 @@ function ProductsTab() {
             <TableHead>Categoria</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Criado em</TableHead>
+            <TableHead />
           </TableRow>
         </TableHeader>
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+              <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
                 Carregando...
               </TableCell>
             </TableRow>
@@ -278,11 +289,23 @@ function ProductsTab() {
                   </Badge>
                 </TableCell>
                 <TableCell>{formatDate(product.createdAt)}</TableCell>
+                <TableCell>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFitmentProduct(product);
+                    }}
+                  >
+                    Compatibilidade
+                  </Button>
+                </TableCell>
               </TableRow>
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+              <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
                 Nenhum produto encontrado.
               </TableCell>
             </TableRow>
@@ -295,6 +318,7 @@ function ProductsTab() {
       )}
 
       <ProductStatusDialog product={selectedProduct} onClose={() => setSelectedProduct(null)} />
+      <FitmentDialog product={fitmentProduct} onClose={() => setFitmentProduct(null)} />
     </div>
   );
 }
@@ -355,6 +379,192 @@ function ProductStatusDialog({
           </Button>
           <Button disabled={mutation.isPending} onClick={() => mutation.mutate('active')}>
             Aprovar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+type FitmentRow = {
+  key: string;
+  universal: boolean;
+  brandId: string;
+  modelId: string;
+  yearFrom: string;
+  yearTo: string;
+};
+
+const emptyRow = (): FitmentRow => ({
+  key: crypto.randomUUID(),
+  universal: false,
+  brandId: '',
+  modelId: '',
+  yearFrom: '',
+  yearTo: '',
+});
+
+function FitmentDialog({ product, onClose }: { product: Product | null; onClose: () => void }) {
+  const queryClient = useQueryClient();
+  const [rows, setRows] = useState<FitmentRow[]>([]);
+
+  const { data: brands } = useQuery({
+    queryKey: ['admin', 'vehicle-catalog', 'brands'],
+    queryFn: listVehicleBrands,
+    enabled: !!product,
+  });
+  const { data: models } = useQuery({
+    queryKey: ['admin', 'vehicle-catalog', 'models'],
+    queryFn: () => listVehicleCatalogModels(),
+    enabled: !!product,
+  });
+  const { data: fitments } = useQuery({
+    queryKey: ['admin', 'marketplace', 'products', product?.id, 'fitments'],
+    queryFn: () => listProductFitments(product!.id),
+    enabled: !!product,
+  });
+
+  useEffect(() => {
+    if (!fitments) return;
+    setRows(
+      fitments.length
+        ? fitments.map((f) => ({
+            key: f.id,
+            universal: f.universal,
+            brandId: f.brandId ?? '',
+            modelId: f.modelId ?? '',
+            yearFrom: f.yearFrom ? String(f.yearFrom) : '',
+            yearTo: f.yearTo ? String(f.yearTo) : '',
+          }))
+        : [],
+    );
+  }, [fitments]);
+
+  const saveMutation = useMutation({
+    mutationFn: () => {
+      const body: FitmentRuleBody[] = rows.map((row) =>
+        row.universal
+          ? { universal: true }
+          : {
+              universal: false,
+              brandId: row.brandId || undefined,
+              modelId: row.modelId || undefined,
+              yearFrom: row.yearFrom ? Number(row.yearFrom) : undefined,
+              yearTo: row.yearTo ? Number(row.yearTo) : undefined,
+            },
+      );
+      return replaceProductFitments(product!.id, body);
+    },
+    onSuccess: () => {
+      toast.success('Compatibilidade salva.');
+      queryClient.invalidateQueries({ queryKey: ['admin', 'marketplace', 'products', product?.id, 'fitments'] });
+      onClose();
+    },
+    onError: (err: any) => toast.error(err?.response?.data?.message ?? 'Erro ao salvar compatibilidade.'),
+  });
+
+  const updateRow = (key: string, patch: Partial<FitmentRow>) =>
+    setRows((prev) => prev.map((r) => (r.key === key ? { ...r, ...patch } : r)));
+
+  const canSave = rows.every((r) => r.universal || r.modelId);
+
+  return (
+    <Dialog open={!!product} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-xl">
+        <DialogHeader>
+          <DialogTitle>Compatibilidade — {product?.name}</DialogTitle>
+          <DialogDescription>
+            Sem nenhuma regra, o produto aparece como compatibilidade desconhecida pra qualquer
+            veículo (comportamento de hoje). Uma regra universal serve pra qualquer veículo.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-1">
+          {rows.length === 0 && (
+            <p className="text-sm text-muted-foreground">Nenhuma regra cadastrada ainda.</p>
+          )}
+          {rows.map((row) => (
+            <div key={row.key} className="space-y-2 rounded-md border p-3">
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={row.universal}
+                    onChange={(e) => updateRow(row.key, { universal: e.target.checked })}
+                  />
+                  Compatível com qualquer veículo (universal)
+                </label>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setRows((prev) => prev.filter((r) => r.key !== row.key))}
+                >
+                  Remover
+                </Button>
+              </div>
+
+              {!row.universal && (
+                <div className="grid grid-cols-2 gap-2">
+                  <Select
+                    value={row.brandId}
+                    onValueChange={(v) => updateRow(row.key, { brandId: v, modelId: '' })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Marca" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {brands?.map((b) => (
+                        <SelectItem key={b.id} value={b.id}>
+                          {b.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select
+                    value={row.modelId}
+                    onValueChange={(v) => updateRow(row.key, { modelId: v })}
+                    disabled={!row.brandId}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Modelo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {models?.filter((m) => m.brandId === row.brandId).map((m) => (
+                        <SelectItem key={m.id} value={m.id}>
+                          {m.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    type="number"
+                    placeholder="Ano de"
+                    value={row.yearFrom}
+                    onChange={(e) => updateRow(row.key, { yearFrom: e.target.value })}
+                  />
+                  <Input
+                    type="number"
+                    placeholder="Ano até"
+                    value={row.yearTo}
+                    onChange={(e) => updateRow(row.key, { yearTo: e.target.value })}
+                  />
+                </div>
+              )}
+            </div>
+          ))}
+
+          <Button variant="outline" size="sm" onClick={() => setRows((prev) => [...prev, emptyRow()])}>
+            + Adicionar regra
+          </Button>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button disabled={!canSave || saveMutation.isPending} onClick={() => saveMutation.mutate()}>
+            {saveMutation.isPending ? 'Salvando...' : 'Salvar'}
           </Button>
         </DialogFooter>
       </DialogContent>

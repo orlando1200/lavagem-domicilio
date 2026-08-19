@@ -350,6 +350,18 @@ export interface VehicleCatalogYear {
   active: boolean;
 }
 
+export interface ProductFitment {
+  id: string;
+  productId: string;
+  universal: boolean;
+  brandId: string | null;
+  modelId: string | null;
+  yearFrom: number | null;
+  yearTo: number | null;
+  brand: VehicleBrand | null;
+  model: VehicleCatalogModel | null;
+}
+
 export interface Payout {
   id: string;
   recipientType: PayoutRecipientType;

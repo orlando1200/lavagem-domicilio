@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -24,8 +24,9 @@ export class MarketplaceController {
   }
 
   @Get('products/:id')
-  getProduct(@Param('id') id: string) {
-    return this.marketplaceService.getProductById(id);
+  @ApiQuery({ name: 'vehicleId', required: false, description: 'Veiculo do comprador, pra calcular compatibility' })
+  getProduct(@Param('id') id: string, @Query('vehicleId') vehicleId?: string) {
+    return this.marketplaceService.getProductById(id, vehicleId);
   }
 
   @Post('client/checkout')

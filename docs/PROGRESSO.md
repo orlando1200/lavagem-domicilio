@@ -1376,3 +1376,42 @@ Ordem sugerida, por dependência e impacto (não por facilidade):
     Fases B (compatibilidade de produto/fitment + matching), C (import
     CSV) e D (mobile-client: seletor de veículo + badges de
     compatibilidade) do plano original seguem pendentes.
+
+29. **Garage Vehicular — Fase B: compatibilidade de produto (fitment) +
+    matching.** A tabela `ProductFitment` já tinha sido criada na
+    migration do item 28 (junto com o catálogo, pra manter a migration
+    simples) — faltava só o código. Lógica de matching extraída pra um
+    helper puro e testável (`fitment-matching.util.ts`,
+    `matchFitment(vehicle, rules)`): sem regra cadastrada no produto →
+    `UNKNOWN`; alguma regra `universal` → `UNIVERSAL`; regra bate
+    marca+modelo e o ano do veículo cai no intervalo `[yearFrom,
+    yearTo]` → `EXACT_MATCH`; tem regra mas nenhuma bate → `NOT_COMPATIBLE`.
+    8 testes unitários cobrindo os 4 casos + prioridade quando há
+    várias regras.
+
+    `CatalogQueryDto` ganhou `vehicleId?` opcional — `getClientCatalog`/
+    `getDriverCatalog`/`getProductById` resolvem o veículo pro
+    catálogo estruturado (via `Vehicle.catalogYearId`) e anotam
+    `compatibility` em cada produto, buscando as regras de fitment em
+    lote (uma query pra página toda, não uma por produto). Admin ganhou
+    `GET/POST /admin/marketplace/products/:id/fitments` (o `POST`
+    substitui todo o conjunto numa transação — mais simples que
+    diffear linha a linha) e `DELETE .../fitments/:fitmentId`.
+
+    admin-web: botão "Compatibilidade" em cada linha de produto do
+    Marketplace, abre um diálogo com linhas repetíveis (checkbox
+    universal, ou marca→modelo em cascata + intervalo de anos),
+    seedado a partir das regras já cadastradas.
+
+    Verificação: backend `lint/type-check/test (160 testes)/build`
+    limpos; admin-web `lint/type-check` limpos, `build` gera as 20
+    páginas com sucesso (mesmo symlink conhecido na etapa de trace).
+    Verificação ao vivo contra Postgres real: diálogo de compatibilidade
+    aberto pra um produto sem regras (estado vazio correto), regra
+    universal criada e salva, `GET /admin/marketplace/products/:id/fitments`
+    confirmando a regra persistida, e `GET /marketplace/client/catalog`
+    mostrando `compatibility: "UNIVERSAL"` nesse produto e `"UNKNOWN"`
+    nos outros dois (sem regra cadastrada) — loop completo admin→API→
+    catálogo do cliente fechado.
+
+    Fases C (import CSV) e D (mobile-client) seguem pendentes.

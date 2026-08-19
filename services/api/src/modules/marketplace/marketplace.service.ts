@@ -10,9 +10,11 @@ import {
   AdminListProductsDto,
   CatalogQueryDto,
   CheckoutDto,
+  ReplaceFitmentsDto,
   UpdateProductStatusDto,
   UpdateStoreStatusDto,
 } from './dto/marketplace.dto';
+import { FitmentRule, matchFitment, ResolvedVehicle } from './fitment-matching.util';
 
 const CHECKOUT_ORDER_INCLUDE = {
   items: { include: { product: true } },
@@ -79,13 +81,16 @@ export class MarketplaceService {
     const hasMore = products.length > limit;
     const items = hasMore ? products.slice(0, limit) : products;
 
+    const vehicle = await this.resolveVehicle(query.vehicleId);
+    const withCompatibility = await this.attachCompatibility(items, vehicle);
+
     return {
-      items,
+      items: withCompatibility,
       nextCursor: hasMore ? items[items.length - 1].id : null,
     };
   }
 
-  async getProductById(id: string) {
+  async getProductById(id: string, vehicleId?: string) {
     const product = await this.prisma.product.findUnique({
       where: { id },
       include: {
@@ -114,6 +119,140 @@ export class MarketplaceService {
       throw new NotFoundException('Produto nao encontrado');
     }
 
+    const vehicle = await this.resolveVehicle(vehicleId);
+    const [withCompatibility] = await this.attachCompatibility([product], vehicle);
+    return withCompatibility;
+  }
+
+  // ────────────────────────────────────────────────────────────────────
+  // FITMENT (compatibilidade produto x veiculo)
+  // ────────────────────────────────────────────────────────────────────
+
+  /**
+   * Resolve o veiculo (marca/modelo/ano) a partir do catalogo — null
+   * quando nao informado ou quando o veiculo nao tem `catalogYearId`
+   * (cadastro livre, sem vinculo com o catalogo estruturado).
+   */
+  private async resolveVehicle(vehicleId?: string): Promise<ResolvedVehicle | null> {
+    if (!vehicleId) {
+      return null;
+    }
+
+    const vehicle = await this.prisma.vehicle.findUnique({
+      where: { id: vehicleId },
+      include: { catalogYear: { include: { model: true } } },
+    });
+
+    if (!vehicle?.catalogYear) {
+      return null;
+    }
+
+    return {
+      brandId: vehicle.catalogYear.model.brandId,
+      modelId: vehicle.catalogYear.modelId,
+      year: vehicle.catalogYear.year,
+    };
+  }
+
+  /**
+   * Anota `compatibility` em cada produto — busca as regras de fitment
+   * em lote (uma query pra pagina toda, nao uma por produto) e computa
+   * em memoria via `matchFitment` (helper puro, testado isoladamente).
+   */
+  private async attachCompatibility<T extends { id: string }>(
+    products: T[],
+    vehicle: ResolvedVehicle | null,
+  ): Promise<Array<T & { compatibility: string }>> {
+    if (products.length === 0) {
+      return [];
+    }
+
+    const fitments = await this.prisma.productFitment.findMany({
+      where: { productId: { in: products.map((p) => p.id) } },
+      select: { productId: true, universal: true, brandId: true, modelId: true, yearFrom: true, yearTo: true },
+    });
+
+    const rulesByProduct = new Map<string, FitmentRule[]>();
+    for (const fitment of fitments) {
+      const list = rulesByProduct.get(fitment.productId) ?? [];
+      list.push({
+        universal: fitment.universal,
+        brandId: fitment.brandId,
+        modelId: fitment.modelId,
+        yearFrom: fitment.yearFrom,
+        yearTo: fitment.yearTo,
+      });
+      rulesByProduct.set(fitment.productId, list);
+    }
+
+    return products.map((product) => ({
+      ...product,
+      compatibility: matchFitment(vehicle, rulesByProduct.get(product.id) ?? []),
+    }));
+  }
+
+  async listProductFitments(productId: string) {
+    await this.findProductOrThrow(productId);
+
+    return this.prisma.productFitment.findMany({
+      where: { productId },
+      include: { brand: true, model: true },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
+  /**
+   * Substitui todo o conjunto de regras de um produto numa transacao —
+   * mais simples e previsivel que diffear linha a linha.
+   */
+  async replaceProductFitments(productId: string, dto: ReplaceFitmentsDto) {
+    await this.findProductOrThrow(productId);
+
+    for (const rule of dto.fitments) {
+      if (!rule.universal && !rule.modelId) {
+        throw new BadRequestException('Cada regra precisa ser universal ou informar um modelo');
+      }
+      if (rule.yearFrom && rule.yearTo && rule.yearFrom > rule.yearTo) {
+        throw new BadRequestException('yearFrom nao pode ser maior que yearTo');
+      }
+    }
+
+    await this.prisma.$transaction([
+      this.prisma.productFitment.deleteMany({ where: { productId } }),
+      ...(dto.fitments.length
+        ? [
+            this.prisma.productFitment.createMany({
+              data: dto.fitments.map((rule) => ({
+                productId,
+                universal: rule.universal ?? false,
+                brandId: rule.universal ? null : rule.brandId,
+                modelId: rule.universal ? null : rule.modelId,
+                yearFrom: rule.universal ? null : rule.yearFrom,
+                yearTo: rule.universal ? null : rule.yearTo,
+              })),
+            }),
+          ]
+        : []),
+    ]);
+
+    return this.listProductFitments(productId);
+  }
+
+  async removeProductFitment(productId: string, fitmentId: string) {
+    const fitment = await this.prisma.productFitment.findUnique({ where: { id: fitmentId } });
+    if (!fitment || fitment.productId !== productId) {
+      throw new NotFoundException('Compatibilidade nao encontrada para este produto');
+    }
+
+    await this.prisma.productFitment.delete({ where: { id: fitmentId } });
+    return { message: 'Compatibilidade removida.' };
+  }
+
+  private async findProductOrThrow(productId: string) {
+    const product = await this.prisma.product.findUnique({ where: { id: productId } });
+    if (!product) {
+      throw new NotFoundException('Produto nao encontrado');
+    }
     return product;
   }
 
