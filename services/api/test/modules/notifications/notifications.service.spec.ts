@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { NotificationsService } from '../../../src/modules/notifications/notifications.service';
 import { PrismaService } from '../../../src/database/prisma.service';
+import { PUSH_GATEWAY_ADAPTER } from '../../../src/modules/notifications/push/push-gateway.interface';
 
 const USER_ID = 'user-1';
 const NOTIFICATION_ID = 'notif-1';
@@ -32,7 +33,13 @@ describe('NotificationsService', () => {
       updateMany: jest.Mock;
       count: jest.Mock;
     };
+    pushToken: {
+      findMany: jest.Mock;
+      upsert: jest.Mock;
+      deleteMany: jest.Mock;
+    };
   };
+  let pushGateway: { send: jest.Mock };
 
   beforeEach(async () => {
     prisma = {
@@ -44,10 +51,20 @@ describe('NotificationsService', () => {
         updateMany: jest.fn(),
         count: jest.fn(),
       },
+      pushToken: {
+        findMany: jest.fn().mockResolvedValue([]),
+        upsert: jest.fn(),
+        deleteMany: jest.fn(),
+      },
     };
+    pushGateway = { send: jest.fn() };
 
     module = await Test.createTestingModule({
-      providers: [NotificationsService, { provide: PrismaService, useValue: prisma }],
+      providers: [
+        NotificationsService,
+        { provide: PrismaService, useValue: prisma },
+        { provide: PUSH_GATEWAY_ADAPTER, useValue: pushGateway },
+      ],
     }).compile();
 
     service = module.get(NotificationsService);
@@ -146,5 +163,54 @@ describe('NotificationsService', () => {
       data: { read: true },
     });
     expect(result.message).toContain('lidas');
+  });
+
+  it('create dispara push best-effort pros tokens registrados do usuario', async () => {
+    prisma.notification.create.mockResolvedValue(notification());
+    prisma.pushToken.findMany.mockResolvedValue([{ token: 'token-1' }, { token: 'token-2' }]);
+
+    await service.create(USER_ID, {
+      type: 'order_accepted',
+      title: 'Seu pedido foi aceito!',
+      body: 'Um lavador aceitou seu pedido.',
+    });
+
+    expect(pushGateway.send).toHaveBeenCalledWith(
+      ['token-1', 'token-2'],
+      { title: 'Seu pedido foi aceito!', body: 'Um lavador aceitou seu pedido.' },
+    );
+  });
+
+  it('create nao quebra quando o envio de push falha (best-effort)', async () => {
+    const created = notification();
+    prisma.notification.create.mockResolvedValue(created);
+    prisma.pushToken.findMany.mockRejectedValue(new Error('boom'));
+
+    await expect(
+      service.create(USER_ID, { type: 'order_accepted', title: 'x', body: 'y' }),
+    ).resolves.toEqual(created);
+  });
+
+  it('registerPushToken faz upsert pelo token (idempotente)', async () => {
+    prisma.pushToken.upsert.mockResolvedValue({ id: 'token-id', userId: USER_ID, token: 'device-1' });
+
+    await service.registerPushToken(USER_ID, 'device-1', 'android');
+
+    expect(prisma.pushToken.upsert).toHaveBeenCalledWith({
+      where: { token: 'device-1' },
+      update: { userId: USER_ID, platform: 'android' },
+      create: { userId: USER_ID, token: 'device-1', platform: 'android' },
+    });
+  });
+
+  it('unregisterPushToken remove o token escopado ao usuario', async () => {
+    prisma.pushToken.deleteMany.mockResolvedValue({ count: 1 });
+
+    const result = await service.unregisterPushToken(USER_ID, 'device-1');
+
+    expect(prisma.pushToken.deleteMany).toHaveBeenCalledWith({
+      where: { userId: USER_ID, token: 'device-1' },
+    });
+    expect(result.message).toBeTruthy();
   });
 });

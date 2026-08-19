@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Patch, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -9,7 +9,7 @@ import {
   CurrentUser,
 } from '../../common/decorators/current-user.decorator';
 import { NotificationsService } from './notifications.service';
-import { ListNotificationsQueryDto } from './dto/notifications.dto';
+import { ListNotificationsQueryDto, RegisterPushTokenDto } from './dto/notifications.dto';
 
 @ApiTags('notifications')
 @ApiBearerAuth()
@@ -41,5 +41,20 @@ export class NotificationsController {
   @ApiOperation({ summary: 'Marca todas as notificacoes do usuario autenticado como lidas' })
   markAllAsRead(@CurrentUser() user: AuthenticatedUser) {
     return this.notificationsService.markAllAsRead(user.id);
+  }
+
+  @Post('push-token')
+  @ApiOperation({
+    summary:
+      'Registra o token de push do dispositivo atual (modo simulado — sem envio real ainda)',
+  })
+  registerPushToken(@CurrentUser() user: AuthenticatedUser, @Body() dto: RegisterPushTokenDto) {
+    return this.notificationsService.registerPushToken(user.id, dto.token, dto.platform);
+  }
+
+  @Delete('push-token/:token')
+  @ApiOperation({ summary: 'Remove o token de push do dispositivo atual (ex.: no logout)' })
+  unregisterPushToken(@CurrentUser() user: AuthenticatedUser, @Param('token') token: string) {
+    return this.notificationsService.unregisterPushToken(user.id, token);
   }
 }

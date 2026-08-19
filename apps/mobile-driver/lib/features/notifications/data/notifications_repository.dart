@@ -50,4 +50,25 @@ class NotificationsRepository {
       throw ApiException.fromDioException(e);
     }
   }
+
+  /// Registra o token de push do dispositivo atual (modo simulado — o
+  /// backend so loga, nao envia nada de verdade ainda).
+  Future<void> registerPushToken(String token) async {
+    try {
+      await _dio.post<Map<String, dynamic>>(
+        '/notifications/push-token',
+        data: {'token': token, 'platform': 'web'},
+      );
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  Future<void> unregisterPushToken(String token) async {
+    try {
+      await _dio.delete('/notifications/push-token/$token');
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
 }
