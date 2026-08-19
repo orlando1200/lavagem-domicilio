@@ -1,7 +1,7 @@
 # Progresso do Projeto — GIUCAR
 
 ## Última atualização
-2026-08-18
+2026-08-19
 
 > Nota: a versão anterior deste arquivo (17/jul) descrevia uma rodada
 > anterior à recuperação do backend (Fase 9 — ver
@@ -1284,3 +1284,59 @@ Ordem sugerida, por dependência e impacto (não por facilidade):
     aparecendo no catálogo (`GET /service-categories`) com o preço
     exato configurado. Nove commits separados (um por item + 2 de
     higiene de código), todos com push confirmado.
+
+27. **Push notifications (modo simulado), ganhos/lavagens reais do dia
+    do lavador, remoção da rota morta de aluguel de moto, e
+    enriquecimento do Leilão de Serviço Pesado com fotos/descrição/
+    contagem regressiva.** Depois do item 26, o usuário pediu mais uma
+    rodada de lacunas: Firebase Push (FCM) foi construído em **modo
+    simulado** (mesmo padrão de e-mail/storage/Mercado Pago —
+    `PushGatewayAdapter` atrás de `LogPushAdapter`, model `PushToken`,
+    registro automático do device a cada login/registro/restauração de
+    sessão nos 3 apps), e uma auditoria ad-hoc encontrou dois itens
+    extras: as estatísticas diárias do lavador (`_StatsGrid` no
+    `mobile-driver`) eram calculadas no cliente incrementando um
+    contador local a cada pedido concluído — trocado por `GET
+    /orders/mine/daily-stats`, uma agregação real por `completedAt` do
+    dia; e a rota `/moto-rental` do `mobile-client`, um `PlaceholderPage`
+    sem nenhuma navegação apontando pra ela, foi removida (junto com o
+    widget `PlaceholderPage`, sem mais usos).
+
+    **Leilão de Serviço Pesado — fotos/descrição/contagem regressiva**:
+    o usuário trouxe uma proposta de "Leilões" estilo Copart/IAAI
+    (fotos, ficha técnica, preço inicial, contagem regressiva ao vivo)
+    inspirada no Webmotors; depois de confirmar que o sistema de leilão
+    de serviço pesado já existente (loja de carwash puja preço/prazo/
+    garantia pra executar o serviço) **fica exatamente como está**, o
+    pedido foi reinterpretado como: enriquecer esse leilão existente
+    com a mesma riqueza visual, sem criar um sistema paralelo de venda/
+    leilão de veículos. `Auction` ganhou `photos String[]` e
+    `description String?` (aditivo, sem afetar `serviceIds`/ranking/
+    aceite/cancelamento, que continuam idênticos); `CreateAuctionDto`
+    aceita os dois campos opcionais. Nos 3 apps: `create_auction_page.dart`
+    (mobile-client) ganhou os mesmos campos de foto-por-link e descrição
+    já usados em `submit_bid_page.dart` pras pujas; `auction_detail_page.dart`
+    mostra a galeria de fotos, a descrição e um `CountdownChip` novo
+    (widget com `Timer.periodic` que recalcula o tempo restante a cada
+    minuto a partir de `createdAt + deadlineHours`); o card de leilão
+    disponível no `mobile-driver` (`auctions_page.dart`) ganhou a mesma
+    galeria/descrição/contagem regressiva no lugar do texto estático
+    "prazo Xh".
+
+    Verificação: backend `lint/type-check/test (152 testes)/build`
+    limpos; `flutter analyze` limpo nos 2 apps tocados (só infos
+    `prefer_const_constructors` pré-existentes). Verificação ao vivo
+    contra Postgres real (API nativa): pedido `HEAVY_SERVICE` pendente
+    criado, leilão aberto com 2 fotos + descrição via `POST /auctions`,
+    conferido de volta tanto em `GET /auctions/me/:id` (cliente) quanto
+    em `GET /auctions/available` (loja de carwash elegível) com os
+    campos exatos. Três commits (push simulado; ganhos reais + rota
+    morta; enriquecimento do leilão), push confirmado.
+
+    Em paralelo, ficou pausado (não commitado) um módulo maior de
+    "Garage Vehicular / Compatibilidade de Repuestos" (catálogo
+    Marca→Modelo→Ano + fitment de produtos) que o usuário havia
+    aprovado antes de pivotar pra esta rodada — schema e migration já
+    aplicados localmente, módulo `vehicle-catalog` escrito mas ainda
+    não registrado em `app.module.ts` nem commitado; retomar ou
+    descartar depende de instrução futura do usuário.

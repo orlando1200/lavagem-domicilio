@@ -42,6 +42,8 @@ class AuctionsRepository {
     required List<String> serviceIds,
     double? maxBudget,
     int? deadlineHours,
+    List<String>? photos,
+    String? description,
   }) async {
     try {
       final response = await _dio.post<Map<String, dynamic>>(
@@ -51,6 +53,8 @@ class AuctionsRepository {
           'serviceIds': serviceIds,
           if (maxBudget != null) 'maxBudget': maxBudget,
           if (deadlineHours != null) 'deadlineHours': deadlineHours,
+          if (photos != null && photos.isNotEmpty) 'photos': photos,
+          if (description != null && description.isNotEmpty) 'description': description,
         },
       );
       return AuctionModel.fromJson(response.data!);

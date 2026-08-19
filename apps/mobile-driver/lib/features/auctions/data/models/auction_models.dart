@@ -19,6 +19,8 @@ class AvailableAuctionModel {
     required this.serviceIds,
     required this.createdAt,
     required this.bidsCount,
+    required this.photos,
+    this.description,
     this.maxBudget,
     this.deadlineHours,
     this.orderTotalAmount,
@@ -28,9 +30,15 @@ class AvailableAuctionModel {
   final List<String> serviceIds;
   final DateTime createdAt;
   final int bidsCount;
+  final List<String> photos;
+  final String? description;
   final double? maxBudget;
   final int? deadlineHours;
   final double? orderTotalAmount;
+
+  /// Prazo limite calculado (createdAt + deadlineHours), null se nao houver.
+  DateTime? get deadline =>
+      deadlineHours != null ? createdAt.add(Duration(hours: deadlineHours!)) : null;
 
   factory AvailableAuctionModel.fromJson(Map<String, dynamic> json) {
     final order = json['order'] as Map<String, dynamic>?;
@@ -41,6 +49,8 @@ class AvailableAuctionModel {
       serviceIds: _parseStringList(json['serviceIds']),
       createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
       bidsCount: (count?['bids'] as num?)?.toInt() ?? 0,
+      photos: _parseStringList(json['photos']),
+      description: json['description'] as String?,
       maxBudget: json['maxBudget'] != null ? _parseDouble(json['maxBudget']) : null,
       deadlineHours: (json['deadlineHours'] as num?)?.toInt(),
       orderTotalAmount: order?['totalAmount'] != null ? _parseDouble(order!['totalAmount']) : null,

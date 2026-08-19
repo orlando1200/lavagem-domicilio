@@ -24,6 +24,9 @@ class _CreateAuctionPageState extends ConsumerState<CreateAuctionPage> {
   final Set<String> _selectedServiceIds = {};
   final _maxBudgetController = TextEditingController();
   final _deadlineHoursController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  final _photoUrlController = TextEditingController();
+  final List<String> _photos = [];
   bool _submitting = false;
   String? _errorMessage;
 
@@ -31,7 +34,18 @@ class _CreateAuctionPageState extends ConsumerState<CreateAuctionPage> {
   void dispose() {
     _maxBudgetController.dispose();
     _deadlineHoursController.dispose();
+    _descriptionController.dispose();
+    _photoUrlController.dispose();
     super.dispose();
+  }
+
+  void _addPhotoUrl() {
+    final url = _photoUrlController.text.trim();
+    if (url.isEmpty) return;
+    setState(() {
+      _photos.add(url);
+      _photoUrlController.clear();
+    });
   }
 
   Future<void> _submit() async {
@@ -56,6 +70,9 @@ class _CreateAuctionPageState extends ConsumerState<CreateAuctionPage> {
             serviceIds: _selectedServiceIds.toList(),
             maxBudget: maxBudget,
             deadlineHours: deadlineHours,
+            photos: _photos.isEmpty ? null : _photos,
+            description:
+                _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
           );
 
       ref.invalidate(myAuctionsProvider);
@@ -139,6 +156,53 @@ class _CreateAuctionPageState extends ConsumerState<CreateAuctionPage> {
                     }),
                   ),
                 ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Descrição adicional (opcional)',
+                  style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 10),
+                TextFormField(
+                  controller: _descriptionController,
+                  maxLines: 3,
+                  decoration: const InputDecoration(
+                    hintText: 'Descreva o estado do veículo, danos, o que precisa ser feito etc.',
+                  ),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Fotos (opcional, link)',
+                  style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _photoUrlController,
+                        decoration: const InputDecoration(hintText: 'https://...'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      onPressed: _addPhotoUrl,
+                      icon: const Icon(Icons.add_circle, color: AppColors.primary),
+                    ),
+                  ],
+                ),
+                if (_photos.isNotEmpty)
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _photos
+                        .map(
+                          (url) => Chip(
+                            label: Text(url, overflow: TextOverflow.ellipsis),
+                            onDeleted: () => setState(() => _photos.remove(url)),
+                          ),
+                        )
+                        .toList(),
+                  ),
                 const SizedBox(height: 20),
                 const Text(
                   'Orçamento máximo (opcional)',

@@ -108,6 +108,8 @@ export class AuctionsService {
         addressId: order.addressId,
         maxBudget: dto.maxBudget,
         deadlineHours: dto.deadlineHours,
+        photos: dto.photos ?? [],
+        description: dto.description,
         status: AuctionStatus.open,
       },
       include: AUCTION_DETAIL_INCLUDE,

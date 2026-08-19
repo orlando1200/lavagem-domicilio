@@ -8,6 +8,7 @@ import {
   IsString,
   IsUUID,
   Min,
+  MaxLength,
 } from 'class-validator';
 
 export class CreateAuctionDto {
@@ -35,4 +36,19 @@ export class CreateAuctionDto {
   @IsInt()
   @Min(1)
   deadlineHours?: number;
+
+  @ApiPropertyOptional({
+    description: 'Fotos do veiculo/dano relacionadas ao servico pesado solicitado',
+    type: [String],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  photos?: string[];
+
+  @ApiPropertyOptional({ description: 'Descricao adicional do que o cliente precisa' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  description?: string;
 }

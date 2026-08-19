@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/neon_surface.dart';
+import '../../../../core/widgets/countdown_chip.dart';
 import '../../auctions_provider.dart';
 import '../../data/auctions_repository.dart';
 import '../../data/models/auction_model.dart';
@@ -144,13 +145,47 @@ class _AuctionSummaryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            auction.serviceIds.map(heavyServiceTitle).join(', '),
-            style: const TextStyle(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w700,
-              fontSize: 16,
+          if (auction.photos.isNotEmpty) ...[
+            SizedBox(
+              height: 96,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: auction.photos.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (context, index) => ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.network(
+                    auction.photos[index],
+                    width: 120,
+                    height: 96,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      width: 120,
+                      height: 96,
+                      color: AppColors.border,
+                      child: Icon(Icons.broken_image_outlined, color: AppColors.textMuted),
+                    ),
+                  ),
+                ),
+              ),
             ),
+            const SizedBox(height: 12),
+          ],
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  auction.serviceIds.map(heavyServiceTitle).join(', '),
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+              if (auction.isOpen && auction.deadline != null)
+                CountdownChip(deadline: auction.deadline!),
+            ],
           ),
           const SizedBox(height: 8),
           Text(
@@ -162,6 +197,13 @@ class _AuctionSummaryCard extends StatelessWidget {
             Text(
               'Orçamento máximo: R\$ ${auction.maxBudget!.toStringAsFixed(2)}',
               style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+            ),
+          ],
+          if (auction.description != null && auction.description!.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              auction.description!,
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4),
             ),
           ],
         ],

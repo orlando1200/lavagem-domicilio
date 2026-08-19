@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/neon_surface.dart';
+import '../../../../core/widgets/countdown_chip.dart';
 import '../../auctions_provider.dart';
 import '../../data/driver_profile_repository.dart';
 import '../../data/models/auction_models.dart';
@@ -254,16 +255,58 @@ class _AvailableAuctionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            auction.serviceIds.map(heavyServiceTitle).join(', '),
-            style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w700),
+          if (auction.photos.isNotEmpty) ...[
+            SizedBox(
+              height: 80,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: auction.photos.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 6),
+                itemBuilder: (context, index) => ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Image.network(
+                    auction.photos[index],
+                    width: 100,
+                    height: 80,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      width: 100,
+                      height: 80,
+                      color: AppColors.border,
+                      child: Icon(Icons.broken_image_outlined, color: AppColors.textMuted),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  auction.serviceIds.map(heavyServiceTitle).join(', '),
+                  style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w700),
+                ),
+              ),
+              if (auction.deadline != null) CountdownChip(deadline: auction.deadline!),
+            ],
           ),
+          if (auction.description != null && auction.description!.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              auction.description!,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4),
+            ),
+          ],
           const SizedBox(height: 6),
           Text(
             [
               '${auction.bidsCount} ${auction.bidsCount == 1 ? 'oferta enviada' : 'ofertas enviadas'}',
-              if (auction.maxBudget != null) 'orçamento até R\$ ${auction.maxBudget!.toStringAsFixed(2)}',
-              if (auction.deadlineHours != null) 'prazo ${auction.deadlineHours}h',
+              if (auction.maxBudget != null) 'orçamento inicial R\$ ${auction.maxBudget!.toStringAsFixed(2)}',
             ].join(' · '),
             style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
           ),

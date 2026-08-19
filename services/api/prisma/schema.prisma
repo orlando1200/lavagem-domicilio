@@ -131,19 +131,92 @@ enum VehicleType {
 }
 
 model Vehicle {
-  id        String      @id @default(uuid()) @db.Uuid
-  userId    String      @map("user_id") @db.Uuid
-  type      VehicleType
-  brand     String      @db.VarChar(80)
-  model     String      @db.VarChar(80)
-  color     String?     @db.VarChar(40)
-  plate     String      @db.VarChar(10)
-  createdAt DateTime    @default(now()) @map("created_at") @db.Timestamptz
+  id            String      @id @default(uuid()) @db.Uuid
+  userId        String      @map("user_id") @db.Uuid
+  type          VehicleType
+  brand         String      @db.VarChar(80)
+  model         String      @db.VarChar(80)
+  color         String?     @db.VarChar(40)
+  plate         String      @db.VarChar(10)
+  catalogYearId String?     @map("catalog_year_id") @db.Uuid
+  createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz
 
-  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  orders Order[]
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders      Order[]
+  catalogYear VehicleCatalogYear? @relation(fields: [catalogYearId], references: [id])
 
   @@map("vehicles")
+}
+
+/// Catalogo estruturado (Marca -> Modelo -> Ano) usado pro sistema de
+/// compatibilidade de pecas (fitment). `Vehicle.catalogYearId` e opcional
+/// de proposito — veiculos existentes (texto livre, sem ano) continuam
+/// funcionando normalmente, so nao participam do matching exato
+/// (recebem `UNKNOWN` em vez de `EXACT_MATCH`/`NOT_COMPATIBLE`).
+model VehicleBrand {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @unique @db.VarChar(80)
+  slug      String   @unique @db.VarChar(90)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  models   VehicleCatalogModel[]
+  fitments ProductFitment[]
+
+  @@map("vehicle_brands")
+}
+
+model VehicleCatalogModel {
+  id          String      @id @default(uuid()) @db.Uuid
+  brandId     String      @map("brand_id") @db.Uuid
+  name        String      @db.VarChar(100)
+  vehicleType VehicleType @map("vehicle_type")
+  active      Boolean     @default(true)
+  createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz
+
+  brand    VehicleBrand         @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  years    VehicleCatalogYear[]
+  fitments ProductFitment[]
+
+  @@unique([brandId, name])
+  @@map("vehicle_catalog_models")
+}
+
+model VehicleCatalogYear {
+  id        String   @id @default(uuid()) @db.Uuid
+  modelId   String   @map("model_id") @db.Uuid
+  year      Int
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  model    VehicleCatalogModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  vehicles Vehicle[]
+
+  @@unique([modelId, year])
+  @@map("vehicle_catalog_years")
+}
+
+/// Uma linha = uma regra de compatibilidade de um Product com um
+/// conjunto de veiculos (marca+modelo+faixa de anos) ou `universal=true`
+/// (serve pra qualquer veiculo, ex.: cera automotiva). `yearFrom`/`yearTo`
+/// null = sem limite naquele lado da faixa.
+model ProductFitment {
+  id        String   @id @default(uuid()) @db.Uuid
+  productId String   @map("product_id") @db.Uuid
+  universal Boolean  @default(false)
+  brandId   String?  @map("brand_id") @db.Uuid
+  modelId   String?  @map("model_id") @db.Uuid
+  yearFrom  Int?     @map("year_from")
+  yearTo    Int?     @map("year_to")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  product Product              @relation(fields: [productId], references: [id], onDelete: Cascade)
+  brand   VehicleBrand?        @relation(fields: [brandId], references: [id])
+  model   VehicleCatalogModel? @relation(fields: [modelId], references: [id])
+
+  @@index([productId])
+  @@index([brandId, modelId])
+  @@map("product_fitments")
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -416,8 +489,9 @@ model Product {
   createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz
   updatedAt        DateTime      @updatedAt @map("updated_at") @db.Timestamptz
 
-  store Store              @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  items ProductOrderItem[]
+  store    Store              @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  items    ProductOrderItem[]
+  fitments ProductFitment[]
 
   @@map("products")
 }
@@ -657,6 +731,8 @@ model Auction {
   status        AuctionStatus @default(open)
   maxBudget     Decimal?      @map("max_budget") @db.Decimal(12, 2)
   deadlineHours Int?          @map("deadline_hours")
+  photos        String[]      @default([])
+  description   String?       @db.Text
   createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamptz
   closedAt      DateTime?     @map("closed_at") @db.Timestamptz
   winningBidId  String?       @unique @map("winning_bid_id") @db.Uuid
