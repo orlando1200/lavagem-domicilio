@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 import { CreateVehicleDto } from './dto/vehicles.dto';
+
+const CATALOG_YEAR_INCLUDE = {
+  catalogYear: { include: { model: { include: { brand: true } } } },
+} satisfies Prisma.VehicleInclude;
 
 @Injectable()
 export class VehiclesService {
@@ -15,13 +20,16 @@ export class VehiclesService {
         model: dto.model,
         color: dto.color,
         plate: dto.plate,
+        catalogYearId: dto.catalogYearId,
       },
+      include: CATALOG_YEAR_INCLUDE,
     });
   }
 
   listMyVehicles(userId: string) {
     return this.prisma.vehicle.findMany({
       where: { userId },
+      include: CATALOG_YEAR_INCLUDE,
       orderBy: { createdAt: 'desc' },
     });
   }

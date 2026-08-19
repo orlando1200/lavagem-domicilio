@@ -6,6 +6,29 @@ double _parseDouble(dynamic value, [double fallback = 0]) {
   return double.tryParse(value.toString()) ?? fallback;
 }
 
+/// Compatibilidade do produto com o veiculo selecionado (so vem preenchido
+/// quando `vehicleId` foi passado na busca do catalogo/detalhe — ver
+/// `fitment-matching.util.ts` no backend, mesmos 4 valores).
+enum ProductCompatibility {
+  universal,
+  exactMatch,
+  notCompatible,
+  unknown;
+
+  static ProductCompatibility fromBackend(String? value) {
+    switch (value) {
+      case 'UNIVERSAL':
+        return ProductCompatibility.universal;
+      case 'EXACT_MATCH':
+        return ProductCompatibility.exactMatch;
+      case 'NOT_COMPATIBLE':
+        return ProductCompatibility.notCompatible;
+      default:
+        return ProductCompatibility.unknown;
+    }
+  }
+}
+
 /// Produto real da loja B2C (GET /marketplace/client/catalog,
 /// GET /marketplace/products/:id), modulo `marketplace`.
 class ProductModel {
@@ -21,6 +44,7 @@ class ProductModel {
     this.category,
     this.weightGrams,
     this.storeName,
+    this.compatibility = ProductCompatibility.unknown,
   });
 
   final String id;
@@ -34,6 +58,7 @@ class ProductModel {
   final String? category;
   final int? weightGrams;
   final String? storeName;
+  final ProductCompatibility compatibility;
 
   bool get inStock => stockQuantity > 0;
 
@@ -57,6 +82,7 @@ class ProductModel {
       stockQuantity: (json['stockQuantity'] as num?)?.toInt() ?? 0,
       weightGrams: (json['weightGrams'] as num?)?.toInt(),
       storeName: store?['name'] as String?,
+      compatibility: ProductCompatibility.fromBackend(json['compatibility'] as String?),
     );
   }
 }

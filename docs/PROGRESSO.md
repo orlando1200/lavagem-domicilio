@@ -1458,3 +1458,54 @@ Ordem sugerida, por dependência e impacto (não por facilidade):
     Falta só a Fase D (mobile-client: seletor de veículo no
     cadastro + badge de compatibilidade no catálogo + confirmação
     pré-checkout) pra fechar o módulo inteiro.
+
+31. **Garage Vehicular — Fase D: mobile-client (fecha o módulo inteiro).**
+    Backend: `CreateVehicleDto` ganhou `catalogYearId` opcional;
+    `VehiclesService` inclui `catalogYear.model.brand` em
+    `create`/`listMyVehicles` — veículos existentes continuam
+    funcionando sem tocar (campo nulo).
+
+    `AddVehiclePage` ganhou 3 dropdowns em cascata (marca→modelo→ano,
+    opcionais) acima dos campos de texto já existentes — selecionar
+    preenche marca/modelo automaticamente e envia `catalogYearId`, mas
+    o cadastro livre continua funcionando sem usar o catálogo (nunca
+    obrigatório). Novo `selectedVehicleProvider`
+    (`StateNotifierProvider`, mesmo padrão de `cart_provider.dart`) na
+    seção de loja: chip no topo do catálogo mostra o veículo escolhido,
+    abre um bottom sheet com `vehiclesProvider` pra trocar. Escolher um
+    veículo passa `vehicleId` pro catálogo/detalhe de produto, que
+    passam a trazer `compatibility` por produto.
+
+    `CompatibilityBadge` (pill, mesmo padrão visual das badges de
+    categoria) nos cards do catálogo e no detalhe do produto — não
+    mostra nada pra `UNKNOWN` (produto sem regra ou sem veículo
+    selecionado, o caso mais comum hoje) pra não virar ruído visual.
+    Antes de adicionar ao carrinho, `confirmAddIfNotCompatible` só
+    interrompe com um diálogo quando a compatibilidade é
+    `NOT_COMPATIBLE` (conflito real e conhecido) — decisão deliberada
+    de UX, diferente do texto original do plano ("NOT_COMPATIBLE ou sem
+    veículo selecionado"): exigir confirmação toda vez que nenhum
+    veículo está selecionado seria fricção desnecessária pro caso mais
+    comum (produto genérico, sem regra cadastrada).
+
+    Verificação: backend `lint/type-check/test (171 testes)/build`
+    limpos; `flutter analyze` limpo no app inteiro (32 issues,
+    mesma baseline de infos `prefer_const_constructors` de sempre, zero
+    erros novos). Verificação ao vivo contra Postgres real via curl:
+    veículo criado com `catalogYearId` real (Fiat Argo 2020) retorna o
+    join completo `catalogYear.model.brand`; regra de fitment cadastrada
+    pra esse modelo/intervalo de ano; `GET
+    /marketplace/client/catalog?vehicleId=` retorna `EXACT_MATCH` no
+    produto certo e `UNKNOWN` nos demais — sem `vehicleId`, tudo volta
+    `UNKNOWN` (loop completo backend fechado). Não foi possível fazer a
+    verificação visual da UI Flutter Web nesta rodada — o pane do
+    browser não estava compositando frames (screenshot indisponível) e
+    a árvore de semântica do Flutter não populou a tempo; a confiança
+    aqui vem do `flutter analyze` limpo + revisão de código cuidadosa
+    contra os padrões já usados (e visualmente validados) em outras
+    telas do mesmo app nesta sessão, não de uma captura de tela real
+    desta mudança especificamente.
+
+    **Módulo Garage Vehicular / Compatibilidade de Repuestos completo**
+    (Fases A-D): catálogo estruturado, compatibilidade de produto,
+    import em massa e UI do cliente, do início ao fim.

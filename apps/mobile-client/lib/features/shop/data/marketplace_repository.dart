@@ -21,10 +21,13 @@ class MarketplaceRepository {
   /// Cursor/paginacao ja suportados pelo backend, mas nao usados nesta
   /// rodada — busca so a primeira pagina (limit padrao 20); filtro de
   /// categoria/busca continua client-side, como ja era com o mock.
-  Future<List<ProductModel>> fetchClientCatalog() async {
+  /// `vehicleId` opcional anota `compatibility` em cada produto.
+  Future<List<ProductModel>> fetchClientCatalog({String? vehicleId}) async {
     try {
-      final response =
-          await _dio.get<Map<String, dynamic>>('/marketplace/client/catalog');
+      final response = await _dio.get<Map<String, dynamic>>(
+        '/marketplace/client/catalog',
+        queryParameters: vehicleId != null ? {'vehicleId': vehicleId} : null,
+      );
       final items = (response.data?['items'] as List<dynamic>?) ?? [];
       return items
           .map((json) => ProductModel.fromJson(json as Map<String, dynamic>))
@@ -34,10 +37,12 @@ class MarketplaceRepository {
     }
   }
 
-  Future<ProductModel> fetchProduct(String id) async {
+  Future<ProductModel> fetchProduct(String id, {String? vehicleId}) async {
     try {
-      final response =
-          await _dio.get<Map<String, dynamic>>('/marketplace/products/$id');
+      final response = await _dio.get<Map<String, dynamic>>(
+        '/marketplace/products/$id',
+        queryParameters: vehicleId != null ? {'vehicleId': vehicleId} : null,
+      );
       return ProductModel.fromJson(response.data!);
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);

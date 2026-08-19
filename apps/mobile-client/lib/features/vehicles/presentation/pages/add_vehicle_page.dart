@@ -4,6 +4,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/neon_surface.dart';
 import '../../data/models/vehicle_model.dart';
 import '../../data/vehicles_repository.dart';
+import '../providers/vehicles_provider.dart';
 
 /// Formulario de cadastro de veiculo (POST /vehicles). Volta `true` no
 /// pop quando o cadastro e concluido com sucesso, pra quem chamou
@@ -25,6 +26,10 @@ class _AddVehiclePageState extends ConsumerState<AddVehiclePage> {
   VehicleType _type = VehicleType.carro;
   bool _submitting = false;
   String? _errorMessage;
+
+  String? _catalogBrandId;
+  String? _catalogModelId;
+  String? _catalogYearId;
 
   @override
   void dispose() {
@@ -50,6 +55,7 @@ class _AddVehiclePageState extends ConsumerState<AddVehiclePage> {
             model: _modelController.text.trim(),
             color: _colorController.text.trim(),
             plate: _plateController.text.trim().toUpperCase(),
+            catalogYearId: _catalogYearId,
           );
       if (!mounted) return;
       Navigator.pop(context, true);
@@ -88,7 +94,30 @@ class _AddVehiclePageState extends ConsumerState<AddVehiclePage> {
                       if (value != null) setState(() => _type = value);
                     },
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Selecione no catálogo (opcional)',
+                    style: TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w700),
+                  ),
+                  Text(
+                    'Preenche marca/modelo automaticamente e habilita comparação de compatibilidade na loja.',
+                    style: TextStyle(color: AppColors.textMuted, fontSize: 11),
+                  ),
+                  const SizedBox(height: 8),
+                  _CatalogSelector(
+                    catalogBrandId: _catalogBrandId,
+                    catalogModelId: _catalogModelId,
+                    onBrandModelYearSelected: (brandId, modelId, yearId, brandName, modelName) {
+                      setState(() {
+                        _catalogBrandId = brandId;
+                        _catalogModelId = modelId;
+                        _catalogYearId = yearId;
+                        if (brandName != null) _brandController.text = brandName;
+                        if (modelName != null) _modelController.text = modelName;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 16),
                   TextFormField(
                     controller: _brandController,
                     style: const TextStyle(color: AppColors.textPrimary),
@@ -149,6 +178,117 @@ class _AddVehiclePageState extends ConsumerState<AddVehiclePage> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Callback: (brandId, modelId, yearId, brandName?, modelName?). `null` nos
+/// ids sinaliza reset (ex.: trocou a marca, entao modelo/ano voltam a nulo).
+typedef _CatalogSelection = void Function(
+  String? brandId,
+  String? modelId,
+  String? yearId,
+  String? brandName,
+  String? modelName,
+);
+
+/// 3 dropdowns em cascata (marca -> modelo -> ano) sobre o catalogo
+/// estruturado. Puramente opcional: o formulario continua funcionando com
+/// os campos de texto livre mesmo sem usar isto.
+class _CatalogSelector extends ConsumerWidget {
+  const _CatalogSelector({
+    required this.catalogBrandId,
+    required this.catalogModelId,
+    required this.onBrandModelYearSelected,
+  });
+
+  final String? catalogBrandId;
+  final String? catalogModelId;
+  final _CatalogSelection onBrandModelYearSelected;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final brandsAsync = ref.watch(vehicleCatalogBrandsProvider);
+
+    return Column(
+      children: [
+        brandsAsync.when(
+          loading: () => const LinearProgressIndicator(color: AppColors.primary),
+          error: (_, __) => const SizedBox.shrink(),
+          data: (brands) => DropdownButtonFormField<String>(
+            initialValue: catalogBrandId,
+            isExpanded: true,
+            dropdownColor: AppColors.surface,
+            style: const TextStyle(color: AppColors.textPrimary),
+            decoration: const InputDecoration(labelText: 'Marca (catálogo)'),
+            hint: Text('Selecionar', style: TextStyle(color: AppColors.textMuted)),
+            items: brands
+                .map((b) => DropdownMenuItem(value: b.id, child: Text(b.name)))
+                .toList(),
+            onChanged: (brandId) {
+              String? brandName;
+              for (final b in brands) {
+                if (b.id == brandId) brandName = b.name;
+              }
+              onBrandModelYearSelected(brandId, null, null, brandName, null);
+            },
+          ),
+        ),
+        const SizedBox(height: 10),
+        if (catalogBrandId != null)
+          Consumer(
+            builder: (context, ref, _) {
+              final modelsAsync = ref.watch(vehicleCatalogModelsProvider(catalogBrandId!));
+              return modelsAsync.when(
+                loading: () => const LinearProgressIndicator(color: AppColors.primary),
+                error: (_, __) => const SizedBox.shrink(),
+                data: (models) => DropdownButtonFormField<String>(
+                  initialValue: catalogModelId,
+                  isExpanded: true,
+                  dropdownColor: AppColors.surface,
+                  style: const TextStyle(color: AppColors.textPrimary),
+                  decoration: const InputDecoration(labelText: 'Modelo (catálogo)'),
+                  hint: Text('Selecionar', style: TextStyle(color: AppColors.textMuted)),
+                  items: models
+                      .map((m) => DropdownMenuItem(value: m.id, child: Text(m.name)))
+                      .toList(),
+                  onChanged: (modelId) {
+                    String? modelName;
+                    for (final m in models) {
+                      if (m.id == modelId) modelName = m.name;
+                    }
+                    onBrandModelYearSelected(catalogBrandId, modelId, null, null, modelName);
+                  },
+                ),
+              );
+            },
+          ),
+        if (catalogBrandId != null && catalogModelId != null) ...[
+          const SizedBox(height: 10),
+          Consumer(
+            builder: (context, ref, _) {
+              final yearsAsync = ref.watch(vehicleCatalogYearsProvider(catalogModelId!));
+              return yearsAsync.when(
+                loading: () => const LinearProgressIndicator(color: AppColors.primary),
+                error: (_, __) => const SizedBox.shrink(),
+                data: (years) => DropdownButtonFormField<String>(
+                  isExpanded: true,
+                  dropdownColor: AppColors.surface,
+                  style: const TextStyle(color: AppColors.textPrimary),
+                  decoration: const InputDecoration(labelText: 'Ano (catálogo)'),
+                  hint: Text('Selecionar', style: TextStyle(color: AppColors.textMuted)),
+                  items: years
+                      .map((y) => DropdownMenuItem(value: y.id, child: Text('${y.year}')))
+                      .toList(),
+                  onChanged: (yearId) {
+                    onBrandModelYearSelected(catalogBrandId, catalogModelId, yearId, null, null);
+                  },
+                ),
+              );
+            },
+          ),
+        ],
+      ],
     );
   }
 }

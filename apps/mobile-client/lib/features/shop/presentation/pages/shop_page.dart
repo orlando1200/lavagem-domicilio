@@ -3,9 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/neon_surface.dart';
+import '../../../vehicles/presentation/providers/vehicles_provider.dart';
 import '../../data/models/product_model.dart';
 import '../../shop_provider.dart';
 import '../providers/cart_provider.dart';
+import '../providers/selected_vehicle_provider.dart';
+import '../widgets/compatibility_badge.dart';
 
 /// Tela principal da loja B2C do cliente: catalogo real, categorias e
 /// busca (filtro client-side sobre a primeira pagina do catalogo).
@@ -140,6 +143,10 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                           ),
                   ),
                 ),
+              ),
+              const Padding(
+                padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
+                child: _VehicleSelectorChip(),
               ),
               if (categories.isNotEmpty)
                 SizedBox(
@@ -284,13 +291,19 @@ class _ProductCard extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 6),
-              Text(
-                'R\$ ${product.price.toStringAsFixed(2)}',
-                style: const TextStyle(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 15,
-                ),
+              Row(
+                children: [
+                  Text(
+                    'R\$ ${product.price.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15,
+                    ),
+                  ),
+                  const Spacer(),
+                  CompatibilityBadge(compatibility: product.compatibility),
+                ],
               ),
               const SizedBox(height: 8),
               SizedBox(
@@ -302,7 +315,9 @@ class _ProductCard extends ConsumerWidget {
                   ),
                   onPressed: !product.inStock
                       ? null
-                      : () {
+                      : () async {
+                          if (!await confirmAddIfNotCompatible(context, product)) return;
+                          if (!context.mounted) return;
                           ref.read(cartProvider.notifier).add(product);
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text('${product.name} adicionado ao carrinho')),
@@ -314,6 +329,108 @@ class _ProductCard extends ConsumerWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Chip que mostra o veiculo selecionado (ou convite pra selecionar) e
+/// abre um bottom sheet com `vehiclesProvider` pra trocar. A escolha
+/// alimenta `selectedVehicleProvider`, que recalcula `compatibility` em
+/// todo o catalogo automaticamente (ver `shop_provider.dart`).
+class _VehicleSelectorChip extends ConsumerWidget {
+  const _VehicleSelectorChip();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selected = ref.watch(selectedVehicleProvider);
+
+    return InkWell(
+      onTap: () => _openPicker(context, ref),
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: selected != null ? AppColors.primary : AppColors.border),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.directions_car_rounded, size: 18, color: selected != null ? AppColors.primary : AppColors.textMuted),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                selected != null
+                    ? selected.displayName
+                    : 'Selecionar veículo para ver compatibilidade',
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: selected != null ? AppColors.textPrimary : AppColors.textSecondary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            Icon(Icons.expand_more_rounded, size: 18, color: AppColors.textMuted),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _openPicker(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.surface,
+      builder: (context) => Consumer(
+        builder: (context, ref, _) {
+          final vehiclesAsync = ref.watch(vehiclesProvider);
+          return SafeArea(
+            child: vehiclesAsync.when(
+              loading: () => const Padding(
+                padding: EdgeInsets.all(24),
+                child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+              ),
+              error: (error, stackTrace) => Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(error.toString(), style: const TextStyle(color: AppColors.error)),
+              ),
+              data: (vehicles) => Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    leading: Icon(Icons.block_rounded, color: AppColors.textMuted),
+                    title: const Text('Nenhum veículo específico', style: TextStyle(color: AppColors.textPrimary)),
+                    onTap: () {
+                      ref.read(selectedVehicleProvider.notifier).clear();
+                      Navigator.pop(context);
+                    },
+                  ),
+                  if (vehicles.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                      child: Text(
+                        'Você ainda não tem veículos cadastrados.',
+                        style: TextStyle(color: AppColors.textSecondary),
+                      ),
+                    )
+                  else
+                    for (final vehicle in vehicles)
+                      ListTile(
+                        leading: const Icon(Icons.directions_car_rounded, color: AppColors.primary),
+                        title: Text(vehicle.displayName, style: const TextStyle(color: AppColors.textPrimary)),
+                        onTap: () {
+                          ref.read(selectedVehicleProvider.notifier).select(vehicle);
+                          Navigator.pop(context);
+                        },
+                      ),
+                  const SizedBox(height: 8),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }

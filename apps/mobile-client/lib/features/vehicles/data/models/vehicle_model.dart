@@ -27,6 +27,11 @@ enum VehicleType {
 }
 
 /// Modelo de veiculo do cliente, espelhando `POST/GET /vehicles`.
+///
+/// `catalogYearId`/`catalogBrandName`/`catalogModelName`/`catalogYear` sao
+/// opcionais — so existem quando o veiculo foi vinculado ao catalogo
+/// estruturado (marca/modelo/ano) no cadastro. Sem eles, a compatibilidade
+/// de produtos do marketplace fica sempre `UNKNOWN` (nunca bloqueia).
 class VehicleModel {
   const VehicleModel({
     required this.id,
@@ -35,6 +40,10 @@ class VehicleModel {
     required this.model,
     required this.plate,
     this.color,
+    this.catalogYearId,
+    this.catalogBrandName,
+    this.catalogModelName,
+    this.catalogYear,
   });
 
   final String id;
@@ -43,8 +52,16 @@ class VehicleModel {
   final String model;
   final String? color;
   final String plate;
+  final String? catalogYearId;
+  final String? catalogBrandName;
+  final String? catalogModelName;
+  final int? catalogYear;
 
   factory VehicleModel.fromJson(Map<String, dynamic> json) {
+    final catalogYearJson = json['catalogYear'] as Map<String, dynamic>?;
+    final catalogModelJson = catalogYearJson?['model'] as Map<String, dynamic>?;
+    final catalogBrandJson = catalogModelJson?['brand'] as Map<String, dynamic>?;
+
     return VehicleModel(
       id: json['id'] as String,
       type: VehicleType.fromBackend(json['type'] as String),
@@ -52,6 +69,10 @@ class VehicleModel {
       model: json['model'] as String,
       color: json['color'] as String?,
       plate: json['plate'] as String,
+      catalogYearId: json['catalogYearId'] as String?,
+      catalogBrandName: catalogBrandJson?['name'] as String?,
+      catalogModelName: catalogModelJson?['name'] as String?,
+      catalogYear: (catalogYearJson?['year'] as num?)?.toInt(),
     );
   }
 

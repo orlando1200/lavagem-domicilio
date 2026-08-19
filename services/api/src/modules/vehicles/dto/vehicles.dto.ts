@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
 import { VehicleType } from '@prisma/client';
 
 export class CreateVehicleDto {
@@ -30,4 +30,9 @@ export class CreateVehicleDto {
   @IsNotEmpty()
   @MaxLength(10)
   plate: string;
+
+  @ApiPropertyOptional({ description: 'Ano do catalogo estruturado (marca/modelo/ano), opcional' })
+  @IsOptional()
+  @IsUUID()
+  catalogYearId?: string;
 }

@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/api/api_exception.dart';
+import 'models/vehicle_catalog_model.dart';
 import 'models/vehicle_model.dart';
 
 final vehiclesRepositoryProvider = Provider<VehiclesRepository>((ref) {
@@ -10,7 +11,8 @@ final vehiclesRepositoryProvider = Provider<VehiclesRepository>((ref) {
 
 /// Repositorio de veiculos do cliente, conectado ao backend real
 /// (VehiclesModule): POST /vehicles, GET /vehicles/me (array puro,
-/// sem paginacao).
+/// sem paginacao) + catalogo estruturado publico (GET /vehicle-catalog/*,
+/// usado so pelos dropdowns em cascata do cadastro).
 class VehiclesRepository {
   VehiclesRepository(this._dio);
 
@@ -34,6 +36,7 @@ class VehiclesRepository {
     required String model,
     String? color,
     required String plate,
+    String? catalogYearId,
   }) async {
     try {
       final response =
@@ -43,8 +46,45 @@ class VehiclesRepository {
         'model': model,
         if (color != null && color.isNotEmpty) 'color': color,
         'plate': plate,
+        if (catalogYearId != null) 'catalogYearId': catalogYearId,
       });
       return VehicleModel.fromJson(response.data!);
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  Future<List<VehicleCatalogBrand>> fetchCatalogBrands() async {
+    try {
+      final response = await _dio.get<List<dynamic>>('/vehicle-catalog/brands');
+      final items = response.data ?? [];
+      return items.map((j) => VehicleCatalogBrand.fromJson(j as Map<String, dynamic>)).toList();
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  Future<List<VehicleCatalogModelOption>> fetchCatalogModels(String brandId) async {
+    try {
+      final response = await _dio.get<List<dynamic>>(
+        '/vehicle-catalog/models',
+        queryParameters: {'brandId': brandId},
+      );
+      final items = response.data ?? [];
+      return items.map((j) => VehicleCatalogModelOption.fromJson(j as Map<String, dynamic>)).toList();
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  Future<List<VehicleCatalogYearOption>> fetchCatalogYears(String modelId) async {
+    try {
+      final response = await _dio.get<List<dynamic>>(
+        '/vehicle-catalog/years',
+        queryParameters: {'modelId': modelId},
+      );
+      final items = response.data ?? [];
+      return items.map((j) => VehicleCatalogYearOption.fromJson(j as Map<String, dynamic>)).toList();
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);
     }

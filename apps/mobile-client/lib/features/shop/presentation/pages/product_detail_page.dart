@@ -6,6 +6,7 @@ import '../../../../core/widgets/neon_surface.dart';
 import '../../data/models/product_model.dart';
 import '../../shop_provider.dart';
 import '../providers/cart_provider.dart';
+import '../widgets/compatibility_badge.dart';
 
 /// Tela de detalhe do produto da loja B2C (GET /marketplace/products/:id).
 class ProductDetailPage extends ConsumerStatefulWidget {
@@ -124,13 +125,21 @@ class _ProductDetailBody extends ConsumerWidget {
                   ),
                 ),
               const SizedBox(height: 12),
-              Text(
-                product.name,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      product.name,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  CompatibilityBadge(compatibility: product.compatibility),
+                ],
               ),
               if (product.storeName != null) ...[
                 const SizedBox(height: 4),
@@ -228,7 +237,9 @@ class _ProductDetailBody extends ConsumerWidget {
               ),
               onPressed: !product.inStock
                   ? null
-                  : () {
+                  : () async {
+                      if (!await confirmAddIfNotCompatible(context, product)) return;
+                      if (!context.mounted) return;
                       ref.read(cartProvider.notifier).add(product, quantity: quantity);
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('${product.name} adicionado ao carrinho')),
