@@ -76,9 +76,12 @@
 |---|---|---|
 | **Mercado Pago** | Mock completo (PIX + cartão), nunca chama API real. Loga `[payments] modo MOCK ativo` no startup | `MERCADO_PAGO_ACCESS_TOKEN`/`MERCADO_PAGO_PUBLIC_KEY` de sandbox no `.env`; trocar `MercadoPagoAdapter` por integração real com o SDK |
 | **Google Maps** | Fallback haversine funcional; código pronto pra API real. Loga `[maps] modo MOCK/REAL ativo` no startup | `GOOGLE_MAPS_API_KEY` no `.env` — sem chave, nunca testamos contra a API de verdade |
-| **AWS Rekognition** | Não iniciado | Nada implementado ainda |
-| **Firebase Push** | Hooks placeholder (só logam) em `auctions-notifications.service.ts` | SDK real do FCM |
+| **AWS Rekognition (verificação facial/KYC)** | Nao iniciado — o modulo `face-check` que existia era codigo morto/corrompido, removido na limpeza do item 14 | Decisao de produto (o que exatamente verificar: selfie x documento? liveness?) + credenciais AWS antes de comecar a construir |
+| **Firebase Push** | Infra completa (`PushToken`, registro/remocao de token nos 3 apps apos login/logout, disparo automatico em toda notificacao in-app) atras de `PushGatewayAdapter` — `LogPushAdapter` so loga, nunca envia de verdade | Projeto Firebase real (`google-services.json`/service account) — trocar por adapter do FCM Admin SDK e isolado, sem tocar em quem consome a interface |
+| **E-mail (esqueci minha senha)** | Infra completa (`EmailGatewayAdapter`) — `LogEmailAdapter` so loga o link/token, nunca envia de verdade | Provedor de e-mail real (SES/SendGrid/Resend) |
+| **Upload de documento (storage)** | Infra completa (`StorageAdapter`) — `LocalDiskAdapter` salva em disco local no proprio container. **Risco real em producao**: no Fly.io o disco nao e persistente entre deploys/restarts — documentos enviados podem sumir | Bucket S3 real + credenciais AWS; trocar por adapter do S3, mesma interface |
 | **Confirmação de pagamento (checkout da loja)** | `mobile-client` chama `POST /payments/webhook` ele mesmo logo após criar a intent, simulando a aprovação do gateway — o endpoint é propositalmente sem autenticação (é o que um gateway real chamaria) | Chave de sandbox do Mercado Pago; quando existir, o app para de chamar o webhook e passa a esperar o callback real |
+| **Apps nativos (Android/iOS)** | Verificado ate aqui so como app web (Chrome do celular via HTTPS, "adicionar a tela inicial") — nunca gerado um APK/IPA de verdade | Android Studio/Xcode instalados, certificados de assinatura, e eventualmente contas de desenvolvedor (Play Store/App Store) se for pra distribuir de verdade |
 
 Nenhuma integração foi validada contra credenciais reais de sandbox —
 não há chaves configuradas nesta máquina.
