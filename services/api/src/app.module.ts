@@ -26,6 +26,7 @@ import { DocumentVerificationModule } from './modules/document-verification/docu
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { ServiceCategoriesModule } from './modules/service-categories/service-categories.module';
+import { VehicleCatalogModule } from './modules/vehicle-catalog/vehicle-catalog.module';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { ServiceCategoriesModule } from './modules/service-categories/service-ca
     DashboardModule,
     NotificationsModule,
     ServiceCategoriesModule,
+    VehicleCatalogModule,
   ],
 })
 export class AppModule {}

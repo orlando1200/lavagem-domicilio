@@ -17,6 +17,7 @@ import {
   Receipt,
   FileCheck,
   Tag,
+  Car,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -28,6 +29,7 @@ const NAV_ITEMS = [
   { href: '/documentos', label: 'Documentos', icon: FileCheck },
   { href: '/marketplace', label: 'Marketplace', icon: Store },
   { href: '/categorias', label: 'Categorias / Serviços', icon: Tag },
+  { href: '/catalogo-veiculos', label: 'Catálogo de Veículos', icon: Car },
   { href: '/repasses', label: 'Repasses', icon: Wallet },
   { href: '/relatorios-financeiros', label: 'Relatórios Financeiros', icon: Receipt },
   { href: '/cupons', label: 'Cupons', icon: Ticket },

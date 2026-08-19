@@ -326,6 +326,30 @@ export interface ServiceCategory {
   updatedAt: string;
 }
 
+export type VehicleCatalogType = 'carro' | 'moto' | 'caminhonete' | 'van';
+
+export interface VehicleBrand {
+  id: string;
+  name: string;
+  slug: string;
+  active: boolean;
+}
+
+export interface VehicleCatalogModel {
+  id: string;
+  brandId: string;
+  name: string;
+  vehicleType: VehicleCatalogType;
+  active: boolean;
+}
+
+export interface VehicleCatalogYear {
+  id: string;
+  modelId: string;
+  year: number;
+  active: boolean;
+}
+
 export interface Payout {
   id: string;
   recipientType: PayoutRecipientType;

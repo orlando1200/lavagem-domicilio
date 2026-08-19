@@ -1336,7 +1336,43 @@ Ordem sugerida, por dependência e impacto (não por facilidade):
     Em paralelo, ficou pausado (não commitado) um módulo maior de
     "Garage Vehicular / Compatibilidade de Repuestos" (catálogo
     Marca→Modelo→Ano + fitment de produtos) que o usuário havia
-    aprovado antes de pivotar pra esta rodada — schema e migration já
-    aplicados localmente, módulo `vehicle-catalog` escrito mas ainda
-    não registrado em `app.module.ts` nem commitado; retomar ou
-    descartar depende de instrução futura do usuário.
+    aprovado antes de pivotar pra esta rodada — retomado no item 28.
+
+28. **Garage Vehicular — Fase A: catálogo de veículos (Marca→Modelo→Ano).**
+    Retomando o módulo pausado no item 27. `Vehicle` ganhou
+    `catalogYearId` opcional (FK nullable, veículos existentes
+    continuam funcionando sem tocar) + 3 tabelas novas (`VehicleBrand`,
+    `VehicleCatalogModel`, `VehicleCatalogYear`), calcadas no mesmo
+    padrão de `service-categories/` (o módulo mais recente do projeto):
+    `listActive*` público (`GET /vehicle-catalog/*`) + CRUD admin
+    (`AdminVehicleCatalogController`, `@Roles(ADMIN)`,
+    `/admin/vehicle-catalog/*`) com `ConflictException` em nome
+    duplicado e remoção bloqueada quando há modelos/anos/veículos
+    dependentes. Registrado em `app.module.ts` e no `tsconfig.json`
+    (este projeto usa uma allowlist explícita de módulos no tsconfig,
+    não um glob — herança da limpeza de módulos mortos do item 26).
+
+    Seed (`prisma/seed.ts`) com um conjunto representativo — não é
+    integração real com FIPE/TecDoc — de 8 marcas brasileiras comuns
+    (Volkswagen, Fiat, Chevrolet, Ford, Toyota, Honda, Hyundai,
+    Renault) × 2 modelos populares cada × anos 2015-2024: 16 modelos,
+    160 combinações de ano, tudo via `upsert` idempotente.
+
+    admin-web: nova página `catalogo-veiculos/page.tsx` com 3 abas
+    (Marcas/Modelos/Anos), cada uma com filtro em cascata (modelos
+    filtráveis por marca, anos por modelo) e o mesmo diálogo único
+    criar/editar de `categorias/page.tsx`. Nova entrada no sidebar.
+
+    Verificação: backend `lint/type-check/test (152 testes)/build`
+    limpos; admin-web `lint/type-check` limpos, `build` gera as 20
+    páginas estáticas com sucesso (falha só na etapa de trace de
+    arquivos do standalone, o mesmo problema de symlink do Windows já
+    documentado no item 13 — não relacionado à mudança). Verificação
+    ao vivo: login real no admin-web, as 3 abas mostrando os dados
+    reais do seed (8 marcas, 16 modelos, 160 anos), criação de uma
+    marca nova confirmada na tabela após salvar, remoção confirmada via
+    `DELETE /admin/vehicle-catalog/brands/:id`.
+
+    Fases B (compatibilidade de produto/fitment + matching), C (import
+    CSV) e D (mobile-client: seletor de veículo + badges de
+    compatibilidade) do plano original seguem pendentes.

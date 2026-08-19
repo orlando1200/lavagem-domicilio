@@ -344,6 +344,52 @@ async function main() {
     console.log('Pedidos: 7 criados (1 por status), incluindo pagamento + pontos de fidelidade no concluído.');
   }
 
+  // ── Catálogo de veículos (marca → modelo → ano) ──────────────────────
+  // Conjunto representativo, não exaustivo — não há integração real a
+  // FIPE/TecDoc. Uma marca com 2 modelos populares cada, anos 2015-2024.
+  const CATALOG: {
+    brand: string;
+    models: { name: string; vehicleType: VehicleType }[];
+  }[] = [
+    { brand: 'Volkswagen', models: [{ name: 'Gol', vehicleType: VehicleType.carro }, { name: 'T-Cross', vehicleType: VehicleType.carro }] },
+    { brand: 'Fiat', models: [{ name: 'Argo', vehicleType: VehicleType.carro }, { name: 'Toro', vehicleType: VehicleType.caminhonete }] },
+    { brand: 'Chevrolet', models: [{ name: 'Onix', vehicleType: VehicleType.carro }, { name: 'Tracker', vehicleType: VehicleType.carro }] },
+    { brand: 'Ford', models: [{ name: 'Ka', vehicleType: VehicleType.carro }, { name: 'Ranger', vehicleType: VehicleType.caminhonete }] },
+    { brand: 'Toyota', models: [{ name: 'Corolla', vehicleType: VehicleType.carro }, { name: 'Hilux', vehicleType: VehicleType.caminhonete }] },
+    { brand: 'Honda', models: [{ name: 'Civic', vehicleType: VehicleType.carro }, { name: 'CG 160', vehicleType: VehicleType.moto }] },
+    { brand: 'Hyundai', models: [{ name: 'HB20', vehicleType: VehicleType.carro }, { name: 'Creta', vehicleType: VehicleType.carro }] },
+    { brand: 'Renault', models: [{ name: 'Kwid', vehicleType: VehicleType.carro }, { name: 'Duster', vehicleType: VehicleType.carro }] },
+  ];
+  const CATALOG_YEARS = Array.from({ length: 10 }, (_, i) => 2015 + i);
+
+  let catalogYearsCreated = 0;
+  for (const { brand: brandName, models } of CATALOG) {
+    const slug = brandName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const brand = await prisma.vehicleBrand.upsert({
+      where: { name: brandName },
+      update: {},
+      create: { name: brandName, slug, active: true },
+    });
+
+    for (const { name: modelName, vehicleType } of models) {
+      const model = await prisma.vehicleCatalogModel.upsert({
+        where: { brandId_name: { brandId: brand.id, name: modelName } },
+        update: {},
+        create: { brandId: brand.id, name: modelName, vehicleType, active: true },
+      });
+
+      for (const year of CATALOG_YEARS) {
+        await prisma.vehicleCatalogYear.upsert({
+          where: { modelId_year: { modelId: model.id, year } },
+          update: {},
+          create: { modelId: model.id, year, active: true },
+        });
+        catalogYearsCreated += 1;
+      }
+    }
+  }
+  console.log(`\nCatálogo de veículos: ${CATALOG.length} marcas, ${CATALOG.reduce((n, b) => n + b.models.length, 0)} modelos, ${catalogYearsCreated} combinações de ano.`);
+
   console.log(`\nSenha de todos os usuários de seed: ${SEED_PASSWORD}`);
   console.log('Concluído.');
 }
