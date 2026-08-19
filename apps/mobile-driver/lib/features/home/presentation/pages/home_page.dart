@@ -367,10 +367,10 @@ class _StatsGrid extends StatelessWidget {
         _StatCard(
             value: 'R\$ ${stats.earningsToday.toStringAsFixed(0)}',
             label: 'Ganhos hoje'),
-        _StatCard(value: '${stats.washesToday}', label: 'Lavagens'),
-        _StatCard(value: stats.rating.toStringAsFixed(1), label: 'Avaliação'),
+        _StatCard(value: '${stats.washesToday}', label: 'Lavagens hoje'),
         _StatCard(
-            value: '${stats.onlineHours.toStringAsFixed(0)}h', label: 'Online'),
+            value: stats.rating != null ? stats.rating!.toStringAsFixed(1) : '—',
+            label: 'Avaliação'),
       ],
     );
   }

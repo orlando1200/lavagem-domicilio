@@ -69,4 +69,15 @@ class DriverOrdersRepository {
       throw ApiException.fromDioException(e);
     }
   }
+
+  /// Ganhos/lavagens de hoje + avaliacao media real do perfil
+  /// (GET /orders/mine/daily-stats).
+  Future<DriverDailyStats> fetchDailyStats() async {
+    try {
+      final response = await _dio.get<Map<String, dynamic>>('/orders/mine/daily-stats');
+      return DriverDailyStats.fromJson(response.data!);
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
 }

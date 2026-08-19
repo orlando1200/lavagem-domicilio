@@ -255,6 +255,39 @@ export class OrdersService {
     });
   }
 
+  /**
+   * Estatisticas reais do dia do lavador (ganhos/lavagens de hoje +
+   * avaliacao media do perfil) — antes era 100% mockado no app
+   * (`DriverDailyStats` hardcoded, nunca lia dado nenhum).
+   */
+  async getMyDailyStats(driverUserId: string) {
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const [completedToday, driverProfile] = await Promise.all([
+      this.prisma.order.findMany({
+        where: {
+          driverId: driverUserId,
+          status: OrderStatus.completed,
+          completedAt: { gte: startOfDay },
+        },
+        select: { totalAmount: true },
+      }),
+      this.prisma.driverProfile.findUnique({
+        where: { userId: driverUserId },
+        select: { averageRating: true },
+      }),
+    ]);
+
+    const earningsToday = completedToday.reduce((sum, order) => sum + Number(order.totalAmount), 0);
+
+    return {
+      earningsToday,
+      washesToday: completedToday.length,
+      rating: driverProfile?.averageRating ? Number(driverProfile.averageRating) : null,
+    };
+  }
+
   /** Lavador aceita um pedido que estava em busca de lavador (`searching_washer`). */
   async acceptOrder(driverUserId: string, orderId: string) {
     const order = await this.findOrderOrThrow(orderId);

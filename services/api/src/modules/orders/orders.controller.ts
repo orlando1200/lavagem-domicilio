@@ -68,6 +68,14 @@ export class OrdersController {
     return this.ordersService.getMyActiveOrder(user.id);
   }
 
+  @Get('mine/daily-stats')
+  @Roles(UserRole.LAVADOR)
+  @UseGuards(RolesGuard)
+  @ApiOperation({ summary: 'Lavador consulta ganhos/lavagens de hoje e avaliacao media' })
+  getMyDailyStats(@CurrentUser() user: AuthenticatedUser) {
+    return this.ordersService.getMyDailyStats(user.id);
+  }
+
   @Get(':id')
   @Roles(UserRole.CLIENTE)
   @UseGuards(RolesGuard)

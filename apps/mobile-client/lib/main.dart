@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'core/theme/app_theme.dart';
-import 'core/widgets/placeholder_page.dart';
 import 'features/addresses/presentation/pages/add_address_page.dart';
 import 'features/addresses/presentation/pages/addresses_page.dart';
 import 'features/auth/presentation/pages/login_page.dart';
@@ -33,9 +32,8 @@ void main() {
 }
 
 /// Entrypoint do app cliente GIUCAR Cyberpunk, conectado ao backend real
-/// (login, home, pedidos, perfil e loja de acessorios). Demais features
-/// legadas (aluguel de motos, veiculos, enderecos, engajamento completo,
-/// etc.) permanecem fora do escopo desta fase e usam [PlaceholderPage].
+/// (login, home, pedidos, perfil, loja de acessorios, notificacoes,
+/// historico de pagamentos etc).
 class GiucarApp extends StatelessWidget {
   const GiucarApp({super.key});
 
@@ -116,11 +114,6 @@ final GoRouter _router = GoRouter(
       builder: (context, state) => AuctionDetailPage(
         auctionId: state.pathParameters['id']!,
       ),
-    ),
-    GoRoute(
-      path: '/moto-rental',
-      builder: (context, state) =>
-          const PlaceholderPage(title: 'Aluguel de Moto'),
     ),
     GoRoute(
       path: '/catalog',

@@ -332,6 +332,37 @@ describe('OrdersService', () => {
     });
   });
 
+  describe('getMyDailyStats', () => {
+    it('sums totalAmount and counts orders completed today for the driver', async () => {
+      prisma.order.findMany.mockResolvedValue([
+        { totalAmount: '59.90' },
+        { totalAmount: '89.90' },
+      ]);
+      prisma.driverProfile.findUnique.mockResolvedValue({ averageRating: '4.80' });
+
+      const result = await service.getMyDailyStats('driver-1');
+
+      expect(prisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            driverId: 'driver-1',
+            status: OrderStatus.completed,
+          }),
+        }),
+      );
+      expect(result).toEqual({ earningsToday: 149.8, washesToday: 2, rating: 4.8 });
+    });
+
+    it('returns rating null when the driver has no profile rating yet', async () => {
+      prisma.order.findMany.mockResolvedValue([]);
+      prisma.driverProfile.findUnique.mockResolvedValue({ averageRating: null });
+
+      const result = await service.getMyDailyStats('driver-1');
+
+      expect(result).toEqual({ earningsToday: 0, washesToday: 0, rating: null });
+    });
+  });
+
   describe('cancelOrder', () => {
     it('allows the customer who owns the order to cancel it', async () => {
       prisma.order.findUnique.mockResolvedValue({

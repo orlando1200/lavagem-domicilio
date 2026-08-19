@@ -150,19 +150,27 @@ class DriverOrder {
   }
 }
 
-/// Estatisticas de desempenho do lavador no dia — ainda sem endpoint de
-/// agregacao no backend, permanece mockado (fora do escopo desta
-/// rodada, que fechou o ciclo real de aceitar/executar pedido).
+/// Estatisticas reais de desempenho do lavador no dia
+/// (GET /orders/mine/daily-stats): ganhos e lavagens somados dos
+/// pedidos concluidos hoje, avaliacao media do `DriverProfile`.
+/// `rating` fica `null` antes do lavador ter qualquer avaliacao — a UI
+/// mostra "—" em vez de inventar uma nota.
 class DriverDailyStats {
   const DriverDailyStats({
     required this.earningsToday,
     required this.washesToday,
     required this.rating,
-    required this.onlineHours,
   });
 
   final double earningsToday;
   final int washesToday;
-  final double rating;
-  final double onlineHours;
+  final double? rating;
+
+  factory DriverDailyStats.fromJson(Map<String, dynamic> json) {
+    return DriverDailyStats(
+      earningsToday: _parseDouble(json['earningsToday']),
+      washesToday: (json['washesToday'] as num?)?.toInt() ?? 0,
+      rating: json['rating'] != null ? _parseDouble(json['rating']) : null,
+    );
+  }
 }

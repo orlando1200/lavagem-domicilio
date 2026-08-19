@@ -17,12 +17,7 @@ class DriverOrdersState {
     this.activeOrder,
     this.availableOrders = const [],
     this.errorMessage,
-    this.stats = const DriverDailyStats(
-      earningsToday: 347,
-      washesToday: 4,
-      rating: 4.9,
-      onlineHours: 12,
-    ),
+    this.stats = const DriverDailyStats(earningsToday: 0, washesToday: 0, rating: null),
   });
 
   final bool isOnline;
@@ -136,6 +131,16 @@ class DriverOrdersNotifier extends StateNotifier<DriverOrdersState> {
     state = state.copyWith(isOnline: isOnline);
     await _refreshActiveOrder();
     if (isOnline) await _refreshAvailableOrders();
+    await _refreshDailyStats();
+  }
+
+  Future<void> _refreshDailyStats() async {
+    try {
+      final stats = await _repository.fetchDailyStats();
+      state = state.copyWith(stats: stats);
+    } catch (_) {
+      // Mantem as estatisticas atuais: falha de rede aqui nao deve travar a tela.
+    }
   }
 
   Future<void> _refreshActiveOrder() async {
@@ -244,15 +249,8 @@ class DriverOrdersNotifier extends StateNotifier<DriverOrdersState> {
     try {
       final updated = await _repository.updateStatus(active.id, nextBackendStatus);
       if (updated.status == DriverOrderStatus.completed) {
-        state = state.copyWith(
-          activeOrder: () => null,
-          stats: DriverDailyStats(
-            earningsToday: state.stats.earningsToday + active.price,
-            washesToday: state.stats.washesToday + 1,
-            rating: state.stats.rating,
-            onlineHours: state.stats.onlineHours,
-          ),
-        );
+        state = state.copyWith(activeOrder: () => null);
+        await _refreshDailyStats();
         _syncLocationTracking();
       } else {
         state = state.copyWith(activeOrder: () => updated);
