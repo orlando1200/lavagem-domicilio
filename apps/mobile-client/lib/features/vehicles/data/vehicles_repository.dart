@@ -2,8 +2,21 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/api/api_exception.dart';
+import 'models/plate_lookup_model.dart';
 import 'models/vehicle_catalog_model.dart';
 import 'models/vehicle_model.dart';
+
+// Placa antiga (AAA-1234/AAA1234) ou Mercosul (AAA1A23) — hifen opcional.
+// Espelha PLATE_REGEX do backend (services/api/.../dto/vehicles.dto.ts).
+final _oldPlateRegex = RegExp(r'^[A-Z]{3}-?\d{4}$');
+final _mercosulPlateRegex = RegExp(r'^[A-Z]{3}\d[A-Z]\d{2}$');
+
+/// Valida o formato da placa no cliente antes de disparar a consulta —
+/// mesmas regras do backend, so pra evitar uma chamada de rede inutil.
+bool isValidPlateFormat(String plate) {
+  final normalized = plate.toUpperCase().replaceAll(RegExp(r'[\s-]'), '');
+  return _oldPlateRegex.hasMatch(normalized) || _mercosulPlateRegex.hasMatch(normalized);
+}
 
 final vehiclesRepositoryProvider = Provider<VehiclesRepository>((ref) {
   return VehiclesRepository(ref.watch(dioProvider));
@@ -38,6 +51,7 @@ class VehiclesRepository {
     required String plate,
     String? catalogYearId,
     CarSize? size,
+    String? renavam,
   }) async {
     try {
       final response =
@@ -49,6 +63,7 @@ class VehiclesRepository {
         'plate': plate,
         if (catalogYearId != null) 'catalogYearId': catalogYearId,
         if (size != null) 'size': size.name,
+        if (renavam != null) 'renavam': renavam,
       });
       return VehicleModel.fromJson(response.data!);
     } on DioException catch (e) {
@@ -76,6 +91,22 @@ class VehiclesRepository {
       return items.map((j) => VehicleCatalogModelOption.fromJson(j as Map<String, dynamic>)).toList();
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// Consulta `GET /vehicles/lookup-plate/:plate`. `null` significa placa
+  /// nao encontrada (404 do backend) — nao e um erro, e um resultado
+  /// valido do fluxo (estado "NotFound" na UI). Qualquer outro erro de
+  /// rede/servidor continua sendo relancado como `ApiException`.
+  Future<PlateLookupResult?> lookupPlate(String plate) async {
+    try {
+      final response =
+          await _dio.get<Map<String, dynamic>>('/vehicles/lookup-plate/$plate');
+      return PlateLookupResult.fromJson(response.data!);
+    } on DioException catch (e) {
+      final exception = ApiException.fromDioException(e);
+      if (exception.statusCode == 404) return null;
+      throw exception;
     }
   }
 

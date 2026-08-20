@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -9,7 +9,7 @@ import {
   CurrentUser,
 } from '../../common/decorators/current-user.decorator';
 import { VehiclesService } from './vehicles.service';
-import { CreateVehicleDto } from './dto/vehicles.dto';
+import { CreateVehicleDto, LookupPlateParamsDto } from './dto/vehicles.dto';
 
 @ApiTags('vehicles')
 @ApiBearerAuth()
@@ -29,5 +29,15 @@ export class VehiclesController {
   @ApiOperation({ summary: 'Lista os veiculos do cliente autenticado' })
   listMyVehicles(@CurrentUser() user: AuthenticatedUser) {
     return this.vehiclesService.listMyVehicles(user.id);
+  }
+
+  @Get('lookup-plate/:plate')
+  @ApiOperation({
+    summary:
+      'Consulta marca/modelo/ano/cor por placa (modo simulado — ver PlateLookupGateway). ' +
+      'Retorna 200 com os dados ou 404 quando a placa nao e encontrada.',
+  })
+  lookupPlate(@Param() params: LookupPlateParamsDto) {
+    return this.vehiclesService.lookupPlate(params.plate);
   }
 }

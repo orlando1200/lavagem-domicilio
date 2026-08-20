@@ -2,9 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/neon_surface.dart';
+import '../../data/models/plate_lookup_model.dart';
 import '../../data/models/vehicle_model.dart';
 import '../../data/vehicles_repository.dart';
 import '../providers/vehicles_provider.dart';
+import '../widgets/plate_lookup_widgets.dart';
+
+/// Estados do fluxo de busca por placa (onboarding estilo Webmotors):
+/// Idle -> Loading -> Found | NotFound | Error. `notFound`/`error` nao
+/// bloqueiam o cadastro — o formulario sempre pode ser preenchido
+/// manualmente.
+enum _PlateLookupStatus { idle, loading, found, notFound, error }
 
 /// Formulario de cadastro de veiculo (POST /vehicles). Volta `true` no
 /// pop quando o cadastro e concluido com sucesso, pra quem chamou
@@ -22,6 +30,7 @@ class _AddVehiclePageState extends ConsumerState<AddVehiclePage> {
   final _modelController = TextEditingController();
   final _colorController = TextEditingController();
   final _plateController = TextEditingController();
+  final _renavamController = TextEditingController();
 
   VehicleType _type = VehicleType.carro;
   CarSize? _size;
@@ -32,13 +41,75 @@ class _AddVehiclePageState extends ConsumerState<AddVehiclePage> {
   String? _catalogModelId;
   String? _catalogYearId;
 
+  _PlateLookupStatus _plateLookupStatus = _PlateLookupStatus.idle;
+  PlateLookupResult? _plateLookupResult;
+  String? _plateLookupErrorMessage;
+  bool _manualOverride = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _plateController.addListener(_onPlateEdited);
+  }
+
   @override
   void dispose() {
+    _plateController.removeListener(_onPlateEdited);
     _brandController.dispose();
     _modelController.dispose();
     _colorController.dispose();
     _plateController.dispose();
+    _renavamController.dispose();
     super.dispose();
+  }
+
+  /// Reconstroi a cada tecla (pro botao "Buscar" habilitar/desabilitar
+  /// junto com o formato da placa). Se ja havia um resultado (found /
+  /// notFound / error), ele fica obsoleto ao editar — volta pra Idle pra
+  /// nao mostrar o resumo de outro veiculo.
+  void _onPlateEdited() {
+    final hasStaleResult =
+        _plateLookupStatus != _PlateLookupStatus.idle && _plateLookupStatus != _PlateLookupStatus.loading;
+    setState(() {
+      if (hasStaleResult) {
+        _plateLookupStatus = _PlateLookupStatus.idle;
+        _plateLookupResult = null;
+        _manualOverride = false;
+      }
+    });
+  }
+
+  Future<void> _searchPlate() async {
+    final plate = _plateController.text.trim().toUpperCase();
+    if (!isValidPlateFormat(plate)) return;
+
+    setState(() {
+      _plateLookupStatus = _PlateLookupStatus.loading;
+      _plateLookupErrorMessage = null;
+    });
+
+    try {
+      final result = await ref.read(vehiclesRepositoryProvider).lookupPlate(plate);
+      if (!mounted) return;
+      if (result == null) {
+        setState(() => _plateLookupStatus = _PlateLookupStatus.notFound);
+        return;
+      }
+      setState(() {
+        _plateLookupStatus = _PlateLookupStatus.found;
+        _plateLookupResult = result;
+        _manualOverride = false;
+        _brandController.text = result.brand;
+        _modelController.text = result.model;
+        if (result.color != null) _colorController.text = result.color!;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _plateLookupStatus = _PlateLookupStatus.error;
+        _plateLookupErrorMessage = error.toString();
+      });
+    }
   }
 
   Future<void> _submit() async {
@@ -50,6 +121,7 @@ class _AddVehiclePageState extends ConsumerState<AddVehiclePage> {
     });
 
     try {
+      final renavam = _renavamController.text.trim();
       await ref.read(vehiclesRepositoryProvider).create(
             type: _type,
             brand: _brandController.text.trim(),
@@ -58,6 +130,7 @@ class _AddVehiclePageState extends ConsumerState<AddVehiclePage> {
             plate: _plateController.text.trim().toUpperCase(),
             catalogYearId: _catalogYearId,
             size: _size,
+            renavam: renavam.isEmpty ? null : renavam,
           );
       if (!mounted) return;
       Navigator.pop(context, true);
@@ -96,7 +169,66 @@ class _AddVehiclePageState extends ConsumerState<AddVehiclePage> {
                       if (value != null) setState(() => _type = value);
                     },
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Digite a placa e buscamos os dados do veículo automaticamente.',
+                    style: TextStyle(color: AppColors.textMuted, fontSize: 11),
+                  ),
+                  const SizedBox(height: 8),
+                  PlateInputField(
+                    controller: _plateController,
+                    canSearch: isValidPlateFormat(_plateController.text.trim()),
+                    loading: _plateLookupStatus == _PlateLookupStatus.loading,
+                    onSearch: _searchPlate,
+                  ),
+                  if (_plateLookupStatus == _PlateLookupStatus.found && _plateLookupResult != null) ...[
+                    const SizedBox(height: 10),
+                    VehicleLookupSummaryCard(
+                      result: _plateLookupResult!,
+                      onEditManually: () => setState(() => _manualOverride = true),
+                    ),
+                  ] else if (_plateLookupStatus == _PlateLookupStatus.notFound) ...[
+                    const SizedBox(height: 10),
+                    const PlateNotFoundHint(),
+                  ] else if (_plateLookupStatus == _PlateLookupStatus.error) ...[
+                    const SizedBox(height: 10),
+                    PlateLookupErrorHint(
+                      message: _plateLookupErrorMessage ?? 'Não foi possível consultar a placa.',
+                      onRetry: _searchPlate,
+                    ),
+                  ],
+                  if (_plateLookupStatus != _PlateLookupStatus.found || _manualOverride) ...[
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _brandController,
+                      style: const TextStyle(color: AppColors.textPrimary),
+                      decoration: const InputDecoration(labelText: 'Marca'),
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? 'Informe a marca'
+                          : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _modelController,
+                      style: const TextStyle(color: AppColors.textPrimary),
+                      decoration: const InputDecoration(labelText: 'Modelo'),
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? 'Informe o modelo'
+                          : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _colorController,
+                      style: const TextStyle(color: AppColors.textPrimary),
+                      decoration:
+                          const InputDecoration(labelText: 'Cor (opcional)'),
+                    ),
+                  ],
+                  if (_plateLookupStatus == _PlateLookupStatus.found) ...[
+                    const SizedBox(height: 12),
+                    RenavamField(controller: _renavamController),
+                  ],
+                  const SizedBox(height: 16),
                   DropdownButtonFormField<CarSize?>(
                     initialValue: _size,
                     dropdownColor: AppColors.surface,
@@ -117,7 +249,7 @@ class _AddVehiclePageState extends ConsumerState<AddVehiclePage> {
                     style: TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w700),
                   ),
                   Text(
-                    'Preenche marca/modelo automaticamente e habilita comparação de compatibilidade na loja.',
+                    'Habilita comparação de compatibilidade na loja.',
                     style: TextStyle(color: AppColors.textMuted, fontSize: 11),
                   ),
                   const SizedBox(height: 8),
@@ -133,41 +265,6 @@ class _AddVehiclePageState extends ConsumerState<AddVehiclePage> {
                         if (modelName != null) _modelController.text = modelName;
                       });
                     },
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _brandController,
-                    style: const TextStyle(color: AppColors.textPrimary),
-                    decoration: const InputDecoration(labelText: 'Marca'),
-                    validator: (v) => (v == null || v.trim().isEmpty)
-                        ? 'Informe a marca'
-                        : null,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _modelController,
-                    style: const TextStyle(color: AppColors.textPrimary),
-                    decoration: const InputDecoration(labelText: 'Modelo'),
-                    validator: (v) => (v == null || v.trim().isEmpty)
-                        ? 'Informe o modelo'
-                        : null,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _colorController,
-                    style: const TextStyle(color: AppColors.textPrimary),
-                    decoration:
-                        const InputDecoration(labelText: 'Cor (opcional)'),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _plateController,
-                    textCapitalization: TextCapitalization.characters,
-                    style: const TextStyle(color: AppColors.textPrimary),
-                    decoration: const InputDecoration(labelText: 'Placa'),
-                    validator: (v) => (v == null || v.trim().isEmpty)
-                        ? 'Informe a placa'
-                        : null,
                   ),
                   if (_errorMessage != null) ...[
                     const SizedBox(height: 16),

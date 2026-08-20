@@ -1567,3 +1567,61 @@ Ordem sugerida, por dependência e impacto (não por facilidade):
     Médio / Sedã"` a R$89,90 — resposta com `status:
     searching_washer` e `driverId` já atribuído, confirmando que o
     matching automático continua funcionando sem nenhuma regressão.
+
+33. **Onboarding de veículo por placa (modo simulado).** Usuário pediu
+    um fluxo de cadastro estilo Webmotors: digitar só a placa, o
+    sistema busca marca/modelo/ano/cor automaticamente, a UI
+    preenche os campos como confirmação somente-leitura e mostra um
+    campo de RENAVAM. Proposta técnica detalhada (opções de API de
+    placa no Brasil, contrato JSON, regex de validação, máquina de
+    estados) foi entregue antes como artifact; usuário aprovou
+    implementar a Fase 1 (modo simulado) primeiro, provedor real fica
+    pra Fase 2 quando houver credencial/orçamento pra SERPRO/Infosimples/
+    equivalente.
+
+    Backend: `Vehicle.renavam` (opcional, 11 dígitos) via migração
+    aditiva. Novo módulo `vehicles/plate-lookup/` no mesmo padrão
+    "modo simulado" já usado 5x nesta sessão (Mercado Pago, email,
+    storage, push): interface `PlateLookupGateway` + `Symbol` token +
+    `MockPlateLookupAdapter` com 3 placas fixas (`ABC1D23` → Fiat
+    Argo, `XYZ4E56` → VW Gol, `OLD1234` → Toyota Corolla) — qualquer
+    outra placa retorna `null` (simula "não encontrada"), exercitando
+    os dois caminhos sem depender de credencial externa. Novo `GET
+    /vehicles/lookup-plate/:plate`, retorna 200 com os dados ou 404
+    quando não encontrada. `PLATE_REGEX` (placa antiga `AAA-1234`/
+    `AAA1234` ou Mercosul `AAA1A23`, hífen opcional) e `RENAVAM_REGEX`
+    (11 dígitos) validam tanto o path param da consulta quanto o
+    corpo de `POST /vehicles`.
+
+    Mobile-client (`AddVehiclePage`): campo de placa movido pro topo
+    do formulário com botão "Buscar" (só habilita com formato válido,
+    mesma regex do backend replicada no cliente pra evitar chamada de
+    rede inútil). Máquina de estados local (`_PlateLookupStatus`:
+    idle/loading/found/notFound/error) — `found` troca marca/modelo/
+    cor por um `VehicleLookupSummaryCard` somente-leitura (com escape
+    hatch "Não é seu veículo? Editar manualmente") e revela o campo de
+    RENAVAM; `notFound`/`error` nunca bloqueiam o cadastro, o
+    formulário manual continua exatamente como antes. Editar a placa
+    depois de um resultado invalida o resultado (volta pra `idle`)
+    pra não deixar um resumo desatualizado na tela. Repositório trata
+    404 como retorno `null` (resultado válido do fluxo), não como
+    exceção — só erros de rede/servidor de verdade viram
+    `ApiException`.
+
+    Verificação: backend `lint/type-check/test (171 testes)/build`
+    limpos; `flutter analyze` limpo (zero erros/warnings novos,
+    mesma baseline de infos `prefer_const_constructors`/
+    `constant_identifier_names` já existente); `flutter test` (16
+    testes) sem regressão. Verificação ao vivo contra Postgres real
+    via curl: `GET /vehicles/lookup-plate/ABC1D23` (com e sem hífen em
+    `OLD-1234`) retorna os dados fixos corretos; placa desconhecida
+    (`ZZZ9Z99`) retorna 404; placa em formato inválido retorna 400;
+    `POST /vehicles` com `renavam` válido persiste e retorna o campo;
+    `renavam` inválido (`"123"`) retorna 400. Não foi possível
+    verificar visualmente a UI no pane do browser nesta rodada — o
+    servidor HTTPS local (certificado autoassinado, mesmo usado pro
+    teste no celular) foi rejeitado pela navegação automatizada tanto
+    em `https://` quanto `http://localhost:5000`; a confiança aqui
+    vem do `flutter analyze` limpo + revisão de código cuidadosa
+    contra os padrões visuais já validados nesta sessão (mesma
+    limitação documentada no item 32).
