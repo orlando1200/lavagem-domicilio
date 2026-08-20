@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
-import { VehicleType } from '@prisma/client';
+import { CarSize, VehicleType } from '@prisma/client';
 
 export class CreateVehicleDto {
   @ApiProperty({ enum: VehicleType })
@@ -35,4 +35,9 @@ export class CreateVehicleDto {
   @IsOptional()
   @IsUUID()
   catalogYearId?: string;
+
+  @ApiPropertyOptional({ enum: CarSize, description: 'Tamanho pra precificacao da Lavagem por Tamanho' })
+  @IsOptional()
+  @IsEnum(CarSize)
+  size?: CarSize;
 }

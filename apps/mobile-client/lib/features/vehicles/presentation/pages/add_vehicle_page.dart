@@ -24,6 +24,7 @@ class _AddVehiclePageState extends ConsumerState<AddVehiclePage> {
   final _plateController = TextEditingController();
 
   VehicleType _type = VehicleType.carro;
+  CarSize? _size;
   bool _submitting = false;
   String? _errorMessage;
 
@@ -56,6 +57,7 @@ class _AddVehiclePageState extends ConsumerState<AddVehiclePage> {
             color: _colorController.text.trim(),
             plate: _plateController.text.trim().toUpperCase(),
             catalogYearId: _catalogYearId,
+            size: _size,
           );
       if (!mounted) return;
       Navigator.pop(context, true);
@@ -93,6 +95,21 @@ class _AddVehiclePageState extends ConsumerState<AddVehiclePage> {
                     onChanged: (value) {
                       if (value != null) setState(() => _type = value);
                     },
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<CarSize?>(
+                    initialValue: _size,
+                    dropdownColor: AppColors.surface,
+                    style: const TextStyle(color: AppColors.textPrimary),
+                    decoration: const InputDecoration(
+                      labelText: 'Tamanho (opcional)',
+                      helperText: 'Usado pra calcular o preço da Lavagem por Tamanho automaticamente',
+                    ),
+                    items: [
+                      const DropdownMenuItem(value: null, child: Text('Não informar')),
+                      ...CarSize.values.map((s) => DropdownMenuItem(value: s, child: Text(s.label))),
+                    ],
+                    onChanged: (value) => setState(() => _size = value),
                   ),
                   const SizedBox(height: 16),
                   Text(

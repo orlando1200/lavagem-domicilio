@@ -9,9 +9,9 @@ import '../../../vehicles/data/models/vehicle_model.dart';
 import '../../../vehicles/presentation/providers/vehicles_provider.dart';
 import '../../../shop/data/payments_repository.dart';
 import '../../data/models/order_model.dart';
-import '../../data/models/service_category_model.dart';
+import '../../data/models/wash_price_model.dart';
 import '../../data/orders_repository.dart';
-import '../../data/service_categories_repository.dart';
+import '../../data/wash_pricing_repository.dart';
 import '../../orders_provider.dart';
 
 typedef _WashService = ({
@@ -22,19 +22,6 @@ typedef _WashService = ({
   bool isAuction,
 });
 
-const Map<String, IconData> _serviceIcons = {
-  'DRY_WASH': Icons.eco,
-  'EXPRESS_WASH': Icons.local_car_wash,
-};
-
-/// Precos de fallback usados apenas enquanto o admin nao cadastrou uma
-/// categoria (`ServiceCategory`) para o tipo — evita que o wizard fique
-/// sem opcao alguma antes da migracao de dados existente ser feita.
-const Map<String, ({String name, double price})> _serviceFallbacks = {
-  'DRY_WASH': (name: 'Lavagem a Seco', price: 59.90),
-  'EXPRESS_WASH': (name: 'Lavagem Express', price: 89.90),
-};
-
 const _heavyService = (
   serviceType: 'HEAVY_SERVICE',
   name: 'Serviço Pesado (Leilão)',
@@ -43,29 +30,10 @@ const _heavyService = (
   isAuction: true,
 );
 
-final _servicesProvider = FutureProvider<List<_WashService>>((ref) async {
-  final repository = ref.watch(serviceCategoriesRepositoryProvider);
-  Map<String, ServiceCategoryModel> byType = {};
-  try {
-    final categories = await repository.fetchActive();
-    byType = {for (final c in categories) c.serviceType: c};
-  } catch (_) {
-    // Falha ao buscar categorias: segue com os precos de fallback.
-  }
-
-  final services = <_WashService>[
-    for (final type in ['DRY_WASH', 'EXPRESS_WASH'])
-      (
-        serviceType: type,
-        name: byType[type]?.name ?? _serviceFallbacks[type]!.name,
-        price: byType[type]?.price ?? _serviceFallbacks[type]!.price,
-        icon: _serviceIcons[type]!,
-        isAuction: false,
-      ),
-    _heavyService,
-  ];
-
-  return services;
+/// Matriz de precos ativa — Servicos Auto / Lavagem por Tamanho
+/// (GET /wash-pricing/matrix).
+final _washMatrixProvider = FutureProvider<List<WashPriceEntry>>((ref) {
+  return ref.watch(washPricingRepositoryProvider).fetchMatrix();
 });
 
 typedef _PaymentMethod = ({IconData icon, String label, String value});
@@ -223,30 +191,11 @@ class _NewOrderPageState extends ConsumerState<NewOrderPage> {
               ),
               const SizedBox(height: 16),
               if (_step == 0)
-                Consumer(
-                  builder: (context, ref, _) {
-                    final servicesAsync = ref.watch(_servicesProvider);
-                    return servicesAsync.when(
-                      loading: () => const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 40),
-                        child: Center(
-                          child: CircularProgressIndicator(color: AppColors.primary),
-                        ),
-                      ),
-                      error: (error, _) => const Text(
-                        'Não foi possível carregar os serviços.',
-                        style: TextStyle(color: AppColors.error),
-                        textAlign: TextAlign.center,
-                      ),
-                      data: (services) => _ServiceStep(
-                        services: services,
-                        onSelect: (service) => setState(() {
-                          _selectedService = service;
-                          _step = 1;
-                        }),
-                      ),
-                    );
-                  },
+                _ServiceStep(
+                  onSelect: (service) => setState(() {
+                    _selectedService = service;
+                    _step = 1;
+                  }),
                 )
               else if (_step == 1)
                 _VehicleStep(
@@ -301,54 +250,254 @@ class _NewOrderPageState extends ConsumerState<NewOrderPage> {
   }
 }
 
-class _ServiceStep extends StatelessWidget {
-  const _ServiceStep({required this.services, required this.onSelect});
+/// Passo 1 do wizard: Lavagem por Tamanho (Servicos Auto) — tamanho +
+/// tipo, preco calculado pela matriz — ou Servico Pesado (leilao,
+/// inalterado). Tamanho e pre-selecionado a partir do primeiro veiculo
+/// salvo que tiver `size` definido; sempre editavel manualmente.
+class _ServiceStep extends ConsumerStatefulWidget {
+  const _ServiceStep({required this.onSelect});
 
-  final List<_WashService> services;
   final ValueChanged<_WashService> onSelect;
 
   @override
+  ConsumerState<_ServiceStep> createState() => _ServiceStepState();
+}
+
+class _ServiceStepState extends ConsumerState<_ServiceStep> {
+  CarSize? _size;
+  WashType? _washType;
+  bool _sizePreselected = false;
+
+  @override
   Widget build(BuildContext context) {
+    final matrixAsync = ref.watch(_washMatrixProvider);
+    final vehiclesAsync = ref.watch(vehiclesProvider);
+
+    if (!_sizePreselected) {
+      final vehicles = vehiclesAsync.valueOrNull;
+      if (vehicles != null) {
+        _sizePreselected = true;
+        final withSize = vehicles.where((v) => v.size != null).toList();
+        if (withSize.isNotEmpty) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) setState(() => _size = withSize.first.size);
+          });
+        }
+      }
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (final service in services)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: NeonSurface(
-              child: InkWell(
-                onTap: () => onSelect(service),
-                borderRadius: BorderRadius.circular(20),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Icon(service.icon, color: AppColors.primary, size: 28),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Text(
-                          service.name,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        service.isAuction
-                            ? 'A definir em leilão'
-                            : 'R\$ ${service.price.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w800),
-                      ),
-                    ],
+        Text(
+          'Lavagem',
+          style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w800, fontSize: 16),
+        ),
+        const SizedBox(height: 10),
+        matrixAsync.when(
+          loading: () => const Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+          ),
+          error: (error, _) => Text(
+            'Não foi possível carregar os preços de lavagem.',
+            style: const TextStyle(color: AppColors.error),
+          ),
+          data: (matrix) => _LavagemSelector(
+            matrix: matrix,
+            size: _size,
+            washType: _washType,
+            onSizeChanged: (s) => setState(() {
+              _size = s;
+              _washType = null;
+            }),
+            onWashTypeChanged: (wt) => setState(() => _washType = wt),
+            onContinue: (price, label) => widget.onSelect((
+              serviceType: 'DRY_WASH',
+              name: label,
+              price: price,
+              icon: Icons.local_car_wash,
+              isAuction: false,
+            )),
+          ),
+        ),
+        const SizedBox(height: 24),
+        Text(
+          'ou',
+          style: TextStyle(color: AppColors.textMuted, fontSize: 12),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 16),
+        NeonSurface(
+          child: InkWell(
+            onTap: () => widget.onSelect(_heavyService),
+            borderRadius: BorderRadius.circular(20),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Icon(_heavyService.icon, color: AppColors.primary, size: 28),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Text(
+                      _heavyService.name,
+                      style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w700),
+                    ),
                   ),
-                ),
+                  const Text(
+                    'A definir em leilão',
+                    style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w800),
+                  ),
+                ],
               ),
             ),
           ),
+        ),
       ],
+    );
+  }
+}
+
+const Map<CarSize, String> _carSizeLabels = {
+  CarSize.PEQUENO: 'Pequeno / Hatch',
+  CarSize.MEDIO: 'Médio / Sedã',
+  CarSize.GRANDE: 'Grande / SUV',
+};
+
+class _LavagemSelector extends StatelessWidget {
+  const _LavagemSelector({
+    required this.matrix,
+    required this.size,
+    required this.washType,
+    required this.onSizeChanged,
+    required this.onWashTypeChanged,
+    required this.onContinue,
+  });
+
+  final List<WashPriceEntry> matrix;
+  final CarSize? size;
+  final WashType? washType;
+  final ValueChanged<CarSize> onSizeChanged;
+  final ValueChanged<WashType> onWashTypeChanged;
+  final void Function(double price, String label) onContinue;
+
+  @override
+  Widget build(BuildContext context) {
+    final availableTypes = size == null
+        ? const <WashPriceEntry>[]
+        : matrix.where((e) => e.carSize == size).toList();
+    WashPriceEntry? selectedEntry;
+    if (washType != null) {
+      for (final entry in availableTypes) {
+        if (entry.washType == washType) selectedEntry = entry;
+      }
+    }
+
+    return NeonSurface(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Tamanho do veículo', style: TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              for (final s in CarSize.values)
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(right: s == CarSize.values.last ? 0 : 8),
+                    child: InkWell(
+                      onTap: () => onSizeChanged(s),
+                      borderRadius: BorderRadius.circular(14),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+                        decoration: BoxDecoration(
+                          color: size == s ? AppColors.primaryContainer : AppColors.surfaceAlt,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: size == s ? AppColors.primary : AppColors.border),
+                        ),
+                        child: Text(
+                          _carSizeLabels[s]!,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: size == s ? AppColors.primary : AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          if (size != null) ...[
+            const SizedBox(height: 16),
+            Text('Tipo de lavagem', style: TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 8),
+            if (availableTypes.isEmpty)
+              Text(
+                'Nenhum preço cadastrado pra esse tamanho ainda.',
+                style: TextStyle(color: AppColors.textMuted, fontSize: 12),
+              )
+            else
+              for (final entry in availableTypes)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: InkWell(
+                    onTap: () => onWashTypeChanged(entry.washType),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: washType == entry.washType ? AppColors.primaryContainer : AppColors.surfaceAlt,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: washType == entry.washType ? AppColors.primary : AppColors.border,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              entry.washType.label,
+                              style: TextStyle(
+                                color: washType == entry.washType ? AppColors.primary : AppColors.textPrimary,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            'R\$ ${entry.price.toStringAsFixed(2)}',
+                            style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w800),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+          ],
+          if (selectedEntry != null) ...[
+            const SizedBox(height: 12),
+            Builder(
+              builder: (context) {
+                final entry = selectedEntry!;
+                return SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () => onContinue(
+                      entry.price,
+                      'Lavagem ${entry.washType.label} — ${_carSizeLabels[entry.carSize]}',
+                    ),
+                    child: Text('Continuar · R\$ ${entry.price.toStringAsFixed(2)}'),
+                  ),
+                );
+              },
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

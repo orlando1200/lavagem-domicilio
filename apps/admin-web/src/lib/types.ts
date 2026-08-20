@@ -326,6 +326,17 @@ export interface ServiceCategory {
   updatedAt: string;
 }
 
+export type CarSize = 'PEQUENO' | 'MEDIO' | 'GRANDE';
+export type WashType = 'EXPRESSA' | 'COMPLETA' | 'HIGIENIZACAO_INTERNA' | 'POLIMENTO';
+
+export interface WashPriceEntry {
+  id: string;
+  carSize: CarSize;
+  washType: WashType;
+  price: string | number;
+  active: boolean;
+}
+
 export type VehicleCatalogType = 'carro' | 'moto' | 'caminhonete' | 'van';
 
 export interface VehicleBrand {

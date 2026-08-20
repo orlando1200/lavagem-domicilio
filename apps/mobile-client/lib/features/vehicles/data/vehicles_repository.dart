@@ -37,6 +37,7 @@ class VehiclesRepository {
     String? color,
     required String plate,
     String? catalogYearId,
+    CarSize? size,
   }) async {
     try {
       final response =
@@ -47,6 +48,7 @@ class VehiclesRepository {
         if (color != null && color.isNotEmpty) 'color': color,
         'plate': plate,
         if (catalogYearId != null) 'catalogYearId': catalogYearId,
+        if (size != null) 'size': size.name,
       });
       return VehicleModel.fromJson(response.data!);
     } on DioException catch (e) {

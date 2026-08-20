@@ -139,6 +139,7 @@ model Vehicle {
   color         String?     @db.VarChar(40)
   plate         String      @db.VarChar(10)
   catalogYearId String?     @map("catalog_year_id") @db.Uuid
+  size          CarSize?
   createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz
 
   user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -256,6 +257,40 @@ model ServiceCategory {
   updatedAt   DateTime    @updatedAt @map("updated_at") @db.Timestamptz
 
   @@map("service_categories")
+}
+
+/// Tamanho do veiculo pra precificacao da lavagem — dimensao nova,
+/// independente de `VehicleType` (um "carro" pode ser Pequeno/Hatch,
+/// Medio/Sedan ou Grande/SUV).
+enum CarSize {
+  PEQUENO
+  MEDIO
+  GRANDE
+}
+
+/// Tipo de lavagem oferecido na secao "Servicos Auto" — substitui
+/// DRY_WASH/EXPRESS_WASH (preco unico por tipo) como forma de precificar
+/// lavagem regular. HEAVY_SERVICE (leilao) continua exatamente como esta,
+/// nao usa esta matriz.
+enum WashType {
+  EXPRESSA
+  COMPLETA
+  HIGIENIZACAO_INTERNA
+  POLIMENTO
+}
+
+/// Matriz de precos tamanho x tipo pro modulo "Servicos Auto — Lavagem".
+/// Uma linha por combinacao ativa; combinacao sem linha cadastrada fica
+/// indisponivel pro cliente (nunca gera preco zero/errado).
+model WashPriceMatrix {
+  id       String   @id @default(uuid()) @db.Uuid
+  carSize  CarSize  @map("car_size")
+  washType WashType @map("wash_type")
+  price    Decimal  @db.Decimal(10, 2)
+  active   Boolean  @default(true)
+
+  @@unique([carSize, washType])
+  @@map("wash_price_matrix")
 }
 
 enum AuctionStatus {

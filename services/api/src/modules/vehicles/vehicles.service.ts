@@ -21,6 +21,7 @@ export class VehiclesService {
         color: dto.color,
         plate: dto.plate,
         catalogYearId: dto.catalogYearId,
+        size: dto.size,
       },
       include: CATALOG_YEAR_INCLUDE,
     });

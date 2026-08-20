@@ -27,6 +27,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { ServiceCategoriesModule } from './modules/service-categories/service-categories.module';
 import { VehicleCatalogModule } from './modules/vehicle-catalog/vehicle-catalog.module';
+import { WashPricingModule } from './modules/wash-pricing/wash-pricing.module';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { VehicleCatalogModule } from './modules/vehicle-catalog/vehicle-catalog.
     NotificationsModule,
     ServiceCategoriesModule,
     VehicleCatalogModule,
+    WashPricingModule,
   ],
 })
 export class AppModule {}

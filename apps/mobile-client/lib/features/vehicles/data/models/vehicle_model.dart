@@ -26,12 +26,42 @@ enum VehicleType {
   }
 }
 
+/// Tamanho do veiculo pra precificacao da lavagem (Servicos Auto) —
+/// dimensao independente de `VehicleType` (um "carro" pode ser
+/// Pequeno/Hatch, Medio/Sedan ou Grande/SUV).
+enum CarSize {
+  PEQUENO,
+  MEDIO,
+  GRANDE;
+
+  static CarSize? fromBackend(String? value) {
+    if (value == null) return null;
+    for (final size in CarSize.values) {
+      if (size.name == value) return size;
+    }
+    return null;
+  }
+
+  String get label {
+    switch (this) {
+      case CarSize.PEQUENO:
+        return 'Pequeno / Hatch';
+      case CarSize.MEDIO:
+        return 'Médio / Sedã';
+      case CarSize.GRANDE:
+        return 'Grande / SUV';
+    }
+  }
+}
+
 /// Modelo de veiculo do cliente, espelhando `POST/GET /vehicles`.
 ///
 /// `catalogYearId`/`catalogBrandName`/`catalogModelName`/`catalogYear` sao
 /// opcionais — so existem quando o veiculo foi vinculado ao catalogo
 /// estruturado (marca/modelo/ano) no cadastro. Sem eles, a compatibilidade
 /// de produtos do marketplace fica sempre `UNKNOWN` (nunca bloqueia).
+/// `size` e opcional e alimenta a pre-selecao de tamanho na Lavagem por
+/// Tamanho (Servicos Auto) — sem ele, o cliente escolhe manualmente.
 class VehicleModel {
   const VehicleModel({
     required this.id,
@@ -44,6 +74,7 @@ class VehicleModel {
     this.catalogBrandName,
     this.catalogModelName,
     this.catalogYear,
+    this.size,
   });
 
   final String id;
@@ -56,6 +87,7 @@ class VehicleModel {
   final String? catalogBrandName;
   final String? catalogModelName;
   final int? catalogYear;
+  final CarSize? size;
 
   factory VehicleModel.fromJson(Map<String, dynamic> json) {
     final catalogYearJson = json['catalogYear'] as Map<String, dynamic>?;
@@ -73,6 +105,7 @@ class VehicleModel {
       catalogBrandName: catalogBrandJson?['name'] as String?,
       catalogModelName: catalogModelJson?['name'] as String?,
       catalogYear: (catalogYearJson?['year'] as num?)?.toInt(),
+      size: CarSize.fromBackend(json['size'] as String?),
     );
   }
 

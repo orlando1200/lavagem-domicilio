@@ -45,7 +45,8 @@
     "src/modules/support/**/*",
     "src/modules/rental/**/*",
     "src/modules/document-verification/**/*",
-    "src/modules/vehicle-catalog/**/*"
+    "src/modules/vehicle-catalog/**/*",
+    "src/modules/wash-pricing/**/*"
   ],
   "exclude": ["node_modules", "dist", "test", "**/*.spec.ts"]
 }

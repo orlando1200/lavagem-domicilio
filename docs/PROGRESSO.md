@@ -1509,3 +1509,61 @@ Ordem sugerida, por dependência e impacto (não por facilidade):
     **Módulo Garage Vehicular / Compatibilidade de Repuestos completo**
     (Fases A-D): catálogo estruturado, compatibilidade de produto,
     import em massa e UI do cliente, do início ao fim.
+
+32. **Serviços Auto — Lavagem por Tamanho.** Depois de mapear o que
+    faltava (lista completa pedida pelo usuário: itens bloqueados por
+    credenciais/dinheiro de um lado, débito técnico conhecido do
+    outro), o usuário escolheu avançar com a proposta técnica de
+    "Serviços Auto" já entregue antes como artifact — implementação
+    real da parte "Lavagem", que evolui a lavagem regular de **preço
+    único por tipo** (`ServiceCategory`, `DRY_WASH`/`EXPRESS_WASH`)
+    pra **preço por combinação tamanho × tipo**.
+
+    Schema novo: enums `CarSize` (PEQUENO/MEDIO/GRANDE) e `WashType`
+    (EXPRESSA/COMPLETA/HIGIENIZACAO_INTERNA/POLIMENTO), model
+    `WashPriceMatrix` (`@@unique([carSize, washType])`, combinação sem
+    linha cadastrada fica indisponível — nunca gera preço errado) e
+    `Vehicle.size` opcional (alimenta a pré-seleção automática, sem
+    tornar o campo obrigatório). Módulo `wash-pricing/` calcado 1:1 no
+    padrão de `service-categories/`: `GET /wash-pricing/matrix`
+    público + CRUD admin. Seed com a matriz de 12 combinações (3
+    tamanhos × 4 tipos) do artifact original.
+
+    **Decisão de integração com o pedido**: `Order.serviceType`
+    continua sendo o enum antigo (`DRY_WASH`/`EXPRESS_WASH`/
+    `HEAVY_SERVICE`) — não foi estendido. Confirmado no código
+    (`orders.service.ts.typePriority`) que `DRY_WASH` e
+    `EXPRESS_WASH` já eram tratados de forma **idêntica** no matching
+    (preferência por `MOTO_WASHER`), então todo pedido de Lavagem por
+    Tamanho usa `DRY_WASH` como marcador genérico — o tamanho/tipo/preço
+    reais ficam no `items` do pedido (mesmo padrão já usado por
+    `HEAVY_SERVICE`, que também não tem preço fixo no `Order`). Zero
+    mudança de comportamento no matching existente.
+
+    `new_order_page.dart` (mobile-client): o Passo 1 do wizard deixa
+    de listar DRY_WASH/EXPRESS_WASH como cartões de preço fixo — agora
+    mostra "Lavagem" com 3 chips de tamanho + lista de tipos
+    disponíveis (preço calculado pela matriz), com tamanho
+    pré-selecionado automaticamente a partir do primeiro veículo salvo
+    que já tiver `size` definido. "Serviço Pesado (Leilão)" continua
+    exatamente como estava, sem nenhuma mudança. `AddVehiclePage`
+    ganhou um dropdown de tamanho (opcional). admin-web: nova página
+    "Serviços Auto" com a matriz 3×4 editável (clicar numa célula abre
+    diálogo de criar/editar).
+
+    Categorias/Serviços (`ServiceCategory`, DRY_WASH/EXPRESS_WASH) não
+    foi apagado nem migrado — fica vestigial no admin (a tela
+    `/categorias` continua funcionando, só não é mais consumida pelo
+    wizard do cliente), decisão deliberada de não mexer em dado
+    existente sem necessidade.
+
+    Verificação: backend `lint/type-check/test (171 testes)/build`
+    limpos; admin-web `lint/type-check` limpos, `build` gera as 21
+    páginas com sucesso; `flutter analyze` limpo no app inteiro.
+    Verificação ao vivo contra Postgres real: `GET
+    /wash-pricing/matrix` retornando as 12 combinações reais do seed;
+    veículo criado com `size: MEDIO` confirmado no retorno; pedido
+    criado com `serviceType: DRY_WASH` e item `"Lavagem Completa —
+    Médio / Sedã"` a R$89,90 — resposta com `status:
+    searching_washer` e `driverId` já atribuído, confirmando que o
+    matching automático continua funcionando sem nenhuma regressão.

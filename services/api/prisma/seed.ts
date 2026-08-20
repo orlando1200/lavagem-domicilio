@@ -23,6 +23,8 @@ import {
   OrderStatus,
   PaymentMethod,
   PaymentStatus,
+  CarSize,
+  WashType,
 } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 
@@ -390,6 +392,30 @@ async function main() {
     }
   }
   console.log(`\nCatálogo de veículos: ${CATALOG.length} marcas, ${CATALOG.reduce((n, b) => n + b.models.length, 0)} modelos, ${catalogYearsCreated} combinações de ano.`);
+
+  // ── Matriz de preços — Serviços Auto / Lavagem por tamanho ───────────
+  const WASH_PRICE_MATRIX: { carSize: CarSize; washType: WashType; price: number }[] = [
+    { carSize: CarSize.PEQUENO, washType: WashType.EXPRESSA, price: 39.9 },
+    { carSize: CarSize.PEQUENO, washType: WashType.COMPLETA, price: 69.9 },
+    { carSize: CarSize.PEQUENO, washType: WashType.HIGIENIZACAO_INTERNA, price: 119.9 },
+    { carSize: CarSize.PEQUENO, washType: WashType.POLIMENTO, price: 189.9 },
+    { carSize: CarSize.MEDIO, washType: WashType.EXPRESSA, price: 49.9 },
+    { carSize: CarSize.MEDIO, washType: WashType.COMPLETA, price: 89.9 },
+    { carSize: CarSize.MEDIO, washType: WashType.HIGIENIZACAO_INTERNA, price: 149.9 },
+    { carSize: CarSize.MEDIO, washType: WashType.POLIMENTO, price: 229.9 },
+    { carSize: CarSize.GRANDE, washType: WashType.EXPRESSA, price: 59.9 },
+    { carSize: CarSize.GRANDE, washType: WashType.COMPLETA, price: 109.9 },
+    { carSize: CarSize.GRANDE, washType: WashType.HIGIENIZACAO_INTERNA, price: 189.9 },
+    { carSize: CarSize.GRANDE, washType: WashType.POLIMENTO, price: 279.9 },
+  ];
+  for (const entry of WASH_PRICE_MATRIX) {
+    await prisma.washPriceMatrix.upsert({
+      where: { carSize_washType: { carSize: entry.carSize, washType: entry.washType } },
+      update: { price: entry.price },
+      create: { carSize: entry.carSize, washType: entry.washType, price: entry.price, active: true },
+    });
+  }
+  console.log(`Matriz de preços (Lavagem por tamanho): ${WASH_PRICE_MATRIX.length} combinações.`);
 
   console.log(`\nSenha de todos os usuários de seed: ${SEED_PASSWORD}`);
   console.log('Concluído.');
