@@ -152,11 +152,24 @@ não há chaves configuradas nesta máquina.
 > ficou desatualizada no arquivo. O que segue é o que **realmente**
 > continua em aberto:
 
-- **Testes e2e automatizados**: nenhum configurado em nenhum pacote.
-  `docs/E2E_CHECKLIST.md` cobre o fluxo crítico manualmente (curl/`.http`
-  contra o Docker real), e esta sessão criou vários scripts Node
-  ad-hoc de verificação ao vivo (não versionados, ficam no scratchpad),
-  mas não há suite automatizada rodando em CI.
+- ~~Testes e2e automatizados~~ — **item corrigido em 2026-08-20**: esta
+  entrada estava desatualizada. `services/api/test/e2e/` já tem 4 specs
+  reais (`auth`/`marketplace`/`order-lifecycle`/`rental`, 15 testes) e
+  **já rodam em CI** (`.github/workflows/ci.yml`, job `api`, step "E2E
+  tests" → `pnpm run test:e2e`, depois de aplicar migrations num
+  Postgres de verdade do próprio job). Achado ao rodar `pnpm run
+  test:e2e` localmente por iniciativa própria (não fazia parte do gate
+  de nenhuma rodada recente): `order-lifecycle.e2e-spec.ts` estava
+  quebrado por uma regressão real da rodada anterior (item 33) — o
+  fixture usava a placa sintética `E2E1A23`, que não bate com o
+  `PLATE_REGEX` novo (`POST /vehicles` passou a validar formato de
+  placa). Corrigido trocando o fixture pra uma placa Mercosul válida
+  (`TST1E22`); os 15 testes voltaram a passar. `docs/E2E_CHECKLIST.md`
+  continua existindo à parte, cobre fluxo manual complementar (não
+  redundante com os specs automatizados). O que falta de verdade aqui
+  não é "criar e2e" — é **rodar `test:e2e` no gate de toda rodada daqui
+  pra frente** (não só `lint/type-check/test/build`), pra pegar
+  regressões como essa antes do push, não depois.
 - **`GET /orders/available` e outras rotas em array puro**: convivem
   três convenções de paginação diferentes no backend (cursor
   `{items,nextCursor}`, array puro, admin `{data,total,page,limit,totalPages}`)

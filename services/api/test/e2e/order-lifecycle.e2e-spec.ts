@@ -52,7 +52,7 @@ describe('Fluxo critico: registro -> pedido -> aceite -> pagamento -> pontos (e2
     const vehicleRes = await http()
       .post('/api/v1/vehicles')
       .set('Authorization', `Bearer ${clientToken}`)
-      .send({ type: 'carro', brand: 'Fiat', model: 'Argo', color: 'Prata', plate: 'E2E1A23' })
+      .send({ type: 'carro', brand: 'Fiat', model: 'Argo', color: 'Prata', plate: 'TST1E22' })
       .expect(201);
     const vehicleId = vehicleRes.body.id as string;
 
