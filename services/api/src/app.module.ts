@@ -25,7 +25,6 @@ import { RentalModule } from './modules/rental/rental.module';
 import { DocumentVerificationModule } from './modules/document-verification/document-verification.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
-import { ServiceCategoriesModule } from './modules/service-categories/service-categories.module';
 import { VehicleCatalogModule } from './modules/vehicle-catalog/vehicle-catalog.module';
 import { WashPricingModule } from './modules/wash-pricing/wash-pricing.module';
 
@@ -57,7 +56,6 @@ import { WashPricingModule } from './modules/wash-pricing/wash-pricing.module';
     DocumentVerificationModule,
     DashboardModule,
     NotificationsModule,
-    ServiceCategoriesModule,
     VehicleCatalogModule,
     WashPricingModule,
   ],

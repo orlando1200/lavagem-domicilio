@@ -82,6 +82,7 @@
 | **Upload de documento (storage)** | Infra completa (`StorageAdapter`) — `LocalDiskAdapter` salva em disco local no proprio container. **Risco real em producao**: no Fly.io o disco nao e persistente entre deploys/restarts — documentos enviados podem sumir | Bucket S3 real + credenciais AWS; trocar por adapter do S3, mesma interface |
 | **Confirmação de pagamento (checkout da loja)** | `mobile-client` chama `POST /payments/webhook` ele mesmo logo após criar a intent, simulando a aprovação do gateway — o endpoint é propositalmente sem autenticação (é o que um gateway real chamaria) | Chave de sandbox do Mercado Pago; quando existir, o app para de chamar o webhook e passa a esperar o callback real |
 | **Apps nativos (Android/iOS)** | Verificado ate aqui so como app web (Chrome do celular via HTTPS, "adicionar a tela inicial") — nunca gerado um APK/IPA de verdade | Android Studio/Xcode instalados, certificados de assinatura, e eventualmente contas de desenvolvedor (Play Store/App Store) se for pra distribuir de verdade |
+| **Consulta de placa (onboarding de veículo)** | Mock completo (`MockPlateLookupAdapter`, 3 placas fixas) atrás de `PlateLookupGateway` — ver item 33 | Pesquisa feita em 2026-08-20 (sem inventar dados): **não existe opção gratuita viável hoje** pra marca/modelo/ano/cor a partir só da placa — Sinesp Cidadão (o produto que faria isso) foi **descontinuado**; SENATRAN/Meus Veículos exige login gov.br do próprio dono do veículo (não serve pra um marketplace consultar a placa de terceiros); SERPRO/RADAR retorna multas, não dados do veículo; BrasilAPI tem [issue aberta pedindo isso](https://github.com/BrasilAPI/BrasilAPI/issues/137) mas nunca implementou. Opção comercial mais concreta encontrada: **Infosimples** (infosimples.com), pré-pago, R$100 de crédito grátis ao cadastrar pra testar, franquia mínima de R$100/mês depois — mas o produto de dados de veículo que eles tinham (Sinesp) também está descontinuado, precisaria confirmar com o suporte deles qual produto atual cobre isso. `apiplacas.com.br` ("API Placas") parece o candidato mais alinhado ao contrato desejado (placa+token → marca/modelo/ano/UF/cor), mas o site bloqueia scraping automatizado — não deu pra verificar preço/trial sem visitar manualmente. Decisão: manter Fase 1 (simulado) até o usuário escolher e testar um provedor de verdade |
 
 Nenhuma integração foi validada contra credenciais reais de sandbox —
 não há chaves configuradas nesta máquina.
@@ -1625,3 +1626,36 @@ Ordem sugerida, por dependência e impacto (não por facilidade):
     vem do `flutter analyze` limpo + revisão de código cuidadosa
     contra os padrões visuais já validados nesta sessão (mesma
     limitação documentada no item 32).
+
+34. **Remoção do `ServiceCategory` vestigial.** O item 32 tinha
+    deixado a tela `/categorias` e o módulo `service-categories` no
+    ar de propósito ("decisão deliberada de não mexer em dado
+    existente sem necessidade"). Usuário pediu pra avançar nos itens
+    de débito técnico da lista pendente; confirmado por grep em todo
+    o repo que nada mais consumia esse model desde a migração pra
+    Lavagem por Tamanho — sem FK de outro model apontando pra ele,
+    `orders.service.ts` nunca leu preço dele (matching usa
+    `WashPriceMatrix`/`items` do pedido), `new_order_page.dart` já
+    não importava mais o repositório/model dele. Dead code confirmado,
+    não só vestigial — removido por completo:
+
+    Backend: model `ServiceCategory` + migração dropando a tabela
+    `service_categories` (`ServiceType` — o enum de
+    `Order.serviceType` — continua intocado, é usado por outra
+    coisa); módulo `service-categories/` inteiro (service/controller/
+    admin controller/dto/module) + teste dedicado removidos;
+    desregistrado do `app.module.ts`. admin-web: página `/categorias`,
+    `lib/api/service-categories.ts`, interface `ServiceCategory` em
+    `lib/types.ts` e a entrada no sidebar (com o ícone `Tag`, que
+    ficou sem uso). mobile-client:
+    `service_categories_repository.dart` e `service_category_model.dart`
+    (já não eram importados por ninguém).
+
+    Verificação: backend `lint/type-check/test/build` limpos — 165
+    testes (era 171, os 6 a menos são exatamente os do módulo
+    removido). admin-web `lint/type-check/build` limpos, 20 páginas
+    geradas (era 21, a menos é `/categorias`) — precisou limpar
+    `.next/` primeiro porque o cache do `tsc` ainda apontava pra
+    página já apagada. `flutter analyze` limpo (42 issues, era 47 —
+    5 infos a menos, dos dois arquivos removidos), `flutter test` (16
+    testes) sem regressão.

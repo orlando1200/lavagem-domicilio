@@ -315,17 +315,6 @@ export interface DocumentVerification {
   user: { id: string; name: string; email: string; phone: string | null };
 }
 
-export interface ServiceCategory {
-  id: string;
-  serviceType: ServiceType;
-  name: string;
-  description: string | null;
-  price: string | number;
-  active: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export type CarSize = 'PEQUENO' | 'MEDIO' | 'GRANDE';
 export type WashType = 'EXPRESSA' | 'COMPLETA' | 'HIGIENIZACAO_INTERNA' | 'POLIMENTO';
 

@@ -16,7 +16,6 @@ import {
   Gift,
   Receipt,
   FileCheck,
-  Tag,
   Car,
   Sparkles,
 } from 'lucide-react';
@@ -29,7 +28,6 @@ const NAV_ITEMS = [
   { href: '/lavadores', label: 'Aprovação de Lavadores', icon: UserCheck },
   { href: '/documentos', label: 'Documentos', icon: FileCheck },
   { href: '/marketplace', label: 'Marketplace', icon: Store },
-  { href: '/categorias', label: 'Categorias / Serviços', icon: Tag },
   { href: '/servicos-auto', label: 'Serviços Auto', icon: Sparkles },
   { href: '/catalogo-veiculos', label: 'Catálogo de Veículos', icon: Car },
   { href: '/repasses', label: 'Repasses', icon: Wallet },
