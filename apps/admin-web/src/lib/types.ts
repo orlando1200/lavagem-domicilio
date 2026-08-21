@@ -316,7 +316,7 @@ export interface DocumentVerification {
 }
 
 export type CarSize = 'PEQUENO' | 'MEDIO' | 'GRANDE';
-export type WashType = 'EXPRESSA' | 'COMPLETA' | 'HIGIENIZACAO_INTERNA' | 'POLIMENTO';
+export type WashType = 'SECO' | 'EXPRESSA' | 'COMPLETA' | 'HIGIENIZACAO_INTERNA' | 'POLIMENTO';
 
 export interface WashPriceEntry {
   id: string;

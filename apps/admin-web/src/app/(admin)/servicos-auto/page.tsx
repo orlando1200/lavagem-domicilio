@@ -21,7 +21,7 @@ import { formatCurrencyBRL } from '@/lib/format';
 import type { CarSize, WashPriceEntry, WashType } from '@/lib/types';
 
 const CAR_SIZES: CarSize[] = ['PEQUENO', 'MEDIO', 'GRANDE'];
-const WASH_TYPES: WashType[] = ['EXPRESSA', 'COMPLETA', 'HIGIENIZACAO_INTERNA', 'POLIMENTO'];
+const WASH_TYPES: WashType[] = ['SECO', 'EXPRESSA', 'COMPLETA', 'HIGIENIZACAO_INTERNA', 'POLIMENTO'];
 
 const CAR_SIZE_LABELS: Record<CarSize, string> = {
   PEQUENO: 'Pequeno / Hatch',
@@ -30,6 +30,7 @@ const CAR_SIZE_LABELS: Record<CarSize, string> = {
 };
 
 const WASH_TYPE_LABELS: Record<WashType, string> = {
+  SECO: 'Seco',
   EXPRESSA: 'Expressa',
   COMPLETA: 'Completa',
   HIGIENIZACAO_INTERNA: 'Higienização interna',

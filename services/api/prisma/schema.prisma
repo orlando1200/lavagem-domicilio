@@ -259,8 +259,12 @@ enum CarSize {
 /// Tipo de lavagem oferecido na secao "Servicos Auto" — substitui
 /// DRY_WASH/EXPRESS_WASH (preco unico por tipo) como forma de precificar
 /// lavagem regular. HEAVY_SERVICE (leilao) continua exatamente como esta,
-/// nao usa esta matriz.
+/// nao usa esta matriz. SECO e a opcao mais basica/barata (primeira da
+/// lista — ordem de declaracao do enum = ordem de exibicao, ja que
+/// `orderBy: washType asc` no Postgres segue a ordem de declaracao de
+/// um enum nativo, nao ordem alfabetica).
 enum WashType {
+  SECO
   EXPRESSA
   COMPLETA
   HIGIENIZACAO_INTERNA

@@ -147,7 +147,7 @@ class _FloatingNavBar extends StatelessWidget {
 
   static const _items = [
     (icon: Icons.home_rounded, label: 'Home'),
-    (icon: Icons.local_car_wash_rounded, label: 'Serviço Auto'),
+    (icon: Icons.build_rounded, label: 'Serviço Auto'),
     (icon: Icons.storefront_rounded, label: 'Loja'),
     (icon: Icons.person_rounded, label: 'Perfil'),
   ];

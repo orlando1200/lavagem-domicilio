@@ -3,6 +3,7 @@ import '../../../vehicles/data/models/vehicle_model.dart';
 // Tipo de lavagem oferecido em Servicos Auto — substitui DRY_WASH/EXPRESS_WASH
 // (preco unico por tipo) por preco variando por tamanho do veiculo.
 enum WashType {
+  SECO,
   EXPRESSA,
   COMPLETA,
   HIGIENIZACAO_INTERNA,
@@ -18,6 +19,8 @@ enum WashType {
 
   String get label {
     switch (this) {
+      case WashType.SECO:
+        return 'Seco';
       case WashType.EXPRESSA:
         return 'Expressa';
       case WashType.COMPLETA:
