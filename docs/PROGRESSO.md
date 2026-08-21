@@ -83,6 +83,7 @@
 | **Confirmação de pagamento (checkout da loja)** | `mobile-client` chama `POST /payments/webhook` ele mesmo logo após criar a intent, simulando a aprovação do gateway — o endpoint é propositalmente sem autenticação (é o que um gateway real chamaria) | Chave de sandbox do Mercado Pago; quando existir, o app para de chamar o webhook e passa a esperar o callback real |
 | **Apps nativos (Android/iOS)** | Verificado ate aqui so como app web (Chrome do celular via HTTPS, "adicionar a tela inicial") — nunca gerado um APK/IPA de verdade | Android Studio/Xcode instalados, certificados de assinatura, e eventualmente contas de desenvolvedor (Play Store/App Store) se for pra distribuir de verdade |
 | **Consulta de placa (onboarding de veículo)** | Mock completo (`MockPlateLookupAdapter`, 3 placas fixas) atrás de `PlateLookupGateway` — ver item 33 | Pesquisa feita em 2026-08-20 (sem inventar dados): **não existe opção gratuita viável hoje** pra marca/modelo/ano/cor a partir só da placa — Sinesp Cidadão (o produto que faria isso) foi **descontinuado**; SENATRAN/Meus Veículos exige login gov.br do próprio dono do veículo (não serve pra um marketplace consultar a placa de terceiros); SERPRO/RADAR retorna multas, não dados do veículo; BrasilAPI tem [issue aberta pedindo isso](https://github.com/BrasilAPI/BrasilAPI/issues/137) mas nunca implementou. Opção comercial mais concreta encontrada: **Infosimples** (infosimples.com), pré-pago, R$100 de crédito grátis ao cadastrar pra testar, franquia mínima de R$100/mês depois — mas o produto de dados de veículo que eles tinham (Sinesp) também está descontinuado, precisaria confirmar com o suporte deles qual produto atual cobre isso. `apiplacas.com.br` ("API Placas") parece o candidato mais alinhado ao contrato desejado (placa+token → marca/modelo/ano/UF/cor), mas o site bloqueia scraping automatizado — não deu pra verificar preço/trial sem visitar manualmente. Decisão: manter Fase 1 (simulado) até o usuário escolher e testar um provedor de verdade |
+| **IPVA e Multas (consulta)** | Mock completo (`MockFiscalDebtAdapter`, mesmas 3 placas do plate-lookup) atrás de `FiscalDebtGateway` — ver item 37. Só consulta, nenhum pagamento é processado | Provedor real de consulta fiscal por estado (sem API unificada nacional) + decisão de produto sobre **pagamento** (é o passo bem mais sensível — mexe em dinheiro de terceiros, não só dado de leitura) antes de ativar o botão "Pagamento em breve" que já existe na UI |
 
 Nenhuma integração foi validada contra credenciais reais de sandbox —
 não há chaves configuradas nesta máquina.
@@ -1714,3 +1715,57 @@ Ordem sugerida, por dependência e impacto (não por facilidade):
     `ana.cliente@giucar.com.br` — continuavam lá depois. Login real
     via `POST /auth/login` voltou a funcionar (`201`). `lint`/
     `type-check` limpos.
+
+37. **Consulta de IPVA e Multas (modo simulado, sem pagamento).**
+    Usuário mandou prints do hub "Serviço Auto" da Webmotors (Lavagem,
+    IPVA/multas/licenciamento, Estética, Funilaria, Manutenção, Óleo)
+    perguntando se um recurso de IPVA/multas teria sucesso. Avaliação:
+    bom gancho de reengajamento (todo dono de carro precisa, traz de
+    volta ao app mesmo sem precisar lavar), mas **processar pagamento**
+    de imposto/multa de terceiros é bem mais sensível que o checkout de
+    lavagem — cada estado tem seu próprio sistema SEFAZ/DETRAN sem API
+    unificada, e normalmente exige um provedor pago (mesma situação já
+    mapeada pra consulta de placa no item 33). Decisão combinada com o
+    usuário: construir só a **consulta** agora (sem mexer em dinheiro),
+    com o modelo de dados já pronto pra um fluxo de pagamento de
+    verdade se conectar depois sem migração nova.
+
+    Backend: novo model `VehicleFiscalDebt` (tipo IPVA/MULTA/
+    LICENCIAMENTO, `status` PENDING/PAID — PAID nunca é setado ainda,
+    existe só pra não precisar de migração quando o pagamento chegar),
+    upsert por `[vehicleId, externalReference]` (numero da parcela do
+    IPVA, numero do AIT da multa etc.) — uma nova consulta atualiza o
+    valor sem duplicar linha, e um pagamento futuro tem um id estável
+    pra referenciar. Mesmo padrão "modo simulado" de sempre:
+    `FiscalDebtGateway` + `MockFiscalDebtAdapter`, reusando as mesmas 3
+    placas fixas do plate-lookup (item 33) pra manter a demo
+    consistente entre os dois módulos — placa sem débito (ou
+    desconhecida) retorna array vazio, não é erro. Novo `GET
+    /vehicles/:id/fiscal-debts` no `VehiclesController` (confere
+    ownership do veículo, 404 se não for do usuário autenticado).
+
+    Bug pego na verificação ao vivo: o mock retornava `dueDate` como
+    string `"AAAA-MM-DD"` (so a data, sem hora) — Prisma recusou com
+    `PrismaClientValidationError: premature end of input. Expected
+    ISO-8601 DateTime`, porque o client espera `DateTime`/ISO completo
+    ou objeto `Date`, não uma data solta. Corrigido convertendo
+    `dueDate` pra `Date` antes do upsert.
+
+    Mobile-client: `FiscalDebtsPage` nova (seletor de veículo quando
+    há mais de um, cards por débito com badge de tipo colorido, "Vencida"
+    quando `dueDate` já passou, e um botão desabilitado "Pagamento em
+    breve" em vez de esconder a intenção — deixa claro que o recurso
+    existe e está a caminho). Acesso via novo quick action "IPVA e
+    Multas" em Ações Rápidas da Home (rota `/fiscal-debts`) — não
+    entrou na aba "Serviço Auto" da nav inferior porque essa aba hoje é
+    só o fluxo de lavagem; virar um hub multi-categoria como o da
+    Webmotors fica pra quando o usuário pedir explicitamente.
+
+    Verificação: backend `lint/type-check/test (165)/test:e2e (15,
+    confirmado que não mexe no banco de dev)/build` limpos.
+    `flutter analyze` limpo (achou e corrigiu o mesmo bug recorrente de
+    `const` com `AppColors.textMuted`, getter não-const), `flutter
+    test` (16) sem regressão. Verificado ao vivo: placa com débito
+    (`ABC1D23`) retorna IPVA + multa ordenados por vencimento; placa
+    limpa (`OLD1234`) retorna `[]`; chamar duas vezes não duplica linha
+    (upsert confirmado); veículo de outro usuário retorna 404.

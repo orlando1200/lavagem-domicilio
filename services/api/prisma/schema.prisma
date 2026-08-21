@@ -146,8 +146,47 @@ model Vehicle {
   user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   orders      Order[]
   catalogYear VehicleCatalogYear? @relation(fields: [catalogYearId], references: [id])
+  fiscalDebts VehicleFiscalDebt[]
 
   @@map("vehicles")
+}
+
+/// Tipo de debito fiscal consultado pro veiculo (IPVA/multas/licenciamento
+/// — modo simulado, ver FiscalDebtGateway). So consulta, nao paga: o
+/// campo `status` existe pra quando o pagamento de verdade for construido
+/// (Fase 2), sem precisar de migracao nova nesse momento.
+enum FiscalDebtType {
+  IPVA
+  MULTA
+  LICENCIAMENTO
+}
+
+enum FiscalDebtStatus {
+  PENDING
+  PAID
+}
+
+/// Snapshot persistido de um debito encontrado numa consulta — upsert por
+/// `externalReference` (ex.: numero da parcela do IPVA, numero do AIT da
+/// multa) pra uma nova consulta atualizar o valor sem duplicar linha, e
+/// pra um pagamento futuro ter um id estavel pra referenciar.
+model VehicleFiscalDebt {
+  id                String           @id @default(uuid()) @db.Uuid
+  vehicleId         String           @map("vehicle_id") @db.Uuid
+  type              FiscalDebtType
+  externalReference String           @map("external_reference") @db.VarChar(60)
+  description       String           @db.VarChar(160)
+  amount            Decimal          @db.Decimal(10, 2)
+  dueDate           DateTime?        @map("due_date") @db.Date
+  status            FiscalDebtStatus @default(PENDING)
+  lastCheckedAt     DateTime         @default(now()) @map("last_checked_at") @db.Timestamptz
+  createdAt         DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime         @updatedAt @map("updated_at") @db.Timestamptz
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@unique([vehicleId, externalReference])
+  @@map("vehicle_fiscal_debts")
 }
 
 /// Catalogo estruturado (Marca -> Modelo -> Ano) usado pro sistema de

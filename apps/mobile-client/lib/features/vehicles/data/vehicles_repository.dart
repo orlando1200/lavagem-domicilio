@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_client.dart';
 import '../../../core/api/api_exception.dart';
+import 'models/fiscal_debt_model.dart';
 import 'models/plate_lookup_model.dart';
 import 'models/vehicle_catalog_model.dart';
 import 'models/vehicle_model.dart';
@@ -107,6 +108,18 @@ class VehiclesRepository {
       final exception = ApiException.fromDioException(e);
       if (exception.statusCode == 404) return null;
       throw exception;
+    }
+  }
+
+  /// Consulta `GET /vehicles/:id/fiscal-debts` (IPVA/multas/licenciamento
+  /// — modo simulado). So consulta: nenhum pagamento e feito por aqui.
+  Future<List<FiscalDebtEntry>> fetchFiscalDebts(String vehicleId) async {
+    try {
+      final response = await _dio.get<List<dynamic>>('/vehicles/$vehicleId/fiscal-debts');
+      final items = response.data ?? [];
+      return items.map((j) => FiscalDebtEntry.fromJson(j as Map<String, dynamic>)).toList();
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
     }
   }
 

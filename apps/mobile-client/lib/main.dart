@@ -20,6 +20,7 @@ import 'features/auctions/presentation/pages/auction_detail_page.dart';
 import 'features/engagement/presentation/pages/engagement_page.dart';
 import 'features/vehicles/presentation/pages/add_vehicle_page.dart';
 import 'features/vehicles/presentation/pages/vehicles_page.dart';
+import 'features/vehicles/presentation/pages/fiscal_debts_page.dart';
 import 'features/profile/presentation/pages/edit_profile_page.dart';
 import 'features/profile/presentation/pages/change_password_page.dart';
 import 'features/auth/presentation/pages/register_page.dart';
@@ -126,6 +127,10 @@ final GoRouter _router = GoRouter(
     GoRoute(
       path: '/vehicles/new',
       builder: (context, state) => const AddVehiclePage(),
+    ),
+    GoRoute(
+      path: '/fiscal-debts',
+      builder: (context, state) => const FiscalDebtsPage(),
     ),
     GoRoute(
       path: '/addresses',

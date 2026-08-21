@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -39,5 +39,15 @@ export class VehiclesController {
   })
   lookupPlate(@Param() params: LookupPlateParamsDto) {
     return this.vehiclesService.lookupPlate(params.plate);
+  }
+
+  @Get(':id/fiscal-debts')
+  @ApiOperation({
+    summary:
+      'Consulta debitos abertos (IPVA/multas/licenciamento) pra placa do veiculo ' +
+      '(modo simulado — ver FiscalDebtGateway). So consulta, nenhum pagamento e feito aqui.',
+  })
+  getFiscalDebts(@CurrentUser() user: AuthenticatedUser, @Param('id', ParseUUIDPipe) id: string) {
+    return this.vehiclesService.getFiscalDebts(user.id, id);
   }
 }

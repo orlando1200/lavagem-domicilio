@@ -488,6 +488,11 @@ class _QuickActionsCard extends StatelessWidget {
                   onTap: () => context.push('/vehicles'),
                 ),
                 _QuickAction(
+                  icon: Icons.receipt_long_outlined,
+                  label: 'IPVA e\nMultas',
+                  onTap: () => context.push('/fiscal-debts'),
+                ),
+                _QuickAction(
                   icon: Icons.workspace_premium_outlined,
                   label: 'GIUCAR\nPoints',
                   onTap: () => context.push('/engagement'),

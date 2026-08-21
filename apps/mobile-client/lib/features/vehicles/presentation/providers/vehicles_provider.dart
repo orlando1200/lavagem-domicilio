@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../data/models/fiscal_debt_model.dart';
 import '../../data/models/vehicle_catalog_model.dart';
 import '../../data/models/vehicle_model.dart';
 import '../../data/vehicles_repository.dart';
@@ -6,6 +7,13 @@ import '../../data/vehicles_repository.dart';
 /// FutureProvider.autoDispose para a lista de veiculos do cliente logado.
 final vehiclesProvider = FutureProvider.autoDispose<List<VehicleModel>>((ref) {
   return ref.watch(vehiclesRepositoryProvider).fetchMine();
+});
+
+/// Debitos fiscais (IPVA/multas/licenciamento) de um veiculo especifico
+/// — modo simulado, so consulta.
+final fiscalDebtsProvider = FutureProvider.autoDispose
+    .family<List<FiscalDebtEntry>, String>((ref, vehicleId) {
+  return ref.watch(vehiclesRepositoryProvider).fetchFiscalDebts(vehicleId);
 });
 
 /// Marcas do catalogo estruturado, pro primeiro dropdown do cadastro.
