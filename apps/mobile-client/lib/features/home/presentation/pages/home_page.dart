@@ -23,8 +23,8 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   final _pages = const [
     _HomeTab(),
+    _ServiceAutoTab(),
     ShopPage(),
-    _HistoryTab(),
     _ProfileTab(),
   ];
 
@@ -463,30 +463,37 @@ class _QuickActionsCard extends StatelessWidget {
                 ),
           ),
           const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _QuickAction(
-                icon: Icons.eco_outlined,
-                label: 'Seco /\nExpress',
-                onTap: () => context.push('/catalog'),
-              ),
-              _QuickAction(
-                icon: Icons.storefront_outlined,
-                label: 'Serviços\nPesados',
-                onTap: () => context.push('/auctions'),
-              ),
-              _QuickAction(
-                icon: Icons.directions_car,
-                label: 'Meus\nVeículos',
-                onTap: () => context.push('/vehicles'),
-              ),
-              _QuickAction(
-                icon: Icons.workspace_premium_outlined,
-                label: 'GIUCAR\nPoints',
-                onTap: () => context.push('/engagement'),
-              ),
-            ],
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _QuickAction(
+                  icon: Icons.eco_outlined,
+                  label: 'Seco /\nExpress',
+                  onTap: () => context.push('/catalog'),
+                ),
+                _QuickAction(
+                  icon: Icons.storefront_outlined,
+                  label: 'Serviços\nPesados',
+                  onTap: () => context.push('/auctions'),
+                ),
+                _QuickAction(
+                  icon: Icons.history_rounded,
+                  label: 'Meus\nLavados',
+                  onTap: () => context.push('/orders'),
+                ),
+                _QuickAction(
+                  icon: Icons.directions_car,
+                  label: 'Meus\nVeículos',
+                  onTap: () => context.push('/vehicles'),
+                ),
+                _QuickAction(
+                  icon: Icons.workspace_premium_outlined,
+                  label: 'GIUCAR\nPoints',
+                  onTap: () => context.push('/engagement'),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -758,14 +765,19 @@ class _PromoSection extends StatelessWidget {
 
 // ── Histórico ────────────────────────────────────────────────────────────────
 
-class _HistoryTab extends StatelessWidget {
-  const _HistoryTab();
+/// Aba "Serviço Auto" da nav inferior — mesmo padrão de delegação da
+/// antiga aba "Pedidos": não tem conteúdo próprio, empurra direto pro
+/// fluxo de solicitação (Lavagem por Tamanho + Serviço Pesado, já
+/// combinados no Passo 1 do wizard). O histórico de lavagens ("Meus
+/// Lavados") ficou na Home, em Ações Rápidas — "Pedido" soava como algo
+/// comprado na loja, não como uma lavagem solicitada.
+class _ServiceAutoTab extends StatelessWidget {
+  const _ServiceAutoTab();
 
   @override
   Widget build(BuildContext context) {
-    // Delegate to dedicated orders page (Fase 2)
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.push('/orders');
+      context.push('/catalog');
     });
     return const Center(
       child: CircularProgressIndicator(color: AppColors.primary),

@@ -6,8 +6,8 @@ import '../theme/app_colors.dart';
 /// Fornece:
 /// - fundo #050811 com spots radiais neon (ciano + roxo) fundidos via
 ///   [ShaderMask] + [BlendMode.dstOut], evitando cortes bruscos entre luzes;
-/// - navegacao inferior flutuante (Home / Loja / Pedidos / Perfil) sobreposta
-///   ao conteudo, com efeito "glass" neon.
+/// - navegacao inferior flutuante (Home / Serviço Auto / Loja / Perfil)
+///   sobreposta ao conteudo, com efeito "glass" neon.
 class AppScaffold extends StatelessWidget {
   const AppScaffold({
     super.key,
@@ -147,8 +147,8 @@ class _FloatingNavBar extends StatelessWidget {
 
   static const _items = [
     (icon: Icons.home_rounded, label: 'Home'),
+    (icon: Icons.local_car_wash_rounded, label: 'Serviço Auto'),
     (icon: Icons.storefront_rounded, label: 'Loja'),
-    (icon: Icons.receipt_long_rounded, label: 'Pedidos'),
     (icon: Icons.person_rounded, label: 'Perfil'),
   ];
 
