@@ -1672,3 +1672,45 @@ Ordem sugerida, por dependência e impacto (não por facilidade):
     página já apagada. `flutter analyze` limpo (42 issues, era 47 —
     5 infos a menos, dos dois arquivos removidos), `flutter test` (16
     testes) sem regressão.
+
+35. **Incidente real: `test:e2e` local apagou o banco de dev.**
+    Descoberto na pior forma possível — usuário reportou que o login
+    parou de funcionar no celular depois de tudo verificado e
+    funcionando. Investigação: `docker exec ... SELECT count(*) FROM
+    users` no banco de dev voltou 0. Causa raiz: `setup.ts.
+    resetDatabase()` (usado pelos specs e2e entre testes) faz
+    `TRUNCATE TABLE ... RESTART IDENTITY CASCADE` em **toda tabela**
+    do banco apontado por `DATABASE_URL` — e `test/jest-e2e.json` não
+    tinha nenhum override dessa variável, então herdava o `DATABASE_URL`
+    do `.env` (o banco de dev de verdade, `lavagem_domicilio`, o
+    mesmo que os 3 apps mobile e o admin-web usam). No CI isso nunca
+    deu problema porque o job `api` do `ci.yml` define `DATABASE_URL`
+    apontando pra `lavagem_domicilio_test` via `env:` do job — mas
+    localmente ninguém tinha esse cuidado. Este item (34, a remoção do
+    `ServiceCategory`) e o item 33 (onboarding por placa) tinham
+    rodado `pnpm run test:e2e` localmente pra fechar o gate, e cada
+    rodada apagou o banco de dev sem ninguém perceber até o próximo
+    login falhar.
+
+    Restaurado com `pnpm run seed:dev` (comando certo — `pnpm run
+    seed` não existe, o `"seed"` do `package.json` fica dentro do
+    bloco `"prisma"`, é convenção do `prisma db seed`, não um script
+    do pnpm). Corrigido de vez: novo `test/e2e/force-test-database.ts`
+    registrado como `setupFiles` no `jest-e2e.json` — lê o `.env`
+    manualmente com `dotenv.parse` (cedo demais pro `ConfigModule.
+    forRoot()` já ter carregado nada) e força `DATABASE_URL` a
+    apontar pro banco com sufixo `_test` **antes** do `ConfigModule`
+    rodar; `@nestjs/config` nunca sobrescreve uma env var que já
+    existe em `process.env` (confirmado lendo o código-fonte dele,
+    `assignVariablesToProcess` filtra `!(key in process.env)`), então
+    o valor forçado aqui sobrevive. Em CI (`process.env.CI`) não faz
+    nada — o `DATABASE_URL` do job já está correto. `lavagem_domicilio_test`
+    recebeu `prisma migrate deploy` pra ficar em dia com as migrações
+    novas desta sessão.
+
+    Verificado de forma definitiva: reseed do banco de dev (8
+    usuários), rodou `pnpm run test:e2e` (15 testes passando) e
+    confirmado por query direta que os 8 usuários — incluindo
+    `ana.cliente@giucar.com.br` — continuavam lá depois. Login real
+    via `POST /auth/login` voltou a funcionar (`201`). `lint`/
+    `type-check` limpos.
